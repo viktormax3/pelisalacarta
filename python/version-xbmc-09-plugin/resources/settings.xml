@@ -148,4 +148,12 @@
     <setting id="personalchannellogo5" type="text" label="30049" enable="eq(-2,true)" default="http://pelisalacarta.mimediacenter.info/personalchannel/sample.png"/>
     <setting id="personalchannelurl5" type="text" label="30045" enable="eq(-3,true)" default="http://pelisalacarta.mimediacenter.info/personalchannel/samplefeed.rss"/>
     <setting id="personalchannelpage5" type="text" label="30047" enable="eq(-4,true)" default="100"/>
+
+
+    <setting type="sep" />
+    <setting label="Separate server names by comma" type="lsep"/>
+    <setting id="filter_servers" type="bool" label="Filter by Servers?" default="false"/>
+    <setting id="whitelist" type="text" label="White List:" enable="eq(-1,true)" default=""/>
+    <setting id="blacklist" type="text" label="Black List:" enable="eq(-2,true)" default=""/>
+
 </settings>
