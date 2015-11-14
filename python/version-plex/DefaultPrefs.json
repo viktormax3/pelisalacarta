@@ -1,7 +1,13 @@
 [
   {
-    "id": "enableadultmode",
-    "label": "Activar modo adulto",
+    "id": "adult_mode",
+    "label": "Mostrar canales para adultos",
+    "type": "bool",
+    "default": "true"
+  },
+{
+    "id": "adult_pin",
+    "label": "PIN para abrir canales adultos",
     "type": "bool",
     "default": "true"
   },

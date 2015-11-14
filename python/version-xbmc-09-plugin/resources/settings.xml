@@ -3,7 +3,8 @@
     <setting id="player_type" type="enum" values="Flash|Native|Type2|Type3" label="30000" default="0"/>
     <setting id="updatecheck2" type="bool" label="30001" default="true"/>
     <setting id="updatechannels" type="bool" label="30004" default="true"/>
-    <setting id="enableadultmode" type="bool" label="30002" default="false"/>
+    <setting id="adult_mode" type="bool" label="30002" default="false"/>
+    <setting id="adult_pin" type="text" label="PIN para abrir canal de adultos" option="hidden" default=""/>
     <setting id="debug" type="bool" label="30003" default="false"/>
     <setting id="default_action" type="enum" lvalues="30006|30007|30008|30009" label="30005" default="0"/>
     <setting id="thumbnail_type" type="enum" lvalues="30011|30012|30200" values="0|1|2" label="30010" default="2"/>
