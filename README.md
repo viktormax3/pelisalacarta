@@ -29,20 +29,21 @@ This way i return a fraction of what I have received.
 ## Links
 
 My spanish blog about "Televisión a la carta"
+
 http://blog.tvalacarta.info
 
 Plugin home page
+
 http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta
 
 Support forum
+
 http://www.mimediacenter.info
 
 Developer thread on forum
+
 http://www.mimediacenter.info/foro/viewforum.php?f=14
 
 ## Contact
-================
 
-If you want to contact me you can do it using any of the links below, or directly using my e-mail
-
-tvalacarta@gmail.com
+If you want to contact me you can do it using any of the links below, or directly using my e-mail tvalacarta@gmail.com
