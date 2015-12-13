@@ -28,13 +28,13 @@
 <project name="pelisalacarta" default="package">
 	<description>pelisalacarta</description>
 
-    <property name="oldversion" value="3.9.99"/>
-    <property name="oldversionboxee" value="10.10"/>
+    <property name="oldversion" value="4.0.3"/>
+    <property name="oldversionboxee" value="10.12"/>
     <property name="oldversiondate" value="19/03/2015"/>
 
-    <property name="version" value="4.0.3"/>
-    <property name="versionboxee" value="10.12"/>
-    <property name="versiondate" value="19/03/2015"/>
+    <property name="version" value="4.0.4"/>
+    <property name="versionboxee" value="10.16"/>
+    <property name="versiondate" value="08/12/2015"/>
     <property name="versionchanges" value="Versión semanal"/>
 
     <property name="target" value="../../target/python"/>
@@ -200,6 +200,7 @@
                 <exclude name="**/.*/**"/>
                 <exclude name="**/*.pyo"/>
                 <exclude name="**/*.pyc"/>
+                <exclude name="**/*.json"/>
                 <exclude name="resources/images/bannermenu/**"/>
                 <exclude name="resources/images/banners/**"/>
                 <exclude name="resources/images/fanart/**"/>
@@ -223,6 +224,7 @@
                 <exclude name="**/.*/**"/>
                 <exclude name="**/*.pyo"/>
                 <exclude name="**/*.pyc"/>
+                <exclude name="**/*.json"/>
                 <exclude name="resources/images/bannermenu/**"/>
                 <exclude name="resources/images/banners/**"/>
                 <exclude name="resources/images/fanart/**"/>
@@ -252,6 +254,7 @@
                 <exclude name="**/.*/**"/>
                 <exclude name="**/*.pyo"/>
                 <exclude name="**/*.pyc"/>
+                <exclude name="**/*.json"/>
                 <exclude name="resources/images/bannermenu/**"/>
                 <exclude name="resources/images/banners/**"/>
                 <exclude name="resources/images/fanart/**"/>
@@ -281,6 +284,7 @@
                 <exclude name="**/.*/**"/>
                 <exclude name="**/*.pyo"/>
                 <exclude name="**/*.pyc"/>
+                <exclude name="**/*.json"/>
                 <exclude name="resources/images/bannermenu/**"/>
                 <exclude name="resources/images/banners/**"/>
                 <exclude name="resources/images/fanart/**"/>
@@ -310,6 +314,7 @@
                 <exclude name="**/.*/**"/>
                 <exclude name="**/*.pyo"/>
                 <exclude name="**/*.pyc"/>
+                <exclude name="**/*.json"/>
                 <exclude name="resources/images/bannermenu/**"/>
                 <exclude name="resources/images/banners/**"/>
                 <exclude name="resources/images/fanart/**"/>
@@ -339,6 +344,7 @@
                 <exclude name="**/.*/**"/>
                 <exclude name="**/*.pyo"/>
                 <exclude name="**/*.pyc"/>
+                <exclude name="**/*.json"/>
                 <exclude name="resources/images/bannermenu/**"/>
                 <exclude name="resources/images/banners/**"/>
                 <exclude name="resources/images/fanart/**"/>
@@ -374,6 +380,7 @@
                 <exclude name="**/.*/**"/>
                 <exclude name="**/*.pyo"/>
                 <exclude name="**/*.pyc"/>
+                <exclude name="**/*.json"/>
                 <exclude name="resources/images/bannermenu/**"/>
                 <exclude name="resources/images/banners/**"/>
                 <exclude name="resources/images/fanart/**"/>
@@ -409,6 +416,7 @@
                 <exclude name="**/.*/**"/>
                 <exclude name="**/*.pyo"/>
                 <exclude name="**/*.pyc"/>
+                <exclude name="**/*.json"/>
                 <exclude name="resources/images/bannermenu/**"/>
                 <exclude name="resources/images/banners/**"/>
                 <exclude name="resources/images/fanart/**"/>
@@ -440,6 +448,7 @@
                 <exclude name="**/.*/**"/>
                 <exclude name="**/*.pyo"/>
                 <exclude name="**/*.pyc"/>
+                <exclude name="**/*.json"/>
                 <exclude name="resources/images/bannermenu/**"/>
                 <exclude name="resources/images/banners/**"/>
                 <exclude name="resources/images/fanart/**"/>
@@ -464,6 +473,7 @@
         </copy>
 
         <zip destfile="${target}/boxee/pelisalacarta-boxee-${version}.zip" basedir="${target}/boxee"/>
+        <copy file="${target}/boxee/pelisalacarta-boxee-${version}.zip" tofile="${target}/boxee/info.mimediacenter.pelisalacarta-${versionboxee}.zip" overwrite="true"/>
 
     </target>
 
@@ -487,6 +497,8 @@
         <copy todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/channels">
             <fileset dir="main-classic/channels">
                 <include name="*.py"/>
+                <include name="*.xml"/>
+                <exclude name="*.json"/>
                 <exclude name="rv_*"/>
             </fileset>
         </copy>
@@ -501,6 +513,10 @@
             <fileset dir="main-classic/core">
                 <include name="*.py"/>
             </fileset>
+        </copy>
+
+        <copy todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/lib">
+            <fileset dir="main-classic/lib"/>
         </copy>
 
         <!-- copy plex specific files -->
