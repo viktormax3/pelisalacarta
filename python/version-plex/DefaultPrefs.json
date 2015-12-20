@@ -3,7 +3,7 @@
     "id": "adult_mode",
     "label": "Mostrar canales para adultos",
     "type": "bool",
-    "default": "true"
+    "default": "false"
   },
 {
     "id": "adult_pin",
