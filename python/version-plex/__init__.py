@@ -60,11 +60,13 @@ def mainlist():
         else:
             oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action="mainlist"), title=item.title, thumb="http://pelisalacarta.mimediacenter.info/squares/"+item.channel+".png"))
     '''
+    oc.add(DirectoryObject(key=Callback(canal, channel_name="novedades", action="mainlist"), title="Novedades", thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_novedades.png"))
     oc.add(DirectoryObject(key=Callback(channels_list), title="Canales", thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_canales.png"))
     #oc.add(DirectoryObject(key=Callback(channels_list), title=Locale.LocalString("30033"), thumb="http://pelisalacarta.mimediacenter.info/squares/channelselector.png"))
     oc.add(InputDirectoryObject(key = Callback(buscador_global), title = 'Buscador', prompt = 'Buscar...', thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_buscar.png"))
     #oc.add(InputDirectoryObject(key = Callback(trailers), title = 'Trailers', prompt = 'Buscar...', thumb="http://pelisalacarta.mimediacenter.info/squares/trailertools.png"))
     oc.add(PrefsObject(title="Configuracion...",thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_configuracion.png"))
+    oc.add(DirectoryObject(key=Callback(canal, channel_name="ayuda", action="mainlist"), title="Ayuda", thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_ayuda.png"))
 
     return oc
 
@@ -82,11 +84,11 @@ def channels_list():
     oc.add(DirectoryObject(key=Callback(TagsList, name="Ayuda"), title="Ayuda t"))
     '''
 
-    itemlist = channelselector.channels_list()
+    itemlist = channelselector.filterchannels(category="all")
     for item in itemlist:
         Log.Info("item="+repr(item))
         if item.type=="generic" and item.channel not in ['tengourl','goear']:
-            oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action="mainlist"), title=item.title, thumb="http://media.tvalacarta.info/pelisalacarta/squares/"+item.channel+".png"))
+            oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action="mainlist"), title=item.title, thumb=item.thumbnail))
 
     return oc
 
@@ -96,7 +98,7 @@ def buscador_global(query=""):
     oc = ObjectContainer(view_group="List")
 
     import buscador
-    itemlist = buscador.do_search_results(query)
+    itemlist = buscador.do_search(Item(extra=query))
 
     for item in itemlist:
         Log.Info("item="+repr(item))
