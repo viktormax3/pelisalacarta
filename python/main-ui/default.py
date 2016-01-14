@@ -27,6 +27,7 @@ import os
 import plugintools
 import navigation
 from core import updater
+from core import config
 from core.item import Item
 
 plugintools.application_log_enabled = (plugintools.get_setting("debug")=="true")
@@ -35,6 +36,10 @@ plugintools.http_debug_log_enabled = (plugintools.get_setting("debug")=="true")
 
 plugintools.log("pelisalacarta 4 ui begin")
 
+# Check if paths are on a default value, and if directories are created
+config.verify_directories_created()
+
+# Check for new updates
 updater.checkforupdates(plugin_mode=False)
 
 # Get items for main menu

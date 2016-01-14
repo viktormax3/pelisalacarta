@@ -83,7 +83,7 @@ class ChannelWindow(xbmcgui.WindowXML):
         if action == ACTION_PARENT_DIR or action==ACTION_PREVIOUS_MENU or action==ACTION_PREVIOUS_MENU2:
             self.close()
 
-        if action == ACTION_SELECT_ITEM:
+        if action == ACTION_SELECT_ITEM or action == ACTION_MOUSE_LEFT_CLICK:
 
             loader_image = os.path.join( plugintools.get_runtime_path(), 'resources', 'skins', 'Default', 'media', 'loader.gif')
             loader = xbmcgui.ControlImage(1200, 19, 40, 40, loader_image)
