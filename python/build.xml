@@ -67,6 +67,7 @@
         <antcall target="copy-xbmc-09-plugin"/>
         <antcall target="copy-boxee"/>
         <antcall target="copy-plex"/>
+        <antcall target="copy-command-line"/>
 
         <!--
         <mkdir dir="${target}/mediaserver/pelisalacarta"/>
@@ -540,6 +541,40 @@
         <copy file="version-plex/ServiceCode.pys" todir="${target}/plex/pelisalacarta.bundle/Contents/URL Services/UniversalResolver" overwrite="true"/>
 
         <zip destfile="${target}/plex/pelisalacarta-plex-${version}.zip" basedir="${target}/plex"/>
+    </target>
+
+    <!-- copy-command-line ============================================================ -->
+    <target name="copy-command-line">
+
+        <!-- build folder structure -->
+        <mkdir dir="${target}/command-line/pelisalacarta-cli"/>
+
+        <copy todir="${target}/command-line/pelisalacarta-cli">
+            <fileset dir="main-classic">
+                <exclude name="**/.*"/>
+                <exclude name="**/.*/**"/>
+                <exclude name="**/*.pyo"/>
+                <exclude name="**/*.pyc"/>
+                <exclude name="**/*.json"/>
+                <exclude name="resources/images/bannermenu/**"/>
+                <exclude name="resources/images/banners/**"/>
+                <exclude name="resources/images/fanart/**"/>
+                <exclude name="resources/images/posters/**"/>
+                <exclude name="resources/images/squares/**"/>
+                <exclude name="resources/settings.xml"/>
+                <exclude name="resources/subtitle.mp4"/>
+            </fileset>
+        </copy>
+        <copy file="version-mediaserver/resources/settings.conf" todir="${target}/command-line/pelisalacarta-cli/resources" overwrite="true"/>
+
+        <copy overwrite="true" todir="${target}/command-line/pelisalacarta-cli">
+            <fileset dir="version-command-line">
+                <exclude name="**/.*"/>
+                <exclude name="**/.*/**"/>
+            </fileset>
+        </copy>
+
+        <zip destfile="${target}/command-line/pelisalacarta-cli-${version}.zip" basedir="${target}/command-line"/>
     </target>
 
 	<!-- copy-wiimc ============================================================ -->
