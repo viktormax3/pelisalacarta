@@ -102,7 +102,7 @@ def buscador_global(query=""):
 
     for item in itemlist:
         Log.Info("item="+repr(item))
-        oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action=item.action, caller_item_serialized=item.serialize()), title=item.title, thumb=item.thumbnail))
+        oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action=item.action, caller_item_serialized=item.tourl()), title=item.title, thumb=item.thumbnail))
 
     #oc.add(DirectoryObject(key=Callback(channels_list), title=Locale.LocalString("30033"), thumb="http://pelisalacarta.mimediacenter.info/squares/channelselector.png"))
     return oc
@@ -128,7 +128,7 @@ def canal(channel_name="",action="",caller_item_serialized=None):
         else:
             Log.Info("caller_item_serialized="+caller_item_serialized)
             caller_item = Item()
-            caller_item.deserialize(caller_item_serialized)
+            caller_item.fromurl(caller_item_serialized)
         Log.Info("caller_item="+str(caller_item))
 
         Log.Info("Importando...")
@@ -166,7 +166,7 @@ def canal(channel_name="",action="",caller_item_serialized=None):
                 pass
             
             if action!="play":
-                oc.add(DirectoryObject(key=Callback(canal, channel_name=channel_name, action=item.action, caller_item_serialized=item.serialize()), title=item.title, thumb=item.thumbnail))
+                oc.add(DirectoryObject(key=Callback(canal, channel_name=channel_name, action=item.action, caller_item_serialized=item.tourl()), title=item.title, thumb=item.thumbnail))
             
             else:
                 Log.Info("Llamando a la funcion play comun")
