@@ -69,12 +69,9 @@
         <antcall target="copy-boxee"/>
         <antcall target="copy-plex"/>
         <antcall target="copy-command-line"/>
+        <antcall target="copy-mediaserver"/>
 
         <!--
-        <mkdir dir="${target}/mediaserver/pelisalacarta"/>
-        <antcall target="copy-mediaserver"/>
-        <zip destfile="${target}/mediaserver/pelisalacarta-mediaserver-${version}.zip" basedir="${target}/mediaserver"/>
-
         <mkdir dir="${target}/dreambox/pelisalacarta"/>
         <antcall target="copy-dreambox"/>
         <zip destfile="${target}/dreambox/pelisalacarta-dreambox-${version}.zip" basedir="${target}/dreambox"/>
@@ -159,10 +156,6 @@
             <arg value="${ruta_remota_descargas}"/>
         </exec>
 
-
-
-
-
         <echo message="Subiendo pelisalacarta-boxee-${version}.zip"/>
         <exec executable="scp">
             <arg value="${target}/boxee/pelisalacarta-boxee-${version}.zip"/>
@@ -172,6 +165,12 @@
         <echo message="Subiendo pelisalacarta-plex-${version}.zip"/>
         <exec executable="scp">
             <arg value="${target}/plex/pelisalacarta-plex-${version}.zip"/>
+            <arg value="${ruta_remota_descargas}"/>
+        </exec>
+
+        <echo message="Subiendo pelisalacarta-mediaserver-${version}.zip"/>
+        <exec executable="scp">
+            <arg value="${target}/mediaserver/pelisalacarta-mediaserver-${version}.zip"/>
             <arg value="${ruta_remota_descargas}"/>
         </exec>
 
@@ -188,11 +187,6 @@
             <arg value="${ruta_remota_descargas}"/>
         </exec>
 
-        <echo message="Subiendo pelisalacarta-mediaserver-${version}.zip"/>
-        <exec executable="scp">
-            <arg value="${target}/mediaserver/pelisalacarta-mediaserver-${version}.zip"/>
-            <arg value="${ruta_remota_descargas}"/>
-        </exec>
         -->
     </target>
 
@@ -626,7 +620,7 @@
                 <exclude name="resources/subtitle.mp4"/>
             </fileset>
         </copy>
-        <copy file="version-mediaserver/resources/settings.conf" todir="${target}/command-line/pelisalacarta-cli/resources" overwrite="true"/>
+        <copy file="version-command-line/resources/settings.conf" todir="${target}/command-line/pelisalacarta-cli/resources" overwrite="true"/>
 
         <copy overwrite="true" todir="${target}/command-line/pelisalacarta-cli">
             <fileset dir="version-command-line">
@@ -636,6 +630,28 @@
         </copy>
 
         <zip destfile="${target}/command-line/pelisalacarta-cli-${version}.zip" basedir="${target}/command-line"/>
+    </target>
+
+    <!-- copy-mediaserver ============================================================ -->
+    <target name="copy-mediaserver">
+        <copy todir="${target}/mediaserver/pelisalacarta">
+            <fileset dir="main-classic">
+              <exclude name="**/.*"/>
+              <exclude name="**/.*/**"/>
+              <exclude name="**/*.pyo"/>
+              <exclude name="**/*.pyc"/>
+              <exclude name="default.py"/>
+              <exclude name="icon.png"/>
+              <exclude name="fanart.jpg"/>
+              <exclude name="addon.xml"/>
+            </fileset>
+        </copy>
+        <copy todir="${target}/mediaserver/pelisalacarta" overwrite="true">
+            <fileset dir="version-mediaserver">
+                  <exclude name="**/.*"/>
+                  <exclude name="**/.*/**"/>
+            </fileset>
+        </copy>
     </target>
 
 	<!-- copy-wiimc ============================================================ -->
@@ -687,30 +703,6 @@
             </fileset>
         </copy>
         <copy file="platformcode/wiimc/platform_name.py" tofile="${target}/wiimc/pelisalacarta/core/platform_name.py" overwrite="true"/>
-    </target>
-
-	<!-- copy-mediaserver ============================================================ -->
-    <target name="copy-mediaserver">
-        <copy todir="${target}/mediaserver/pelisalacarta">
-            <fileset dir="main-classic">
-              <exclude name="**/.*"/>
-              <exclude name="**/.*/**"/>
-              <exclude name="**/*.pyo"/>
-              <exclude name="**/*.pyc"/>
-              <exclude name="resources/*.*"/>
-              <exclude name="resources/skins/**"/>
-              <exclude name="default.py"/>
-              <exclude name="icon.png"/>
-              <exclude name="fanart.jpg"/>
-              <exclude name="addon.xml"/>
-            </fileset>
-        </copy>
-        <copy todir="${target}/mediaserver/pelisalacarta" overwrite="true">
-            <fileset dir="version-mediaserver">
-                  <exclude name="**/.*"/>
-                  <exclude name="**/.*/**"/>
-            </fileset>
-        </copy>
     </target>
 
 	<!-- copy-rss ============================================================ -->

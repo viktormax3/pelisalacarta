@@ -21,7 +21,7 @@ sys.path.append (os.path.join( config.get_runtime_path(),'lib'))
 PORT=int(config.get_setting("server.port"))
 WebsocketPort=int(config.get_setting("websocket.port")) 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-s.connect(('8.8.8.8', 0))  # connecting to a UDP address doesn't send packets
+s.connect(('8.8.8.8', 53))  # connecting to a UDP address doesn't send packets
 myip = s.getsockname()[0]
 
 from functools import wraps
