@@ -31,14 +31,14 @@ function ImgError(obj){
   if (obj.src.indexOf("http") == 0){
   
   if (obj.src.indexOf(obj.alt) !== 0){
-    obj.src=obj.alt+"/image-"+encodeURIComponent(btoa(obj.src))
+    obj.src=obj.alt+"/proxy/"+encodeURIComponent(btoa(obj.src))
   }else{obj.style.display="none";obj.parentNode.children[1].style.display="inline-block"}
   }else{ImgLocal(obj)}
 }
 
 function ImgLocal(obj){
   if (obj.src.indexOf(obj.alt) !== 0){
-    obj.src=obj.alt+"/local-"+encodeURIComponent(btoa(obj.src))
+    obj.src=obj.alt+"/local/"+encodeURIComponent(btoa(obj.src))
   }else{obj.style.display="none"}
 }
 
