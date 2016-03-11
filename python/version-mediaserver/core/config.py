@@ -11,7 +11,10 @@ PLUGIN_NAME="pelisalacarta"
 
 settings_dic ={}
 def is_xbmc():
-  return False
+    return False
+
+def get_library_support():
+    return False
 
 def get_platform():
   return PLATFORM_NAME
@@ -19,6 +22,21 @@ def get_platform():
 def get_system_platform():
     return "mediaserver"
     
+def get_local_ip():
+  import socket
+  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  s.connect(('8.8.8.8', 53))  # connecting to a UDP address doesn't send packets
+  myip = s.getsockname()[0]
+  return myip
+
+def get_plugin_version():
+    data = open(os.path.join(get_runtime_path(),"version.xml"),"r").read()
+    return data.split("<tag>")[1].split("</tag>")[0]
+
+def get_plugin_date():
+    data = open(os.path.join(get_runtime_path(),"version.xml"),"r").read()
+    return data.split("<date>")[1].split("</date>")[0]
+
 def open_settings():
     Opciones =[]
     from xml.dom import minidom
@@ -27,8 +45,9 @@ def open_settings():
     for category in xmldoc.getElementsByTagName("category"):
       for setting in category.getElementsByTagName("setting"):
         Opciones.append(dict(setting.attributes.items() + [(u"category",category.getAttribute("label")),(u"value",get_setting(setting.getAttribute("id")))]))
-        from platformcode import cliente
-    cliente.Acciones().AbrirConfig(Opciones)
+
+    from platformcode import platformtools
+    platformtools.open_settings(Opciones)
 
  
 def get_setting(name):

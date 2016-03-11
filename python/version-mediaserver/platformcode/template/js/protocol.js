@@ -80,7 +80,7 @@ function GetResponses(data) {
               }else{
                 Action = 'DescargarContenido(\''+ JsonItem["url"] +'\')'
               }
-              if (JsonItem["thumbnail"].indexOf("http") != 0){JsonItem["thumbnail"] = data["host"] +"/local-"+encodeURIComponent(btoa(JsonItem["thumbnail"]))}
+              if (JsonItem["thumbnail"].indexOf("http") != 0){JsonItem["thumbnail"] = data["host"] +"/local/"+encodeURIComponent(btoa(JsonItem["thumbnail"]))}
               if (data["mode"]==0){
                 HtmlItem ='<li class="ListItemBanner"><a onblur="" onfocus="ItemFocus=this" onmouseover="this.focus()" class="ListItem {$ClassMenu}" href="javascript:void(0)" onclick="ItemFocus=this;'+Action+'"><div class="ListItem"><img class="ListItem" onerror="ImgError(this)" alt="'+data["host"]+'" src="'+JsonItem["thumbnail"]+'"></div><h3 class="ListItem">' + JsonItem["title"] + '</h3><p class="ListItem"></p></a>{$BotonMenu}</li>'
               }else if (data["mode"]==1){
@@ -221,13 +221,13 @@ function GetResponses(data) {
             EnviarDatos({"id":response["id"], "result":true });
             CerrarLoading()
             if(!new RegExp("^(.+://)").test(data["video_url"])){
-             data["video_url"] = data["host"]+"/local-"+encodeURIComponent(btoa(Utf8.encode(data["video_url"])))+".mp4"}
+             data["video_url"] = data["host"]+"/local/"+encodeURIComponent(btoa(Utf8.encode(data["video_url"])))+"/video.mp4"}
              
             else if(new RegExp("^(?:http\://.*?\.vkcache\.com)").test(data["video_url"])){
             
              data["video_url"] = data["host"]+"/netutv-"+encodeURIComponent(btoa(Utf8.encode(data["video_url"])))+".mp4"} 
             
-            ProxyUrl = data["host"]+"/remote-"+encodeURIComponent(btoa(Utf8.encode(data["video_url"])))+".mp4"
+            ProxyUrl = data["host"]+"/proxy/"+encodeURIComponent(btoa(Utf8.encode(data["video_url"])))+"/video.mp4"
             Lista  = '<li onmouseover="this.focus()" class="Lista"><a href="#" onmouseover="this.focus()" onclick="CerrarDialogos();Play(\''+data["video_url"]+'\',\''+btoa(data["title"])+'\')" class="Lista"><h3>Abrir Enlace</h3></a></li>';
             Lista += '<li onmouseover="this.focus()" class="Lista"><a href="#" onmouseover="this.focus()" onclick="CerrarDialogos();Play_VLC(\''+data["video_url"]+'\',\''+btoa(data["title"])+'\')" class="Lista"><h3>Plugin VLC</h3></a></li>';
             Lista += '<li onmouseover="this.focus()" class="Lista"><a href="#" onmouseover="this.focus()" onclick="CerrarDialogos();Play_HTML(\''+data["video_url"]+'\',\''+btoa(data["title"])+'\')" class="Lista"><h3>Video HTML</h3></a></li>';

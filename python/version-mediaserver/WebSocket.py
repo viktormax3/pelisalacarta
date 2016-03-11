@@ -1,73 +1,85 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # pelisalacarta
 # HTTPServer
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
-#------------------------------------------------------------
-
-import sys
+# ------------------------------------------------------------
 import os
 from core import logger
 from core import config
 from threading import Thread
 import WebSocketServer
+from platformcode import platformtools
+import random
+import traceback
 
-MostrarInfo= None
-ProcessRequest = None
-data = open(os.path.join(config.get_runtime_path(),"version.xml"),"r").read()
-version = data.split("<tag>")[1].split("</tag>")[0]
-fecha = data.split("<date>")[1].split("</date>")[0]
 
 class HandleWebSocket(WebSocketServer.WebSocket):
-   def handleMessage(self):
-      if self.data is None: self.data = ''
-      if self.data:
-        import json
-        JSONData = json.loads(str(self.data))
-        
-      if "request" in JSONData:        
-        sys.argv[JSONData["id"]]["request"]=JSONData["request"].encode("utf8")
-        global ProcessRequest
-        Thread(target=ProcessRequest,args=[JSONData["id"]], name=JSONData["id"] ).start()  
-                 
-      elif "data" in JSONData:
-        if type(JSONData["data"]["result"]) == unicode:
-          JSONData["data"]["result"]=JSONData["data"]["result"].encode("utf8")
+    ID = "%032x" % (random.getrandbits(128))
+    controller = None
 
-        sys.argv[JSONData["id"]]["data"]=JSONData["data"]
- 
-      
+    def handleMessage(self):
+        try:
+            if self.data:
+                import json
+                json_message = json.loads(str(self.data))
 
-   def handleConnected(self):
-      import random
-      ID = "%032x" %(random.getrandbits(128))
-      sys.argv[ID]={"socket": self, "request":"", "data":"","host":""}
-      self.sendMessage('{"action": "connect", "data":{"version": "pelisalacarta '+version+'", "date":"'+fecha+'"}, "id": "'+ ID +'"}')
-      from platformcode import launcher
-      Thread(target=launcher.start, name=ID ).start()  
-      global MostrarInfo
-      MostrarInfo()
+            if "request" in json_message:
+                t = Thread(target=self.controller.run, args=[json_message["request"].encode("utf8")], name=self.ID)
+                t.setDaemon(True)
+                t.start()
 
-   def handleClose(self):
-    for ID in sys.argv:
-      if sys.argv[ID]["socket"] == self:
-        del sys.argv[ID]
-        break
-          
-    global MostrarInfo
-    MostrarInfo()
+            elif "data" in json_message:
+                if type(json_message["data"]["result"]) == unicode:
+                    json_message["data"]["result"] = json_message["data"]["result"].encode("utf8")
+
+                self.controller.set_data(json_message["data"])
+
+        except:
+            logger.error(traceback.format_exc())
+            show_error_message(traceback.format_exc())
+
+    def handleConnected(self):
+        try:
+            from platformcode.controllers.html import html
+            self.controller = html(self)
+            platformtools.controllers[self.ID] = self.controller
+            self.server.fnc_info()
+        except:
+            logger.error(traceback.format_exc())
+
+    def handleClose(self):
+        self.controller = None
+        del platformtools.controllers[self.ID]
+        self.server.fnc_info()
 
 
+port = int(config.get_setting("websocket.port"))
+server = WebSocketServer.SimpleWebSocketServer("", port, HandleWebSocket)
 
-WebsocketPort=int(config.get_setting("websocket.port"))
-server = WebSocketServer.SimpleWebSocketServer("",WebsocketPort,HandleWebSocket)
 
-def start(Request, Info):
-    global ProcessRequest
-    global MostrarInfo
-    ProcessRequest=Request
-    MostrarInfo = Info
+def start(fnc_info):
+    server.fnc_info = fnc_info
     Thread(target=server.serveforever).start()
- 
+
+
 def stop():
     server.close()
+
+
+def show_error_message(err_info):
+    from core import scrapertools
+    patron = 'File "' + os.path.join(config.get_runtime_path(), "channels", "").replace("\\", "\\\\") + '([^.]+)\.py"'
+    canal = scrapertools.find_single_match(err_info, patron)
+    if canal:
+        platformtools.dialog_ok(
+                "Se ha producido un error en el canal " + canal,
+                "Esto puede ser devido a varias razones: \n \
+                - \El servidor no está disponible, o no esta respondiendo.\n \
+                - Cambios en el diseño de la web.\n \
+                - Etc...\n \
+                Comprueba el log para ver mas detalles del error.")
+    else:
+        platformtools.dialog_ok(
+                "Se ha producido un error en pelisalacarta",
+                "Comprueba el log para ver mas detalles del error.")
