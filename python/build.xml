@@ -650,6 +650,7 @@
                   <exclude name="**/.*/**"/>
             </fileset>
         </copy>
+        <zip destfile="${target}/mediaserver/pelisalacarta-mediaserver-${version}.zip" basedir="${target}/mediaserver"/>
     </target>
 
 	<!-- copy-wiimc ============================================================ -->
