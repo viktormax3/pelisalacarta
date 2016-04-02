@@ -8,10 +8,6 @@
 # Creado por: Jesús (tvalacarta@gmail.com)
 # Licencia: GPL (http://www.gnu.org/licenses/gpl-3.0.html)
 #------------------------------------------------------------
-# Historial de cambios:
-#------------------------------------------------------------
-
-print "[config.py] xbmc config"
 
 import sys
 import os
@@ -19,7 +15,20 @@ import os
 import xbmcplugin
 import xbmc
 
+PLATFORM_NAME = "xbmc-plugin"
+
 PLUGIN_NAME = "pelisalacarta"
+
+
+
+def get_platform():
+    return PLATFORM_NAME
+
+def is_xbmc():
+    return True
+
+def get_library_support():
+    return True
 
 def get_system_platform():
     """ fonction: pour recuperer la platform que xbmc tourne """
@@ -85,9 +94,86 @@ def get_data_path():
 
     return devuelve
 
-def verify_directories_created():
-    return 
+def get_cookie_data():
+    import os
+    ficherocookies = os.path.join( get_data_path(), 'cookies.dat' )
 
-print "[config.py] runtime path = "+get_runtime_path()
-print "[config.py] data path = "+get_data_path()
-print "[config.py] temp path = "+get_temp_file("test")
+    cookiedatafile = open(ficherocookies,'r')
+    cookiedata = cookiedatafile.read()
+    cookiedatafile.close();
+
+    return cookiedata
+
+# Test if all the required directories are created
+def verify_directories_created():
+    import logger
+    import os
+    logger.info("pelisalacarta.core.config.verify_directories_created")
+
+    # Force download path if empty
+    download_path = get_setting("downloadpath")
+    if download_path=="":
+        download_path = os.path.join( get_data_path() , "downloads")
+        set_setting("downloadpath" , download_path)
+
+    # Force download list path if empty
+    download_list_path = get_setting("downloadlistpath")
+    if download_list_path=="":
+        download_list_path = os.path.join( get_data_path() , "downloads" , "list")
+        set_setting("downloadlistpath" , download_list_path)
+
+    # Force bookmark path if empty
+    bookmark_path = get_setting("bookmarkpath")
+    if bookmark_path=="":
+        bookmark_path = os.path.join( get_data_path() , "bookmarks")
+        set_setting("bookmarkpath" , bookmark_path)
+
+    # Create data_path if not exists
+    if not os.path.exists(get_data_path()):
+        logger.debug("Creating data_path "+get_data_path())
+        try:
+            os.mkdir(get_data_path())
+        except:
+            pass
+
+    # Create download_path if not exists
+    if not download_path.lower().startswith("smb") and not os.path.exists(download_path):
+        logger.debug("Creating download_path "+download_path)
+        try:
+            os.mkdir(download_path)
+        except:
+            pass
+
+    # Create download_list_path if not exists
+    if not download_list_path.lower().startswith("smb") and not os.path.exists(download_list_path):
+        logger.debug("Creating download_list_path "+download_list_path)
+        try:
+            os.mkdir(download_list_path)
+        except:
+            pass
+
+    # Create bookmark_path if not exists
+    if not bookmark_path.lower().startswith("smb") and not os.path.exists(bookmark_path):
+        logger.debug("Creating bookmark_path "+bookmark_path)
+        try:
+            os.mkdir(bookmark_path)
+        except:
+            pass
+
+    # Create library_path if not exists
+    if not get_library_path().lower().startswith("smb") and not os.path.exists(get_library_path()):
+        logger.debug("Creating library_path "+get_library_path())
+        try:
+            os.mkdir(get_library_path())
+        except:
+            pass
+
+    # Checks that a directory "xbmc" is not present on platformcode
+    old_xbmc_directory = os.path.join( get_runtime_path() , "platformcode" , "xbmc" )
+    if os.path.exists( old_xbmc_directory ):
+        logger.debug("Removing old platformcode.xbmc directory")
+        try:
+            import shutil
+            shutil.rmtree(old_xbmc_directory)
+        except:
+            pass

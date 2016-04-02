@@ -1,7 +1,13 @@
 [
   {
-    "id": "enableadultmode",
-    "label": "Activar modo adulto",
+    "id": "adult_mode",
+    "label": "Mostrar canales para adultos",
+    "type": "bool",
+    "default": "false"
+  },
+{
+    "id": "adult_pin",
+    "label": "PIN para abrir canales adultos",
     "type": "bool",
     "default": "true"
   },
@@ -85,7 +91,7 @@
     "default": "",
     "secure": "true"
   },
-{
+  {
     "id": "onefichierpremium",
     "label": "Cuenta premium 1fichier",
     "type": "bool",
@@ -99,6 +105,26 @@
   },
   {
     "id": "onefichierpassword",
+    "label": "Password",
+    "type": "text",
+    "option": "hidden",
+    "default": "",
+    "secure": "true"
+  },
+  {
+    "id": "filesmonsterpremium",
+    "label": "Cuenta premium filesmonster",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "filesmonsteruser",
+    "label": "Usuario",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "filesmonsterpassword",
     "label": "Password",
     "type": "text",
     "option": "hidden",
@@ -166,46 +192,6 @@
     "secure": "true"
   },
   {
-    "id": "quebajamosaccount",
-    "label": "Cuenta quebajamos",
-    "type": "bool",
-    "default": "false"
-  },
-  {
-    "id": "quebajamosuser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "quebajamospassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
-  },
-  {
-    "id": "playmaxaccount",
-    "label": "Cuenta playmax",
-    "type": "bool",
-    "default": "false"
-  },
-  {
-    "id": "playmaxuser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "playmaxpassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
-  },
-  {
     "id": "seriesmuaccount",
     "label": "Cuenta seriesmu",
     "type": "bool",
@@ -239,6 +225,26 @@
   },
   {
     "id": "torrentestrenospassword",
+    "label": "Password",
+    "type": "text",
+    "option": "hidden",
+    "default": "",
+    "secure": "true"
+  },
+  {
+    "id": "hdfullaccount",
+    "label": "Cuenta hdfull",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "hdfulluser",
+    "label": "Usuario",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "hdfullpassword",
     "label": "Password",
     "type": "text",
     "option": "hidden",

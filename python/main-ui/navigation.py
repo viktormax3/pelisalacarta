@@ -81,14 +81,14 @@ def get_next_items( item ):
 
                 # Si el canal tiene una acción "play" tiene prioridad
                 if hasattr(channel, 'play'):
-                    plugintools.log("pelisalacarta.platformcode.launcher Channel has its own 'play' method")
+                    plugintools.log("navigation.get_next_items play Channel has its own 'play' method")
                     itemlist = channel.play(item)
                     if len(itemlist)>0:
                         item = itemlist[0]
 
                         # FIXME: Este error ha que tratarlo de otra manera, al dar a volver sin ver el vídeo falla
                         try:
-                            xbmctools.play_video(channel=item.channel, server=item.server, url=item.url, category=item.category, title=item.title, thumbnail=item.thumbnail, plot=item.plot, extra=item.extra, subtitle=item.subtitle, video_password = item.password, fulltitle=item.fulltitle, Serie=item.show)
+                            xbmctools.play_video(item)
                         except:
                             pass
 
@@ -97,15 +97,16 @@ def get_next_items( item ):
                         ventana_error = xbmcgui.Dialog()
                         ok = ventana_error.ok ("plugin", "No hay nada para reproducir")
                 else:
-                    plugintools.log("pelisalacarta.platformcode.launcher No channel 'play' method, executing core method")
+                    plugintools.log("navigation.get_next_items play No channel 'play' method, executing core method")
 
                     # FIXME: Este error ha que tratarlo de otra manera, por al dar a volver sin ver el vídeo falla
                     # Mejor hacer el play desde la ventana
                     try:
-                        xbmctools.play_video(channel=item.channel, server=item.server, url=item.url, category=item.category, title=item.title, thumbnail=item.thumbnail, plot=item.plot, extra=item.extra, subtitle=item.subtitle, video_password = item.password, fulltitle=item.fulltitle, Serie=item.show)
+                        xbmctools.play_video(item)
                     except:
+                        import traceback
+                        plugintools.log(traceback.format_exc())
                         pass
-
 
                 return []
 
@@ -114,7 +115,7 @@ def get_next_items( item ):
 
                 # Si el canal tiene una acción "findvideos" tiene prioridad
                 if hasattr(channel, 'findvideos'):
-                    plugintools.log("pelisalacarta.platformcode.launcher Channel has its own 'findvideos' method")
+                    plugintools.log("navigation.get_next_items play Channel has its own 'findvideos' method")
                     itemlist = channel.findvideos(item)
                 else:
                     itemlist = []

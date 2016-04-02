@@ -9,14 +9,20 @@ from types import *
 
 PLATFORM_NAME = "plex"
 
+def get_platform():
+    return PLATFORM_NAME
+
+def is_xbmc():
+    return False
+
+def get_library_support():
+    return False
+    
 def get_system_platform():
     return ""
     
 def open_settings():
     return
-
-def get_platform():
-    return "plex"
 
 def get_setting(name,channel=""):
 
@@ -67,7 +73,7 @@ def get_temp_file(filename):
     return ""
 
 def get_runtime_path():
-    return os.getcwd()
+    return os.path.abspath( os.path.join( os.path.dirname(__file__) , ".." ) )
 
 def get_data_path():
     return os.getcwd()

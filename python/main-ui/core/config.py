@@ -15,7 +15,7 @@ import os
 import xbmcaddon
 import xbmc
 
-PLATFORM_NAME = "kodi-isengard"
+PLATFORM_NAME = "kodi-jarvis"
 print "pelisalacarta.core.config PLATFORM_NAME="+PLATFORM_NAME
 
 PLUGIN_NAME = "pelisalacarta-ui"
