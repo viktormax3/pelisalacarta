@@ -12,6 +12,7 @@ from core import logger
 from core import config
 from platformcode import platformtools
 from core import channeltools
+import channelselector
 
 def start():
     ''' Primera funcion que se ejecuta al entrar en el plugin.
@@ -23,8 +24,7 @@ def start():
     
     # Test if all the required directories are created
     config.verify_directories_created()
-    from core import updater
-    updater.checkforupdates()
+    
       
 
 def run(item):
@@ -77,6 +77,23 @@ def run(item):
       import channelselector
       if item.action =="mainlist":
         itemlist = channelselector.getmainlist("bannermenu")
+        
+        if config.get_setting("updatecheck2") == "true":
+          logger.info("channelselector.mainlist Verificar actualizaciones activado")
+          from core import updater
+          try:
+            version = updater.checkforupdates()
+            
+            if version:
+              platformtools.dialog_ok("Versión "+version+" disponible","Ya puedes descargar la nueva versión del plugin\ndesde el listado principal")
+              itemlist.insert(0,Item(title="Descargar version "+version, version=version, channel="updater", action="update", thumbnail=channelselector.get_thumbnail_path("bannermenu") + "Crystal_Clear_action_info.png"))
+          except:
+            platformtools.dialog_ok("No se puede conectar","No ha sido posible comprobar","si hay actualizaciones")
+            logger.info("channelselector.mainlist Fallo al verificar la actualización")
+
+        else:
+          logger.info("channelselector.mainlist Verificar actualizaciones desactivado")
+
       if item.action =="channeltypes":
         itemlist = channelselector.getchanneltypes("bannermenu")
       if item.action =="listchannels":

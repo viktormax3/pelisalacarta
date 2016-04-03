@@ -9,10 +9,13 @@ function AbrirLoading(){
 function CerrarLoading(){
   document.getElementById("Loading").style.display="none";
   document.getElementById("Overlay").style.display="none";
-    try{ 
-  ItemFocus.focus()
+  try{ 
+    ItemFocus.focus()
   }catch(e){
-  document.getElementById("Contenedor").children[0].children[0].children[0].focus();
+    try{ 
+      document.getElementById("Contenedor").children[0].children[0].children[0].focus();
+    }catch(e){
+    }
   }
 }
 
@@ -26,14 +29,13 @@ function CerrarDialogos() {
   document.getElementById("AlertYesNo-popup").style.display="none";
   document.getElementById("Keyboard-popup").style.display="none";
   document.getElementById("ProgressBar-popup").style.display="none";
-    try{ 
-  ItemFocus.focus()
-  }catch(e){
   try{ 
-  document.getElementById("Contenedor").children[0].children[0].children[0].focus();
+    ItemFocus.focus()
   }catch(e){
-  }
-  
+    try{ 
+      document.getElementById("Contenedor").children[0].children[0].children[0].focus();
+    }catch(e){
+    }
   }
 }
 
