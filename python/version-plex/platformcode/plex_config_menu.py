@@ -64,9 +64,10 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", chan
     
         #Obtenemos el valor
         if not c["id"] in dict_values:
-          dict_values[c["id"]]= config.get_setting(c["id"],channelname)
-          if dict_values[c["id"]] == "" :
-            dict_values[c["id"]] = c["default"]
+          if not callback:
+              dict_values[c["id"]]= config.get_setting(c["id"],channelname)
+            else:
+              dict_values[c["id"]] = c["default"]
 
           
         # Translation
@@ -94,7 +95,7 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", chan
           itemlist.append(Item(channel=__channel__, action="control_bool_click", title=titulo, extra=list_controls.index(c)))
           
         elif c['type'] == 'list':
-            titulo = c["label"] + ":" + (' ' * 5) + str(dict_values[c["id"]])
+            titulo = c["label"] + ":" + (' ' * 5) + str(c["lvalues"][dict_values[c["id"]]])
             itemlist.append(Item(channel=__channel__, action="control_list_click", title=titulo, extra=list_controls.index(c)))
                 
         elif c['type'] == 'text':
@@ -264,8 +265,8 @@ def control_list_click(item):
     value = params["dict_values"][c["id"]]
     
     for i in c["lvalues"]:
-        titulo = (' ' * 5) +str(i) if i != value else "[X] " + str(i)
-        itemlist.append(Item(channel=__channel__, title=titulo, action="cambiar_valor", extra= item.extra, new_value= i))
+        titulo = (' ' * 5) +str(i) if c["lvalues"].index(i) != value else "[X] " + str(i)
+        itemlist.append(Item(channel=__channel__, title=titulo, action="cambiar_valor", extra= item.extra, new_value= c["lvalues"].index(i)))
     return itemlist
 
 
