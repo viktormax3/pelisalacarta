@@ -24,7 +24,7 @@ def isGeneric():
     return True 
 
 
-def show_channel_settings(list_controls=None, dict_values=None, caption="", channelname="", cb=None,item=None):
+def show_channel_settings(list_controls=None, dict_values=None, caption="", channelname="", callback=None,item=None):
     logger.info("[plex_config_menu] show_channel_settings")
     global params
     itemlist = []
@@ -43,7 +43,6 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", chan
       
         # La llamada se hace desde un canal
         list_controls, default_values = channeltools.get_channel_controls_settings(channelname)
-        JSONFileData = os.path.join(config.get_data_path(), "settings_channels", channelname + "_data.json")
         
       #En caso contrario salimos
       else:
@@ -65,9 +64,10 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", chan
     
         #Obtenemos el valor
         if not c["id"] in dict_values:
-          dict_values[c["id"]]= config.get_setting(c["id"],channelname)
-          if dict_values[c["id"]] == "" :
-            dict_values[c["id"]] = c["default"]
+          if not callback:
+              dict_values[c["id"]]= config.get_setting(c["id"],channelname)
+            else:
+              dict_values[c["id"]] = c["default"]
 
           
         # Translation
@@ -95,7 +95,7 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", chan
           itemlist.append(Item(channel=__channel__, action="control_bool_click", title=titulo, extra=list_controls.index(c)))
           
         elif c['type'] == 'list':
-            titulo = c["label"] + ":" + (' ' * 5) + str(dict_values[c["id"]])
+            titulo = c["label"] + ":" + (' ' * 5) + str(c["lvalues"][dict_values[c["id"]]])
             itemlist.append(Item(channel=__channel__, action="control_list_click", title=titulo, extra=list_controls.index(c)))
                 
         elif c['type'] == 'text':
@@ -107,7 +107,7 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", chan
 
             
         
-    params = {"list_controls":list_controls, "dict_values":dict_values, "caption":caption, "channelname":channelname, "cb":cb, "item":item}
+    params = {"list_controls":list_controls, "dict_values":dict_values, "caption":caption, "channelname":channelname, "callback":callback, "item":item}
     if itemlist:
     
         #Creamos un itemlist nuevo añadiendo solo los items que han pasado la evaluacion
@@ -265,8 +265,8 @@ def control_list_click(item):
     value = params["dict_values"][c["id"]]
     
     for i in c["lvalues"]:
-        titulo = (' ' * 5) +str(i) if i != value else "[X] " + str(i)
-        itemlist.append(Item(channel=__channel__, title=titulo, action="cambiar_valor", extra= item.extra, new_value= i))
+        titulo = (' ' * 5) +str(i) if c["lvalues"].index(i) != value else "[X] " + str(i)
+        itemlist.append(Item(channel=__channel__, title=titulo, action="cambiar_valor", extra= item.extra, new_value= c["lvalues"].index(i)))
     return itemlist
 
 
@@ -294,11 +294,11 @@ def ok_Button_click(item):
     list_controls = params["list_controls"]
     dict_values = params["dict_values"]
     channel = params["channelname"]
-    cb = params["cb"]
+    callback = params["callback"]
     item = params["item"]
       
     
-    if cb is None:
+    if callback is None:
       for v in dict_values:
         config.set_setting(v,dict_values[v], channel)
         exec "from channels import " + channel + " as channelmodule"
@@ -307,7 +307,7 @@ def ok_Button_click(item):
         
     else:
       exec "from channels import " + channel + " as cb_channel"
-      exec "itemlist = cb_channel." + cb + "(item,dict_values)"
+      exec "itemlist = cb_channel." + callback + "(item,dict_values)"
       if not type(itemlist)== list:
           exec "from channels import " + channel + " as channelmodule"
           exec "itemlist = channelmodule.mainlist(Item())"

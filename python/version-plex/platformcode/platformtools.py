@@ -65,6 +65,6 @@ def is_playing():
 def play_video(item):
     pass
     
-def show_channel_settings(list_controls=None, dict_values=None, caption="", channel="", cb=None, item=None):
+def show_channel_settings(list_controls=None, dict_values=None, caption="", channel="", callback=None, item=None):
     from platformcode import plex_config_menu
-    return plex_config_menu.show_channel_settings(list_controls=list_controls, dict_values=dict_values, caption=caption, cb=cb, item=item)
+    return plex_config_menu.show_channel_settings(list_controls=list_controls, dict_values=dict_values, caption=caption, callback=callback, item=item)
