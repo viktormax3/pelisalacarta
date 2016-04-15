@@ -4,7 +4,7 @@
 # Configuracion
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
 #------------------------------------------------------------
-import os
+import os,io
 from types import *
 
 PLATFORM_NAME = "plex"
@@ -24,26 +24,27 @@ def get_system_platform():
 def open_settings():
     return
 
-def get_setting(name,channel=""):
+  
+def get_setting(name, channel=""):
+    if channel:
+      from core import channeltools
+      value = channeltools.get_channel_setting(name, channel)
+      if not value is None:
+          return value
 
+        
+    # Devolvemos el valor del parametro global 'name'        
     if name=="cache.dir":
         return ""
 
-    if name=="debug":
-        return "false"
-    
-    if name=="download.enabled":
+    if name=="debug" or name=="download.enabled":
         return "false"
     
     if name=="cookies.dir":
         return os.getcwd()
 
-    if name=="cache.mode":
+    if name=="cache.mode" or name=="thumbnail_type":
         return "2"
-
-    if name=="thumbnail_type":
-        return "2"
-
     else:
         import bridge
         try:
@@ -59,9 +60,16 @@ def get_setting(name,channel=""):
         
         return devuelve
 
-def set_setting(name,value):
-    return ""
-
+def set_setting(name,value, channel=""):
+    if channel:
+      from core import channeltools
+      return channeltools.set_channel_setting(name,value, channel)
+    else:   
+      return ""
+            
+    
+    
+            
 def get_localized_string(code):
     import bridge
     return bridge.get_localized_string(code)
@@ -75,7 +83,7 @@ def get_temp_file(filename):
 def get_runtime_path():
     return os.path.abspath( os.path.join( os.path.dirname(__file__) , ".." ) )
 
-def get_data_path():
+def get_data_path():        
     return os.getcwd()
 
 def get_cookie_data():
