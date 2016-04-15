@@ -25,6 +25,119 @@ def isGeneric():
 
 
 def show_channel_settings(list_controls=None, dict_values=None, caption="", channelname="", callback=None,item=None):
+    ''' Funcion que permite utilizar cuadros de configuracion personalizados.
+    
+    show_channel_settings(listado_controles, dict_values, caption, callback, item)
+            Parametros:
+                listado_controles: (list) Lista de controles a incluir en la ventana, segun el siguiente esquema:
+                    (opcional)list_controls= [
+                                {'id': "nameControl1",
+                                  'type': "bool",                       # bool, text, list, label 
+                                  'label': "Control 1: tipo RadioButton",
+                                  'color': '0xFFee66CC',                # color del texto en formato ARGB hexadecimal
+                                  'default': True,
+                                  'enabled': True,
+                                  'visible': True
+                                },
+                                {'id': "nameControl2",
+                                  'type': "text",                       # bool, text, list, label 
+                                  'label': "Control 2: tipo Cuadro de texto",
+                                  'color': '0xFFee66CC',
+                                  'default': "Valor por defecto",
+                                  'hidden': False,                      # only for type = text Indica si hay que ocultar el texto (para passwords)
+                                  'enabled': True,
+                                  'visible': True
+                                },
+                                {'id': "nameControl3",
+                                  'type': "list",                       # bool, text, list, label 
+                                  'label': "Control 3: tipo Lista",
+                                  'color': '0xFFee66CC',
+                                  'default': 0,                         # Indice del valor por defecto en lvalues 
+                                  'enabled': True,
+                                  'visible': True,
+                                  'lvalues':["item1", "item2", "item3", "item4"],  # only for type = list
+                                },
+                                {'id': "nameControl4",
+                                  'type': "label",                       # bool, text, list, label 
+                                  'label': "Control 4: tipo Etiqueta",
+                                  'color': '0xFFee66CC',               
+                                  'enabled': True,
+                                  'visible': True
+                                }]
+                    Si no se incluye el listado_controles, se intenta obtener del xml del canal desde donde se hace la llamada. 
+                    El formato de los controles en el xml es:
+                        <?xml version="1.0" encoding="UTF-8" ?>
+                        <channel>
+                            ...
+                            ...
+                            <settings>
+                                <id>nameControl1</id>
+                                <type>bool</type>
+                                <label>Control 1: tipo RadioButton</label>
+                                <default>false</default>
+                                <enabled>true</enabled>
+                                <visible>true</visible>
+                                <color>0xFFee66CC</color>
+                            </settings>
+                            <settings>
+                                <id>nameControl2</id>
+                                <type>text</type>
+                                <label>Control 2: tipo Cuadro de texto</label>
+                                <default>Valor por defecto</default>
+                                <hidden>true</hidden>
+                                <enabled>true</enabled>
+                                <visible>true</visible>
+                                <color>0xFFee66CC</color>
+                            </settings>
+                            <settings>
+                                <id>nameControl3</id>
+                                <type>list</type>
+                                <label>Control 3: tipo Lista</label>
+                                <default>0</default>
+                                <enabled>true</enabled>
+                                <color>0xFFee66CC</color>
+                                <visible>true</visible>
+                                <lvalues>item1</lvalues>
+                                <lvalues>item2</lvalues>
+                                <lvalues>item3</lvalues>
+                                <lvalues>item4</lvalues>
+                            </settings>
+                            <settings>
+                                <id>nameControl4</id>
+                                <type>label</type>
+                                <label>Control 4: tipo Etiqueta</label>
+                                <enabled>true</enabled>
+                                <visible>true</visible>
+                                <color>0xFFee66CC</color>
+                            </settings>
+                            ...
+                        </channel>  
+                    
+                    
+                    Los campos 'label', 'default' y 'lvalues' pueden ser un numero precedido de '@'. En cuyo caso se buscara el literal en el archivo string.xml del idioma seleccionado.
+                    Los campos 'enabled' y 'visible' admiten los comparadores eq(), gt() e it() y su funcionamiento se describe en: http://kodi.wiki/view/Add-on_settings#Different_types
+                    Por el momento en PLEX, tanto si quedan disabled, como no visible, los ocultamos (quitandolos del itemlist)
+                    Los campos hidden y color no tienen utilidad en PLEX
+                    
+                (opcional)dict_values: (dict) Diccionario que representa el par (id: valor) de los controles de la lista.
+                    Si algun control de la lista no esta incluido en este diccionario se le asignara el valor por defecto.
+                        dict_values={"nameControl1": False,
+                                     "nameControl2": "Esto es un ejemplo"}
+                
+                (opcional) caption: (str) Titulo de la ventana de configuracion. Se puede localizar mediante un numero precedido de '@'
+                (opcional) callback (str) Nombre de la funcion, del canal desde el que se realiza la llamada, que sera invocada al pulsar 
+                    el boton aceptar de la ventana. A esta funcion se le pasara como parametros el objeto 'item' y el dicionario 'dict_values'
+            Retorno: Si se especifica 'callback' se devolvera lo que devuelva esta funcion. Si no devolvera None     
+    
+    Ejemplos de uso:
+        platformtools.show_channel_settings(): Así tal cual, sin pasar ningún argumento, la ventana detecta de que canal se ha hecho la llamada, 
+            y lee los ajustes del XML y carga los controles, cuando le das a Aceptar los vuelve a guardar.
+        
+        return platformtools.show_channel_settings(list_controls=list_controls, dict_values=dict_values, callback='cb', ítem=ítem):
+            Así abre la ventana con los controles pasados y los valores de dict_values, si no se pasa dict_values, carga los valores por defecto de los controles, 
+            cuando le das a aceptar, llama a la función 'cb' del canal desde donde se ha llamado, pasando como parámetros, el ítem y el dict_values    
+    
+    '''
     logger.info("[plex_config_menu] show_channel_settings")
     global params
     itemlist = []
@@ -137,6 +250,12 @@ def evaluate(index,cond):
     #Si la condicion es True o False, no hay mas que evaluar, ese es el valor
     if type(cond)== bool: return cond
     
+    #Si la condicion es un str representando un boleano devolvemos el valor
+        if cond.lower() == "true": 
+            return True
+        elif cond.lower() == "false": 
+            return False
+            
     #Obtenemos las condiciones
     conditions =  re.compile("(!?eq|!?gt|!?lt)?\(([^,]+),[\"|']?([^)|'|\"]*)['|\"]?\)[ ]*([+||])?").findall(cond)
 
