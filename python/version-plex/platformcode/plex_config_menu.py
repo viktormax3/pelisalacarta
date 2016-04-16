@@ -177,10 +177,11 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", chan
     
         #Obtenemos el valor
         if not c["id"] in dict_values:
-          if not callback:
-              dict_values[c["id"]]= config.get_setting(c["id"],channelname)
+            if not callback:
+                dict_values[c["id"]]= config.get_setting(c["id"],channelname)
             else:
-              dict_values[c["id"]] = c["default"]
+                if not 'default' in c: c["default"] = ''
+                dict_values[c["id"]] = c["default"]
 
           
         # Translation
@@ -251,10 +252,10 @@ def evaluate(index,cond):
     if type(cond)== bool: return cond
     
     #Si la condicion es un str representando un boleano devolvemos el valor
-        if cond.lower() == "true": 
-            return True
-        elif cond.lower() == "false": 
-            return False
+    if cond.lower() == "true": 
+        return True
+    elif cond.lower() == "false": 
+        return False
             
     #Obtenemos las condiciones
     conditions =  re.compile("(!?eq|!?gt|!?lt)?\(([^,]+),[\"|']?([^)|'|\"]*)['|\"]?\)[ ]*([+||])?").findall(cond)
@@ -440,6 +441,7 @@ def default_Button_click(item):
     dict_values = params["dict_values"]
     
     for c in list_controls:
+      if not 'default' in c: c["default"] = ''
       dict_values[c["id"]] = c["default"]
       
     return show_channel_settings(**params)
