@@ -81,7 +81,7 @@
       <div class="Titulo" id="Keyboard-Titulo">
       </div>
       <div Class="KeyboardTexto">
-      <div class="Text"><input class="Text" type="text" id="Keyboard-Text" ></div>
+      <div class="Text"><input class="Text" type="text" onkeypress="if(event.keyCode == 13){EnviarDatos({'id':this.parentNode.parentNode.parentNode.RequestID, 'result':this.value });CerrarDialogos();AbrirLoading();}" id="Keyboard-Text" ></div>
       </div>
       <div class="Botones">
         <a href="#" class="Boton BotonIcon BotonOK" onmouseover="this.focus()" onclick="EnviarDatos({'id':this.parentNode.parentNode.RequestID, 'result':document.getElementById('Keyboard-Text').value });CerrarDialogos();AbrirLoading();" >Aceptar</a>
