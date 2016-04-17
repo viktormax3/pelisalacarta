@@ -636,10 +636,10 @@ div.Lista > div.ListaContenido > ul.Lista > li.Lista > a.Lista > h3 {
     margin-bottom: 7.2px;
     margin-left: 0px;
     margin-right: 0px;
-    margin-top: 7.2px;
+    margin-top: 10px;
     overflow: hidden;
     white-space: nowrap;
-    display:inline-block;
+    display:block;
     width:295px;
     text-overflow: ellipsis;
 }
