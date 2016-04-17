@@ -72,3 +72,7 @@ def play_video(*args, **kwargs):
 def open_settings(*args, **kwargs):
     id = threading.current_thread().name
     return controllers[id].platformtools.open_settings(*args, **kwargs)
+
+def show_channel_settings(*args, **kwargs):
+    id = threading.current_thread().name
+    return controllers[id].platformtools.show_channel_settings(*args, **kwargs)

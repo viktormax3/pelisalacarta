@@ -89,8 +89,17 @@ class fileserver(Controller):
           self.handler.wfile.close()
           f.close()         
       elif path.startswith("/media/"):
-        f=open( os.path.join ( config.get_runtime_path() , "platformcode" , "template" , path[7:] ), "rb" )
+        file = os.path.join ( config.get_runtime_path() , "platformcode" , "template" , path[7:] )
+        from mimetypes import MimeTypes
+        mime = MimeTypes()
+        mime_type = mime.guess_type(file)
+        try:
+          mim = mime_type[0]
+        except:
+          mim = ""
+        f=open(file, "rb")
         self.handler.send_response(200)
+        self.handler.send_header('Content-type', mim)
         self.handler.end_headers()
         self.handler.wfile.write(f.read())
         f.close()

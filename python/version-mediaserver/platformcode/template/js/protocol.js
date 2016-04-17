@@ -1,3 +1,4 @@
+var default_settings = {}
 function GetResponses(data) {
     response = JSON.parse(data)
     data = response["data"];
@@ -245,16 +246,21 @@ function GetResponses(data) {
         case "OpenConfig":
             CerrarLoading()
             Opciones = {};
+            default_settings = {}
             for (x = 0; x < data["items"].length; x++) {
                 if (typeof(Opciones[data["items"][x]["category"]]) == 'undefined') {
                     Opciones[data["items"][x]["category"]] = "";
                 }
+                if (data["items"][x]["color"] != ""){
+                  data["items"][x]["label"] = "<span style='color:"+data["items"][x]["color"]+"'>" + data["items"][x]["label"] + "</span>"
+                }
+                default_settings[data["items"][x]["id"]] = data["items"][x]["default"]
                 switch (data["items"][x]["type"]) {
                     case "sep":
                         Opciones[data["items"][x]["category"]] +=
                             '<li class="ListItem"><div class="Separador"></div></li>';
                         break;
-                    case "lsep":
+                    case "lsep", "label":
                         Opciones[data["items"][x]["category"]] +=
                             '<li class="ListItem"><div class="LabelSeparador">' + data["items"][x]["label"] + '</div></li>';
                         break;
@@ -266,7 +272,7 @@ function GetResponses(data) {
                         }
                         break;
                     case "bool":
-                        if (data["items"][x]["value"] == "true") {
+                        if (data["items"][x]["value"] == "true" || data["items"][x]["value"] == true) {
                             Opciones[data["items"][x]["category"]] += '<li class="ListItem"><div class="ListItem"><h3 class="Ajuste">' + data["items"][x]["label"] + '</h3><span class="Control"><div class="Check"><input class="Check" onchange="ChangeSetting(this)" onfocus="this.parentNode.parentNode.parentNode.className=\'ListItem ListItem-hover\'" onblur="this.parentNode.parentNode.parentNode.className=\'ListItem\'" type="checkbox" checked=checked id="' + data["items"][x]["id"] + '" value="' + data["items"][x]["value"] + '"></div></span</div></li>';
                         } else {
                             Opciones[data["items"][x]["category"]] += '<li class="ListItem"><div class="ListItem"><h3 class="Ajuste">' + data["items"][x]["label"] + '</h3><span class="Control"><div class="Check"><input class="Check" onchange="ChangeSetting(this)" onfocus="this.parentNode.parentNode.parentNode.className=\'ListItem ListItem-hover\'" onblur="this.parentNode.parentNode.parentNode.className=\'ListItem\'" type="checkbox" id="' + data["items"][x]["id"] + '" value="' + data["items"][x]["value"] + '"></div></span</div></li>';
@@ -299,8 +305,21 @@ function GetResponses(data) {
                         }
                         Opciones[data["items"][x]["category"]] += '<li class="ListItem"><div class="ListItem"><h3 class="Ajuste">' + data["items"][x]["label"] + '</h3><span class="Control"><div class="Select"><select class="Select" onchange="ChangeSetting(this)" name="labelenum" onfocus="this.parentNode.parentNode.parentNode.className=\'ListItem ListItem-hover\'" onblur="this.parentNode.parentNode.parentNode.className=\'ListItem\'" id="' + data["items"][x]["id"] + '">' + SOpciones + '</select></div></span</div></li>';
                         break;
-                    case "enum":
                         
+                    case "list":
+                  
+                        SOpciones = "";
+                        for (y = 0; y < + data["items"][x]["lvalues"].length; y++) {
+                            if (data["items"][x]["value"] == y) {
+                              SOpciones += "<option selected=selected>" + data["items"][x]["lvalues"][y] + "</option>";
+                            } else {
+              
+                              SOpciones += "<option>" + data["items"][x]["lvalues"][y] + "</option>";
+                            }
+                        }
+                        Opciones[data["items"][x]["category"]] += '<li class="ListItem"><div class="ListItem"><h3 class="Ajuste">' + data["items"][x]["label"] + '</h3><span class="Control"><div class="Select"><select class="Select" onchange="ChangeSetting(this)" name="enum" onfocus="this.parentNode.parentNode.parentNode.className=\'ListItem ListItem-hover\'" onblur="this.parentNode.parentNode.parentNode.className=\'ListItem\'" id="' + data["items"][x]["id"] + '">' + SOpciones + '</select></div></span</div></li>';
+                        break;
+                    case "enum":
                         if (data["items"][x]["values"] === "" || typeof(data["items"][x]["values"]) === "undefined") {
                             Opcion = data["items"][x]["lvalues"].split("|");
                             for (y = 0; y < Opcion.length; y++) {
@@ -337,15 +356,17 @@ function GetResponses(data) {
             }
             Secciones = "";
             Lista = "";
+            
             for (var key in Opciones) {
                 if (Opciones.hasOwnProperty(key)) {
-                    Secciones += '<a href="javascript:void(0)" class="Boton" onmouseover="this.focus()" onclick="MostrarSeccion(\'' + key + '\')">' + key + '</a>\n';
+                    if (Object.keys(Opciones).length > 1 || key !="undefined"){
+                      Secciones += '<a href="javascript:void(0)" class="Boton" onmouseover="this.focus()" onclick="MostrarSeccion(\'' + key + '\')">' + key + '</a>\n';
+                    }
                     Lista +=
                         '<ul class="ListItem" style="display:none" id="Config-' + key + '">' + Opciones[key] + '</ul>';
                 }
             }
             AbrirConfig(response["id"],data, Secciones, Lista)
-
             break;
 
         default:
@@ -353,7 +374,45 @@ function GetResponses(data) {
     }
 }
 
+function DefaultConfig() {
+        Objetos = document.getElementById("Config-popup").getElementsByTagName("input")
+        
+        for(x=0;x<Objetos.length;x++){
+          switch (Objetos[x].type) {
+                case "text":
+                    Objetos[x].value = default_settings[Objetos[x].id]
+                    break;
+                case "password":
+                    Objetos[x].value = default_settings[Objetos[x].id]
+                    break;
+                case "checkbox":
+                    value = default_settings[Objetos[x].id]
+                    if (value == true) {
+                      value = "checked"
+                    } else{
+                      value = ""
+                    }
+                    Objetos[x].checked = value
+                    break;
+                case "select-one":
+                    Objetos[x].selectedIndex = default_settings[Objetos[x].id]
+                    break;
+            }
+        }
+        Objetos = document.getElementById("Config-popup").getElementsByTagName("select")
+        for(x=0;x<Objetos.length;x++){
+          switch (Objetos[x].type) {
+                case "select-one":
+                    if (Objetos[x].name == "enum"){
+                      Objetos[x].selectedIndex = default_settings[Objetos[x].id]
+                    } else if (Objetos[x].name == "labelenum"){
+                      Objetos[x].value = default_settings[Objetos[x].id]
+                    }
+                    break;
+            }
+        }
 
+}
 function GuardarConfig(Guardar) {
     var Ajustes = {};
     if (Guardar === true) {

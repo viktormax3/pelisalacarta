@@ -32,7 +32,13 @@ function ImgError(obj){
   
   if (obj.src.indexOf(obj.alt) !== 0){
     obj.src=obj.alt+"/proxy/"+encodeURIComponent(btoa(obj.src))
-  }else{obj.style.display="none";obj.parentNode.children[1].style.display="inline-block"}
+  }else{
+    obj.style.display="none";
+    try{ 
+        obj.parentNode.children[1].style.display="inline-block"
+    }catch(e){
+    }
+  }
   }else{ImgLocal(obj)}
 }
 

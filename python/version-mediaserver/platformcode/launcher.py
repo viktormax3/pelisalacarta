@@ -86,7 +86,7 @@ def run(item):
             
             if version:
               platformtools.dialog_ok("Versión "+version+" disponible","Ya puedes descargar la nueva versión del plugin\ndesde el listado principal")
-              itemlist.insert(0,Item(title="Descargar version "+version, version=version, channel="updater", action="update", thumbnail=channelselector.get_thumbnail_path("bannermenu") + "Crystal_Clear_action_info.png"))
+              itemlist.insert(0,Item(title="Actualizadr pelisalacarta a la versión "+version, version=version, channel="updater", action="update", thumbnail=os.path.join(config.get_runtime_path(),"resources","images","bannermenu","thumb_update.png")))
           except:
             platformtools.dialog_ok("No se puede conectar","No ha sido posible comprobar","si hay actualizaciones")
             logger.info("channelselector.mainlist Fallo al verificar la actualización")
@@ -138,7 +138,7 @@ def run(item):
     #Si la accion no ha devuelto ningún resultado, añade un item con el texto "No hay elementos para mostrar"              
     if type(itemlist)==list:
       if  len(itemlist) ==0:
-        itemlist = [Item(title="No hay elementos para mostrar", thumbnail=os.path.join(config.get_runtime_path() , "resources" , "images" , "thumb_error.png" ))]
+        itemlist = [Item(title="No hay elementos para mostrar", thumbnail="http://media.tvalacarta.info/pelisalacarta/thumb_error.png")]
 
     #Si la accion ha devuelto resultados:
     if type(itemlist)==list:
