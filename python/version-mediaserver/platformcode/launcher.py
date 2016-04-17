@@ -14,6 +14,13 @@ from platformcode import platformtools
 from core import channeltools
 import channelselector
 
+#Temporal hasta que se junten las ramas
+try:
+	from core import servertools
+except:
+	from servers import servertools
+
+
 def start():
     ''' Primera funcion que se ejecuta al entrar en el plugin.
     Dentro de esta funcion deberian ir todas las llamadas a las
@@ -213,7 +220,6 @@ def AddContext(item):
   
 def findvideos(item):
     logger.info("pelisalacarta.platformcode.launcher findvideos")
-    from servers import servertools
     itemlist = servertools.find_video_items(item)        
     return itemlist
 
@@ -318,7 +324,6 @@ def download_all_episodes(item,first_episode="",preferred_server="vidspot",filte
     # Ordena los episodios para que funcione el filtro de first_episode
     episode_itemlist = sorted(episode_itemlist, key=lambda Item: Item.title) 
 
-    from servers import servertools
     from core import downloadtools
     from core import scrapertools
 
@@ -692,7 +697,6 @@ def check_video_options(item, video_urls):
 
 #play_menu, abre el menu con las opciones para reproducir
 def play_menu(item):
-    from servers import servertools
 
     if type(item) ==list and len(item)==1:
       item = item[0]
