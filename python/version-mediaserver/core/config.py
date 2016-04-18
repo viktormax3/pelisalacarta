@@ -50,7 +50,13 @@ def open_settings():
     platformtools.open_settings(Opciones)
 
  
-def get_setting(name):
+def get_setting(name,channel=""):
+    if channel:
+      from core import channeltools
+      value = channeltools.get_channel_setting(name, channel)
+      if not value is None:
+        return value       
+         
     global settings_dic
     if name in settings_dic:
       return settings_dic[name]
@@ -89,22 +95,27 @@ def load_settings():
     set_settings(settings_dic)
 
 
-def set_setting(name,value):
-    settings_dic[name]=value
-    from xml.dom import minidom
-    #Crea un Nuevo XML vacio
-    new_settings = minidom.getDOMImplementation().createDocument(None, "settings", None)
-    new_settings_root = new_settings.documentElement
-    
-    for key in settings_dic:
-      nodo = new_settings.createElement("setting")
-      nodo.setAttribute("value",settings_dic[key])
-      nodo.setAttribute("id",key)    
-      new_settings_root.appendChild(nodo)
+def set_setting(name,value,channel=""):
+    if channel:
+      from core import channeltools
+      return channeltools.set_channel_setting(name,value, channel)
       
-    fichero = open(configfilepath, "w")
-    fichero.write(new_settings.toprettyxml(encoding='utf-8'))
-    fichero.close()
+    else:     
+      settings_dic[name]=value
+      from xml.dom import minidom
+      #Crea un Nuevo XML vacio
+      new_settings = minidom.getDOMImplementation().createDocument(None, "settings", None)
+      new_settings_root = new_settings.documentElement
+      
+      for key in settings_dic:
+        nodo = new_settings.createElement("setting")
+        nodo.setAttribute("value",settings_dic[key])
+        nodo.setAttribute("id",key)    
+        new_settings_root.appendChild(nodo)
+        
+      fichero = open(configfilepath, "w")
+      fichero.write(new_settings.toprettyxml(encoding='utf-8'))
+      fichero.close()
 
 def set_settings(JsonRespuesta):
     for Ajuste in JsonRespuesta:

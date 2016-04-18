@@ -642,6 +642,12 @@
               <exclude name="icon.png"/>
               <exclude name="fanart.jpg"/>
               <exclude name="addon.xml"/>
+              <exclude name="platformcode/**"/>
+              <exclude name="resources/images/bannermenu/**"/>
+              <exclude name="resources/images/banners/**"/>
+              <exclude name="resources/images/fanart/**"/>
+              <exclude name="resources/images/posters/**"/>
+              <exclude name="resources/images/squares/**"/>
             </fileset>
         </copy>
         <copy todir="${target}/mediaserver/pelisalacarta" overwrite="true">

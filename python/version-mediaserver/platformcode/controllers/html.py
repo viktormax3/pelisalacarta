@@ -120,14 +120,18 @@ class platform(Platformtools):
            
     for item in itemlist:
         if item.thumbnail == "" and item.action == "search": item.thumbnail = config.get_thumbnail_path() + "thumb_buscar.png"
-        if item.thumbnail == "" and item.folder == True: item.thumbnail = config.get_thumbnail_path() + "thumb_folder.png"
-        if item.thumbnail == "" and item.folder == False: item.thumbnail = config.get_thumbnail_path() + "thumb_nofolder.png"
+        if item.thumbnail == "" and item.folder == True: item.thumbnail = "http://media.tvalacarta.info/pelisalacarta/thumb_folder.png"
+        if item.thumbnail == "" and item.folder == False: item.thumbnail = "http://media.tvalacarta.info/pelisalacarta/thumb_nofolder.png"
         
-        if "http://media.tvalacarta.info/" in item.thumbnail:
+        if "http://media.tvalacarta.info/" in item.thumbnail and not item.thumbnail.startswith("http://media.tvalacarta.info/pelisalacarta/thumb_"):
           if viewmode != 2: 
             item.thumbnail = config.get_thumbnail_path("bannermenu") + os.path.basename(item.thumbnail)
           else:
             item.thumbnail = config.get_thumbnail_path() + os.path.basename(item.thumbnail)
+        
+        #Estas imagenes no estan en bannermenu, asi que si queremos bannermenu, para que no se vean mal las quitamos    
+        elif viewmode != 2 and item.thumbnail.startswith("http://media.tvalacarta.info/pelisalacarta/thumb_"):
+          item.thumbnail = ""
             
         if item.fanart == "":
             channel_fanart = os.path.join(config.get_runtime_path(), 'resources', 'images', 'fanart', item.channel + '.jpg')
@@ -370,6 +374,7 @@ class platform(Platformtools):
     JsonData = {}
     JsonData["action"]="OpenConfig"   
     JsonData["data"]={}
+    JsonData["data"]["title"]= "Opciones"
     JsonData["data"]["items"]=[]
     
     for item in items:
@@ -396,3 +401,110 @@ class platform(Platformtools):
     JsonData["action"]="HideLoading"
     JsonData["data"] = {}
     self.send_message(JsonData)
+
+  def show_channel_settings(self, list_controls=None, dict_values=None, caption="", callback=None, item=None):
+    from core import config
+    from core import channeltools
+    import inspect
+    if not os.path.isdir(os.path.join(config.get_data_path(), "settings_channels")):
+       os.mkdir(os.path.join(config.get_data_path(), "settings_channels"))
+       
+              
+    title = caption
+
+
+    #Obtenemos el canal desde donde se ha echo la llamada y cargamos los settings disponibles para ese canal
+    channelpath = inspect.currentframe().f_back.f_back.f_code.co_filename
+    channelname = os.path.basename(channelpath).replace(".py", "")
+
+    #Si no tenemos list_controls, hay que sacarlos del xml del canal
+    if not list_controls:      
+    
+      #Si la ruta del canal esta en la carpeta "channels", obtenemos los controles y valores mediante chaneltools
+      if os.path.join(config.get_runtime_path(), "channels") in channelpath:
+      
+        # La llamada se hace desde un canal
+        list_controls, default_values = channeltools.get_channel_controls_settings(channelname)
+
+      #En caso contrario salimos
+      else:
+        return None
+
+
+    #Si no se pasan dict_values, creamos un dict en blanco
+    if  dict_values == None:
+      dict_values = {}
+    
+    #Ponemos el titulo
+    if caption =="": 
+      caption = str(config.get_localized_string(30100)) + " -- " + channelname.capitalize()
+    elif caption.startswith('@') and unicode(caption[1:]).isnumeric():
+        caption = config.get_localized_string(int(caption[1:]))
+    
+    
+  
+    JsonData = {}
+    JsonData["action"]="OpenConfig"   
+    JsonData["data"]={}
+    JsonData["data"]["title"]=caption
+    JsonData["data"]["items"]=[]
+    
+
+    # Añadir controles
+    for c in list_controls:
+        if not "default" in c: c["default"] = ""
+        if not "color" in c: c["color"] = "auto"
+        
+        #Obtenemos el valor
+        if not c["id"] in dict_values:
+          if not callback:
+            c["value"]= config.get_setting(c["id"],channelname)
+          else:
+            c["value"] = c["default"]
+
+          
+        # Translation
+        if c['label'].startswith('@') and unicode(c['label'][1:]).isnumeric():
+            c['label'] = str(config.get_localized_string(c['label'][1:]))
+        if c["label"].endswith (":"): c["label"] = c["label"][:-1]
+        
+        if c['type'] == 'list':
+            lvalues=[]
+            for li in c['lvalues']:
+                if li.startswith('@') and unicode(li[1:]).isnumeric():
+                    lvalues.append(str(config.get_localized_string(li[1:])))
+                else:
+                    lvalues.append(li)
+            c['lvalues'] = lvalues
+
+        JsonData["data"]["items"].append(c)
+      
+    ID = self.send_message(JsonData)
+
+    while self.get_data(ID) == None:
+      pass
+    data = self.get_data(ID)
+    
+    JsonData["action"]="HideLoading"
+    JsonData["data"] = {}
+    self.send_message(JsonData)
+    if not data == False:
+      for v in data:
+          if data[v] == "true": data[v] = True
+          if data[v] == "false": data[v] = False
+          if unicode(data[v]).isnumeric():  data[v] =  int(data[v])
+        
+      if not callback:
+        for v in data:
+          config.set_setting(v,data[v],channelname)
+      else:
+        exec "from channels import " + channelname + " as cb_channel"
+        exec "return_value = cb_channel." + callback + "(item, data)"
+        return return_value
+
+        
+    
+
+     
+
+    

@@ -81,7 +81,7 @@
       <div class="Titulo" id="Keyboard-Titulo">
       </div>
       <div Class="KeyboardTexto">
-      <div class="Text"><input class="Text" type="text" id="Keyboard-Text" ></div>
+      <div class="Text"><input class="Text" type="text" onkeypress="if(event.keyCode == 13){EnviarDatos({'id':this.parentNode.parentNode.parentNode.RequestID, 'result':this.value });CerrarDialogos();AbrirLoading();}" id="Keyboard-Text" ></div>
       </div>
       <div class="Botones">
         <a href="#" class="Boton BotonIcon BotonOK" onmouseover="this.focus()" onclick="EnviarDatos({'id':this.parentNode.parentNode.RequestID, 'result':document.getElementById('Keyboard-Text').value });CerrarDialogos();AbrirLoading();" >Aceptar</a>
@@ -119,8 +119,9 @@
         </ul>
       </div>
       <div id="Config-botones" class="Botones">
-        <a href="#" class="Boton BotonIcon BotonClose" onmouseover="this.focus()" onclick="CerrarDialogos();GuardarConfig(false);" >Cerrar</a>
         <a href="#" class="Boton BotonIcon BotonOK" onmouseover="this.focus()" onclick="CerrarDialogos();GuardarConfig(true);" >Guardar</a>
+        <a href="#" class="Boton BotonIcon BotonClose" onmouseover="this.focus()" onclick="CerrarDialogos();GuardarConfig(false);" >Cerrar</a>
+        <a href="#" class="Boton" onmouseover="this.focus()" onclick="DefaultConfig();" >Por defecto</a>
       </div>
     </div >  
     <div class="Pagina" id="Pagina">

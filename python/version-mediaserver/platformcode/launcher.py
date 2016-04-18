@@ -14,6 +14,13 @@ from platformcode import platformtools
 from core import channeltools
 import channelselector
 
+#Temporal hasta que se junten las ramas
+try:
+	from core import servertools
+except:
+	from servers import servertools
+
+
 def start():
     ''' Primera funcion que se ejecuta al entrar en el plugin.
     Dentro de esta funcion deberian ir todas las llamadas a las
@@ -86,7 +93,7 @@ def run(item):
             
             if version:
               platformtools.dialog_ok("Versión "+version+" disponible","Ya puedes descargar la nueva versión del plugin\ndesde el listado principal")
-              itemlist.insert(0,Item(title="Descargar version "+version, version=version, channel="updater", action="update", thumbnail=channelselector.get_thumbnail_path("bannermenu") + "Crystal_Clear_action_info.png"))
+              itemlist.insert(0,Item(title="Actualizadr pelisalacarta a la versión "+version, version=version, channel="updater", action="update", thumbnail=os.path.join(config.get_runtime_path(),"resources","images","bannermenu","thumb_update.png")))
           except:
             platformtools.dialog_ok("No se puede conectar","No ha sido posible comprobar","si hay actualizaciones")
             logger.info("channelselector.mainlist Fallo al verificar la actualización")
@@ -138,7 +145,7 @@ def run(item):
     #Si la accion no ha devuelto ningún resultado, añade un item con el texto "No hay elementos para mostrar"              
     if type(itemlist)==list:
       if  len(itemlist) ==0:
-        itemlist = [Item(title="No hay elementos para mostrar", thumbnail=os.path.join(config.get_runtime_path() , "resources" , "images" , "thumb_error.png" ))]
+        itemlist = [Item(title="No hay elementos para mostrar", thumbnail="http://media.tvalacarta.info/pelisalacarta/thumb_error.png")]
 
     #Si la accion ha devuelto resultados:
     if type(itemlist)==list:
@@ -213,7 +220,6 @@ def AddContext(item):
   
 def findvideos(item):
     logger.info("pelisalacarta.platformcode.launcher findvideos")
-    from servers import servertools
     itemlist = servertools.find_video_items(item)        
     return itemlist
 
@@ -318,7 +324,6 @@ def download_all_episodes(item,first_episode="",preferred_server="vidspot",filte
     # Ordena los episodios para que funcione el filtro de first_episode
     episode_itemlist = sorted(episode_itemlist, key=lambda Item: Item.title) 
 
-    from servers import servertools
     from core import downloadtools
     from core import scrapertools
 
@@ -692,7 +697,6 @@ def check_video_options(item, video_urls):
 
 #play_menu, abre el menu con las opciones para reproducir
 def play_menu(item):
-    from servers import servertools
 
     if type(item) ==list and len(item)==1:
       item = item[0]

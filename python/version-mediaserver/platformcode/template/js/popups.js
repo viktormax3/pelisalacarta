@@ -149,13 +149,27 @@ function CerrarProgress() {
 
 function AbrirConfig(id, data, Secciones,Lista){
   document.getElementById("Config-popup").RequestID = id
-  document.getElementById("Config-secciones").innerHTML = Secciones
   document.getElementById("Config").innerHTML = Lista;
-  document.getElementById("Config-Titulo").innerHTML = "Opciones";
-  document.getElementById("Config-General").style.display="block";
-  document.getElementById("Config").scrollTop = 0;
+  document.getElementById("Config-Titulo").innerHTML = data["title"];
+  if (Secciones != ""){
+    document.getElementById("Config-secciones").innerHTML = Secciones
+    document.getElementById("Config-secciones").style.display="block";
+    document.getElementById("Config-General").style.display="block";
+    
+  } else {
+    document.getElementById("Config-secciones").style.display="none";
+    document.getElementById("Config-undefined").style.display="block";
+    
+  }
+  
   document.getElementById("Overlay").style.display="block";
   document.getElementById("Config-popup").style.display="block";
-  document.getElementById("Config-popup").children[2].children[0].focus()
+  if (Secciones != ""){
+    document.getElementById("Config-popup").children[2].children[0].focus()
+    document.getElementById("Config-General").scrollTop = 0;
+  } else {
+    document.getElementById("Config-popup").children[4].children[0].focus()
+    document.getElementById("Config-undefined").scrollTop = 0;
+  }
   document.getElementById("Config-popup").style.top = document.getElementById("Pagina").offsetHeight / 2 - document.getElementById("Config-popup").offsetHeight / 2 + "px"
 }
