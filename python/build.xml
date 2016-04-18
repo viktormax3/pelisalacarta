@@ -26,13 +26,13 @@
 <project name="pelisalacarta" default="package">
 	<description>pelisalacarta</description>
 
-    <property name="oldversion" value="4.0.7"/>
-    <property name="oldversionboxee" value="10.19"/>
-    <property name="oldversiondate" value="06/02/2016"/>
+    <property name="oldversion" value="4.0.8"/>
+    <property name="oldversionboxee" value="10.20"/>
+    <property name="oldversiondate" value="01/04/2016"/>
 
-    <property name="version" value="4.0.8"/>
-    <property name="versionboxee" value="10.20"/>
-    <property name="versiondate" value="01/04/2016"/>
+    <property name="version" value="4.0.9"/>
+    <property name="versionboxee" value="10.21"/>
+    <property name="versiondate" value="04/04/2016"/>
     <property name="versionchanges" value="Varios cambios"/>
 
     <property name="target" value="../../target/python"/>
@@ -540,12 +540,8 @@
 
         <!-- build folder structure -->
         <mkdir dir="${target}/plex/pelisalacarta.bundle/Contents"/>
-        <mkdir dir="${target}/plex/pelisalacarta.bundle/Contents/Code"/>
         <mkdir dir="${target}/plex/pelisalacarta.bundle/Contents/Libraries"/>
         <mkdir dir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared"/>
-        <mkdir dir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/channels"/>
-        <mkdir dir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/servers"/>
-        <mkdir dir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/core"/>
         <mkdir dir="${target}/plex/pelisalacarta.bundle/Contents/Resources"/>
         <mkdir dir="${target}/plex/pelisalacarta.bundle/Contents/Strings"/>
         <mkdir dir="${target}/plex/pelisalacarta.bundle/Contents/URL Services"/>
@@ -576,19 +572,25 @@
         <copy todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/lib">
             <fileset dir="main-classic/lib"/>
         </copy>
+        
+        <copy todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/platformcode" overwrite="true">
+            <fileset dir="version-plex/platformcode"/>
+        </copy>
+        
+        <copy todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/core" overwrite="true">
+            <fileset dir="version-plex/core"/>
+        </copy>
+        
+        <copy todir="${target}/plex/pelisalacarta.bundle/Contents/Code" overwrite="true">
+            <fileset dir="version-plex/Code"/>
+        </copy>
 
         <!-- copy plex specific files -->
         <copy file="version-plex/Info.plist" todir="${target}/plex/pelisalacarta.bundle/Contents" overwrite="true"/>
         <copy file="version-plex/DefaultPrefs.json" todir="${target}/plex/pelisalacarta.bundle/Contents" overwrite="true"/>
 
-        <copy file="version-plex/__init__.py" todir="${target}/plex/pelisalacarta.bundle/Contents/Code" overwrite="true"/>
-
         <copy file="version-plex/bridge.py" todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared" overwrite="true"/>
         <copy file="main-classic/channelselector.py" todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared" overwrite="true"/>
-        <copy file="main-classic/channels/buscador.py" todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared" overwrite="true"/>
-
-        <copy file="version-plex/config.py" todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/core" overwrite="true"/>
-        <copy file="version-plex/logger.py" todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/core" overwrite="true"/>
 
         <copy file="version-plex/en.json" todir="${target}/plex/pelisalacarta.bundle/Contents/Strings" overwrite="true"/>
 
