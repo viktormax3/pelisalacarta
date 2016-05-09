@@ -426,10 +426,12 @@ def clean_up_file(item):
     # Obtenemos las carpetas de las series
     raiz, carpetas_series, files = os.walk(path).next()
 
-    for key in dict_data.keys():
-        for key2 in dict_data[key].keys():
-            if key2 not in carpetas_series:
-                dict_data[key].pop(key2, None)
+    for channel in dict_data.keys():
+        for tvshow in dict_data[channel].keys():
+            if tvshow not in carpetas_series:
+                dict_data[channel].pop(tvshow, None)
+                if not dict_data[channel]:
+                    dict_data.pop(channel, None)
 
     json_data = jsontools.dump_json(dict_data)
     save_file(json_data, join_path(config.get_data_path(), TVSHOW_FILE))
@@ -659,11 +661,14 @@ def convert_xml_to_json(flag):
                 with open(fname, "r") as f:
                     for line in f:
                         aux = line.rstrip('\n').split(",")
-                        if aux[2] in dict_data:
-                            if aux[0] in dict_data[aux[2]]:
-                                dict_data[aux[2]][aux[0]] = aux[1]
+                        tvshow = aux[0].strip()
+                        url = aux[1].strip()
+                        channel = aux[2].strip()
+
+                        if channel in dict_data:
+                            dict_data[channel][tvshow] = url
                         else:
-                            dict_data.update({aux[2]: {aux[0]: aux[1]}})
+                            dict_data.update({channel: {tvshow: url}})
 
             except EnvironmentError:
                 logger.info("ERROR al leer el archivo: {0}".format(fname))
