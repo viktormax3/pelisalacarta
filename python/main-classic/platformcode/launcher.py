@@ -1,8 +1,28 @@
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------
-# tvalacarta
-# XBMC Launcher (xbmc / xbmc-dharma / boxee)
-# http://blog.tvalacarta.info/plugin-xbmc/
+# pelisalacarta 4
+# Copyright 2015 tvalacarta@gmail.com
+# http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
+#
+# Distributed under the terms of GNU General Public License v3 (GPLv3)
+# http://www.gnu.org/licenses/gpl-3.0.html
+# ------------------------------------------------------------
+# This file is part of pelisalacarta 4.
+#
+# pelisalacarta 4 is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# pelisalacarta 4 is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with pelisalacarta 4.  If not, see <http://www.gnu.org/licenses/>.
+# ------------------------------------------------------------
+# XBMC Launcher (xbmc / kodi / boxee)
 # ------------------------------------------------------------
 
 import os
@@ -12,6 +32,7 @@ import urllib2
 
 from core import channeltools
 from core import config
+from core import downloadtools
 from core import logger
 from core import scrapertools
 from core.item import Item
@@ -222,9 +243,8 @@ def run():
                 elif item.action == "add_serie_to_library":
                     add_serie_to_library(item, channel)
 
-                elif item.action=="download_all_episodes":
-                    import downloadtools
-                    downloadtools.download_all_episodes(item,channel)
+                elif item.action == "download_all_episodes":
+                    downloadtools.download_all_episodes(item, channel)
 
                 elif item.action=="search":
                     logger.info("pelisalacarta.platformcode.launcher search")
