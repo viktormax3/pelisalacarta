@@ -35,6 +35,7 @@ import xbmcplugin
 from core import config
 from core import logger
 from platformcode import library
+from channels import descargas
 
 # Esto permite su ejecución en modo emulado
 try:
@@ -44,40 +45,40 @@ except:
 
 DEBUG = True
 
-def addnewfolderextra(item, totalItems=0):
+def add_new_folder(item, totalItems=0):
+    logger.info('pelisalacarta.platformcode.xbmctools add_new_folder item='+item.tostring())
 
     if item.fulltitle=="":
         item.fulltitle=item.title
-    
+
     contextCommands = []
     ok = False
     
     try:
         item.context = urllib.unquote_plus(item.context)
     except:
-        item.context=""
+        item.context = ""
     
     if "|" in item.context:
         item.context = item.context.split("|")
-    
-    if DEBUG:
-        logger.info('[xbmctools.py] addnewfolderextra(' + item.tostring() +')')
-        logger.info(item.tostring())
 
     listitem = xbmcgui.ListItem( item.title, iconImage="DefaultFolder.png", thumbnailImage=item.thumbnail )
 
     if item.action !="":
         set_infoLabels(listitem,item) # Modificacion introducida por super_berny para añadir infoLabels al ListItem
+    
     if item.fanart!="":
         listitem.setProperty('fanart_image',item.fanart) 
         xbmcplugin.setPluginFanart(pluginhandle, item.fanart)
 
     try:
-        item.title = item.title.encode ("utf-8") #This only aplies to unicode strings. The rest stay as they are.
+        item.title = item.title.encode("utf-8") #This only aplies to unicode strings. The rest stay as they are.
     except:
         pass
     
     itemurl = '%s?%s' % ( sys.argv[ 0 ] , item.tourl())
+    logger.info("pelisalacarta.platformcode.xbmctools add_new_folder itemurl="+itemurl)
+
     #if item.show != "": #Añadimos opción contextual para Añadir la serie completa a la biblioteca
     #    addSerieCommand = "XBMC.RunPlugin(%s?%s)" % ( sys.argv[ 0 ] , item.clone(action="addlist2Library").tourl())
     #    contextCommands.append(("Añadir Serie a Biblioteca",addSerieCommand))
@@ -121,25 +122,27 @@ def addnewfolderextra(item, totalItems=0):
             ok = xbmcplugin.addDirectoryItem( handle = pluginhandle, url = itemurl , listitem=listitem, isFolder=True, totalItems=item.totalItems)
     return ok
 
-def addnewvideo(item, IsPlayable='false', totalItems = 0):
+def add_new_video(item, IsPlayable='false', totalItems = 0):
+    logger.info('pelisalacarta.platformcode.xbmctools add_new_video item='+item.tostring())
+
     # TODO: Posible error en trailertools.py
     contextCommands = []
     ok = False
+
     try:
         item.context = urllib.unquote_plus(item.context)
     except:
         item.context=""
+
     if "|" in item.context:
         item.context = item.context.split("|")
-    if DEBUG:
-        logger.info('[xbmctools.py] addnewvideo')
-        logger.info(item.tostring())  
 
     icon_image = os.path.join( config.get_runtime_path() , "resources" , "images" , "servers" , item.server+".png" )
     if not os.path.exists(icon_image):
         icon_image = "DefaultVideo.png"
 
     listitem = xbmcgui.ListItem( item.title, iconImage="DefaultVideo.png", thumbnailImage=item.thumbnail )
+
     if item.action !="":
         set_infoLabels(listitem,item) # Modificacion introducida por super_berny para añadir infoLabels al ListItem
    
@@ -151,11 +154,12 @@ def addnewvideo(item, IsPlayable='false', totalItems = 0):
     if item.isPlayable == 'true': #Esta opcion es para poder utilizar el xbmcplugin.setResolvedUrl()
         listitem.setProperty('IsPlayable', 'true')
 
-
     if len (contextCommands) > 0:
         listitem.addContextMenuItems ( contextCommands, replaceItems=False)
+    
     if item.action == "":
-            listitem.addContextMenuItems ( list(), replaceItems=True)
+        listitem.addContextMenuItems ( list(), replaceItems=True)
+    
     try:
         item.title = item.title.encode ("utf-8")     #This only aplies to unicode strings. The rest stay as they are.
         item.plot  = item.plot.encode ("utf-8")
@@ -163,7 +167,8 @@ def addnewvideo(item, IsPlayable='false', totalItems = 0):
         pass
 
     itemurl = '%s?%s' % ( sys.argv[ 0 ] , item.tourl())
-                    
+    logger.info("pelisalacarta.platformcode.xbmctools add_new_video itemurl="+itemurl)
+
     if item.totalItems == 0:
         ok = xbmcplugin.addDirectoryItem( handle = pluginhandle, url=itemurl, listitem=listitem, isFolder=False)
     else:
@@ -174,7 +179,7 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
     from core import servertools
     import xbmcgui,xbmc
     
-    logger.info("[xbmctools.py] play_video")
+    logger.info("pelisalacarta.platformcode.xbmctools play_video")
     #logger.info(item.tostring('\n'))
 
     try:
@@ -184,12 +189,6 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
 
     if item.server=="":
         item.server="directo"
-
-    try:
-        from core import descargas
-        download_enable=True
-    except:
-        download_enable=False
 
     view = False
     # Abre el diálogo de selección
@@ -212,9 +211,8 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
         if item.server=="local":
             opciones.append(config.get_localized_string(30164))
         else:
-            if download_enable:
-                opcion = config.get_localized_string(30153)
-                opciones.append(opcion) # "Descargar"
+            opcion = config.get_localized_string(30153)
+            opciones.append(opcion) # "Descargar"
     
             if item.channel=="favoritos": 
                 opciones.append(config.get_localized_string(30154)) # "Quitar de favoritos"
@@ -224,16 +222,15 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
             if not strmfile:
                 opciones.append(config.get_localized_string(30161)) # "Añadir a Biblioteca"
         
-            if download_enable:
-                if item.channel!="descargas":
-                    opciones.append(config.get_localized_string(30157)) # "Añadir a lista de descargas"
+            if item.channel!="descargas":
+                opciones.append(config.get_localized_string(30157)) # "Añadir a lista de descargas"
+            else:
+                if item.category=="errores":
+                    opciones.append(config.get_localized_string(30159)) # "Borrar descarga definitivamente"
+                    opciones.append(config.get_localized_string(30160)) # "Pasar de nuevo a lista de descargas"
                 else:
-                    if item.category=="errores":
-                        opciones.append(config.get_localized_string(30159)) # "Borrar descarga definitivamente"
-                        opciones.append(config.get_localized_string(30160)) # "Pasar de nuevo a lista de descargas"
-                    else:
-                        opciones.append(config.get_localized_string(30156)) # "Quitar de lista de descargas"
-    
+                    opciones.append(config.get_localized_string(30156)) # "Quitar de lista de descargas"
+
             if config.get_setting("jdownloader_enabled")=="true":
                 opciones.append(config.get_localized_string(30158)) # "Enviar a JDownloader"
             if config.get_setting("pyload_enabled")=="true":
@@ -381,7 +378,7 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
         return
 
     elif opciones[seleccion]==config.get_localized_string(30154): #"Quitar de favoritos"
-        from core import favoritos
+        from channels import favoritos
         # En "extra" está el nombre del fichero en favoritos
         favoritos.deletebookmark(urllib.unquote_plus( item.extra ))
 
@@ -392,7 +389,7 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
         return
 
     elif opciones[seleccion]==config.get_localized_string(30159): #"Borrar descarga definitivamente"
-        from core import descargas
+        from channels import descargas
         descargas.delete_error_bookmark(urllib.unquote_plus( item.extra ))
 
         advertencia = xbmcgui.Dialog()
@@ -401,7 +398,7 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
         return
 
     elif opciones[seleccion]==config.get_localized_string(30160): #"Pasar de nuevo a lista de descargas":
-        from core import descargas
+        from channels import descargas
         descargas.mover_descarga_error_a_pendiente(urllib.unquote_plus( item.extra ))
 
         advertencia = xbmcgui.Dialog()
@@ -409,7 +406,7 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
         return
 
     elif opciones[seleccion]==config.get_localized_string(30155): #"Añadir a favoritos":
-        from core import favoritos
+        from channels import favoritos
         from core import downloadtools
 
         download_title = item.fulltitle
@@ -431,7 +428,7 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
         return
 
     elif opciones[seleccion]==config.get_localized_string(30156): #"Quitar de lista de descargas":
-        from core import descargas
+        from channels import descargas
         # La categoría es el nombre del fichero en la lista de descargas
         descargas.deletebookmark((urllib.unquote_plus( item.extra )))
 
@@ -442,7 +439,7 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
         return
 
     elif opciones[seleccion]==config.get_localized_string(30157): #"Añadir a lista de descargas":
-        from core import descargas
+        from channels import descargas
         from core import downloadtools
 
         download_title = item.fulltitle
@@ -491,9 +488,8 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
         return
 
     # Si no hay mediaurl es porque el vídeo no está :)
-    logger.info("[xbmctools.py] mediaurl="+mediaurl)
+    logger.info("pelisalacarta.platformcode.xbmctools mediaurl="+mediaurl)
     if mediaurl=="":
-        logger.info("b1")
         if server == "unknown":
             alertUnsopportedServer()
         else:
@@ -502,7 +498,6 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
 
     # Si hay un tiempo de espera (como en megaupload), lo impone ahora
     if wait_time>0:
-        logger.info("b2")
         continuar = handle_wait(wait_time,server,"Cargando vídeo...")
         if not continuar:
             return
@@ -510,11 +505,8 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
     # Obtención datos de la Biblioteca (solo strms que estén en la biblioteca)
     import xbmcgui
     if strmfile:
-        logger.info("b3")
         xlistitem = getLibraryInfo(mediaurl)
     else:
-        logger.info("b4")
-
         play_title = item.fulltitle
         play_thumbnail = item.thumbnail
         play_plot = item.plot
@@ -526,10 +518,8 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
 
         try:
             xlistitem = xbmcgui.ListItem( play_title, iconImage="DefaultVideo.png", thumbnailImage=play_thumbnail, path=mediaurl)
-            logger.info("b4.1")
         except:
             xlistitem = xbmcgui.ListItem( play_title, iconImage="DefaultVideo.png", thumbnailImage=play_thumbnail)
-            logger.info("b4.2")
 
         xlistitem.setInfo( "video", { "Title": play_title, "Plot" : play_plot , "Studio" : item.channel , "Genre" : item.category } )
 
@@ -539,7 +529,6 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
         # Lanza el reproductor
 
     if strmfile and not item.from_biblioteca: #Si es un fichero strm no hace falta el play
-        logger.info("b6")
         import sys
         xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, xlistitem)
         if item.subtitle != "":
@@ -556,125 +545,122 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
 
         #Plugins externos se pueden añadir otros
         if xbmc.getCondVisibility('System.HasAddon("plugin.video.xbmctorrent")'):
-          torrent_options.append(["Plugin externo: xbmctorrent","plugin://plugin.video.xbmctorrent/play/%s"])
+            torrent_options.append(["Plugin externo: xbmctorrent","plugin://plugin.video.xbmctorrent/play/%s"])
         if xbmc.getCondVisibility('System.HasAddon("plugin.video.pulsar")'):
-          torrent_options.append(["Plugin externo: pulsar","plugin://plugin.video.pulsar/play?uri=%s"])
+            torrent_options.append(["Plugin externo: pulsar","plugin://plugin.video.pulsar/play?uri=%s"])
         if xbmc.getCondVisibility('System.HasAddon("plugin.video.quasar")'):
-          torrent_options.append(["Plugin externo: quasar","plugin://plugin.video.quasar/play?uri=%s"])
+            torrent_options.append(["Plugin externo: quasar","plugin://plugin.video.quasar/play?uri=%s"])
         if xbmc.getCondVisibility('System.HasAddon("plugin.video.stream")'):
-          torrent_options.append(["Plugin externo: stream","plugin://plugin.video.stream/play/%s"])
+            torrent_options.append(["Plugin externo: stream","plugin://plugin.video.stream/play/%s"])
         if xbmc.getCondVisibility('System.HasAddon("plugin.video.torrenter")'):
-          torrent_options.append(["Plugin externo: torrenter","plugin://plugin.video.torrenter/?action=playSTRM&item.url=%s"])
+            torrent_options.append(["Plugin externo: torrenter","plugin://plugin.video.torrenter/?action=playSTRM&item.url=%s"])
         if xbmc.getCondVisibility('System.HasAddon("plugin.video.torrentin")'):
-          torrent_options.append(["Plugin externo: torrentin","plugin://plugin.video.torrentin/?uri=%s&image="])
+            torrent_options.append(["Plugin externo: torrentin","plugin://plugin.video.torrentin/?uri=%s&image="])
 
 
         if len(torrent_options)>1:
-          import xbmcgui
-          seleccion = xbmcgui.Dialog().select("Abrir torrent con...", [opcion[0] for opcion in torrent_options])
+            import xbmcgui
+            seleccion = xbmcgui.Dialog().select("Abrir torrent con...", [opcion[0] for opcion in torrent_options])
         else:
-          seleccion = 0
+            seleccion = 0
 
         #Plugins externos
         if seleccion > 1:
-          xbmc.executebuiltin("XBMC.RunPlugin(" + torrent_options[seleccion][1] % (item.url) + ")")
+            xbmc.executebuiltin("XBMC.RunPlugin(" + torrent_options[seleccion][1] % (item.url) + ")")
 
         if seleccion ==1:
-          from platformcode import mct
-          mct.play( mediaurl, xbmcgui.ListItem("", iconImage=item.thumbnail, thumbnailImage=item.thumbnail), subtitle=item.subtitle )
+            from platformcode import mct
+            mct.play( mediaurl, xbmcgui.ListItem("", iconImage=item.thumbnail, thumbnailImage=item.thumbnail), subtitle=item.subtitle )
 
         #Reproductor propio (libtorrent)
         if seleccion == 0:
-          import time
-          import os
-          videourl = None
-          played = False
+            import time
+            import os
+            videourl = None
+            played = False
+  
+            #Importamos el cliente
+            from btserver import Client
+  
+            #Iniciamos el cliente:
+            c = Client(url=mediaurl, is_playing_fnc= xbmc.Player().isPlaying, wait_time=None, timeout=5, temp_path =os.path.join(config.get_data_path(),"torrent") )
+  
+            #Mostramos el progreso
+            progreso = xbmcgui.DialogProgress()
+            progreso.create( "Pelisalacarta - Torrent" , "Iniciando...")
+  
+  
+            #Mientras el progreso no sea cancelado ni el cliente cerrado
+            while not progreso.iscanceled() and not c.closed:
+  
+                try:
+                    #Obtenemos el estado del torrent
+                    s = c.status
+      
+                    #Montamos las tres lineas con la info del torrent
+                    txt = '%.2f%% de %.1fMB %s | %.1f kB/s' % \
+                    (s.progress_file, s.file_size, s.str_state, s._download_rate)
+                    txt2 =  'S: %d(%d) P: %d(%d) | DHT:%s (%d) | Trakers: %d' % \
+                    (s.num_seeds, s.num_complete, s.num_peers, s.num_incomplete, s.dht_state, s.dht_nodes, s.trackers)
+                    txt3 = 'Origen Peers TRK: %d DHT: %d PEX: %d LSD %d ' % \
+                    (s.trk_peers,s.dht_peers, s.pex_peers, s.lsd_peers)
+      
+                    progreso.update(s.buffer,txt, txt2, txt3)
+      
+      
+                    time.sleep(1)
+      
+                    #Si el buffer se ha llenado y la reproduccion no ha sido iniciada, se inicia
+                    if s.buffer == 100 and not played:
+      
+                        #Cerramos el progreso
+                        progreso.close()
+        
+                        #Obtenemos el playlist del torrent
+                        videourl = c.get_play_list()
+        
+                        #Iniciamos el reproductor
+                        playlist = xbmc.PlayList( xbmc.PLAYLIST_VIDEO )
+                        playlist.clear()
+                        playlist.add( videourl, xlistitem )
+                        xbmcPlayer = xbmc.Player()
+                        xbmcPlayer.play(playlist)
+        
+                        #Marcamos como reproducido para que no se vuelva a iniciar
+                        played = True
+        
+                        #Y esperamos a que el reproductor se cierre
+                        while xbmc.Player().isPlaying():
+                          time.sleep(1)
+        
+                        #Cuando este cerrado,  Volvemos a mostrar el dialogo
+                        progreso.create( "Pelisalacarta - Torrent" , "Iniciando...")
+      
+                except:
+                    import traceback
+                    logger.info(traceback.format_exc())
+                    break
 
+            progreso.update(100,"Terminando y eliminando datos"," "," ")
 
-          #Importamos el cliente
-          from btserver import Client
+            #Detenemos el cliente
+            if not c.closed:
+                c.stop()
 
-          #Iniciamos el cliente:
-          c = Client(url=mediaurl, is_playing_fnc= xbmc.Player().isPlaying, wait_time=None, timeout=5, temp_path =os.path.join(config.get_data_path(),"torrent") )
+            #Y cerramos el progreso
+            progreso.close()
 
-          #Mostramos el progreso
-          progreso = xbmcgui.DialogProgress()
-          progreso.create( "Pelisalacarta - Torrent" , "Iniciando...")
+            return
 
-
-          #Mientras el progreso no sea cancelado ni el cliente cerrado
-          while not progreso.iscanceled() and not c.closed:
-
-            try:
-              #Obtenemos el estado del torrent
-              s = c.status
-
-              #Montamos las tres lineas con la info del torrent
-              txt = '%.2f%% de %.1fMB %s | %.1f kB/s' % \
-              (s.progress_file, s.file_size, s.str_state, s._download_rate)
-              txt2 =  'S: %d(%d) P: %d(%d) | DHT:%s (%d) | Trakers: %d' % \
-              (s.num_seeds, s.num_complete, s.num_peers, s.num_incomplete, s.dht_state, s.dht_nodes, s.trackers)
-              txt3 = 'Origen Peers TRK: %d DHT: %d PEX: %d LSD %d ' % \
-              (s.trk_peers,s.dht_peers, s.pex_peers, s.lsd_peers)
-
-              progreso.update(s.buffer,txt, txt2, txt3)
-
-
-              time.sleep(1)
-
-              #Si el buffer se ha llenado y la reproduccion no ha sido iniciada, se inicia
-              if s.buffer == 100 and not played:
-
-                #Cerramos el progreso
-                progreso.close()
-
-                #Obtenemos el playlist del torrent
-                videourl = c.get_play_list()
-
-                #Iniciamos el reproductor
-                playlist = xbmc.PlayList( xbmc.PLAYLIST_VIDEO )
-                playlist.clear()
-                playlist.add( videourl, xlistitem )
-                xbmcPlayer = xbmc.Player()
-                xbmcPlayer.play(playlist)
-
-                #Marcamos como reproducido para que no se vuelva a iniciar
-                played = True
-
-                #Y esperamos a que el reproductor se cierre
-                while xbmc.Player().isPlaying():
-                  time.sleep(1)
-
-                #Cuando este cerrado,  Volvemos a mostrar el dialogo
-                progreso.create( "Pelisalacarta - Torrent" , "Iniciando...")
-
-            except:
-              import traceback
-              logger.info(traceback.format_exc())
-              break
-
-          progreso.update(100,"Terminando y eliminando datos"," "," ")
-
-          #Detenemos el cliente
-          if not c.closed:
-            c.stop()
-
-          #Y cerramos el progreso
-          progreso.close()
-
-        return
     else:
-        logger.info("b7")
         logger.info("player_mode="+config.get_setting("player_mode"))
         logger.info("mediaurl="+mediaurl)
         if config.get_setting("player_mode")=="3" or "megacrypter.com" in mediaurl:
-            logger.info("b11")
             import download_and_play
             download_and_play.download_and_play( mediaurl , "download_and_play.tmp" , config.get_setting("downloadpath") )
             return
 
         elif config.get_setting("player_mode")=="0" or (config.get_setting("player_mode")=="3" and mediaurl.startswith("rtmp")):
-            logger.info("b8")
             # Añadimos el listitem a una lista de reproducción (playlist)
             playlist = xbmc.PlayList( xbmc.PLAYLIST_VIDEO )
             playlist.clear()
@@ -682,19 +668,19 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
 
             # Reproduce
             playersettings = config.get_setting('player_type')
-            logger.info("[xbmctools.py] playersettings="+playersettings)
+            logger.info("pelisalacarta.platformcode.xbmctools playersettings="+playersettings)
 
             if config.get_system_platform()=="xbox":
                 player_type = xbmc.PLAYER_CORE_AUTO
                 if playersettings == "0":
                     player_type = xbmc.PLAYER_CORE_AUTO
-                    logger.info("[xbmctools.py] PLAYER_CORE_AUTO")
+                    logger.info("pelisalacarta.platformcode.xbmctools PLAYER_CORE_AUTO")
                 elif playersettings == "1":
                     player_type = xbmc.PLAYER_CORE_MPLAYER
-                    logger.info("[xbmctools.py] PLAYER_CORE_MPLAYER")
+                    logger.info("pelisalacarta.platformcode.xbmctools PLAYER_CORE_MPLAYER")
                 elif playersettings == "2":
                     player_type = xbmc.PLAYER_CORE_DVDPLAYER
-                    logger.info("[xbmctools.py] PLAYER_CORE_DVDPLAYER")
+                    logger.info("pelisalacarta.platformcode.xbmctools PLAYER_CORE_DVDPLAYER")
 
                 xbmcPlayer = xbmc.Player( player_type )
             else:
@@ -705,21 +691,18 @@ def play_video(item,desdefavoritos=False,desdedescargados=False,desderrordescarg
             if item.channel=="cuevana" and item.subtitle!="":
                 logger.info("subtitulo="+subtitle)
                 if item.subtitle!="" and (opciones[seleccion].startswith("Ver") or opciones[seleccion].startswith("Watch")):
-                    logger.info("[xbmctools.py] Con subtitulos")
+                    logger.info("pelisalacarta.platformcode.xbmctools Con subtitulos")
                     setSubtitles()
 
         elif config.get_setting("player_mode")=="1":
-            logger.info("b9")
             logger.info("mediaurl :"+ mediaurl)
             logger.info("Tras setResolvedUrl")
             xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, xbmcgui.ListItem(path=mediaurl))
 
         elif config.get_setting("player_mode")=="2":
-            logger.info("b10")
             xbmc.executebuiltin( "PlayMedia("+mediaurl+")" )
 
     if item.subtitle!="" and view:
-        logger.info("b11")
         logger.info("Subtítulos externos: "+item.subtitle)
         xbmc.Player().setSubtitles(item.subtitle)
 
@@ -756,7 +739,7 @@ def getLibraryInfo (mediaurl):
     '''Obtiene información de la Biblioteca si existe (ficheros strm) o de los parámetros
     '''
     if DEBUG:
-        logger.info('[xbmctools.py] playlist OBTENCIÓN DE DATOS DE BIBLIOTECA')
+        logger.info('pelisalacarta.platformcode.xbmctools playlist OBTENCIÓN DE DATOS DE BIBLIOTECA')
 
     # Información básica
     label = xbmc.getInfoLabel( 'listitem.label' )
@@ -881,7 +864,7 @@ def alertanomegauploadlow(server):
 def playstrm(params,url,category):
     '''Play para videos en ficheros strm
     '''
-    logger.info("[xbmctools.py] playstrm url="+url)
+    logger.info("pelisalacarta.platformcode.xbmctools playstrm url="+url)
 
     title = unicode( xbmc.getInfoLabel( "ListItem.Title" ), "utf-8" )
     thumbnail = urllib.unquote_plus( params.get("thumbnail") )
@@ -902,6 +885,7 @@ def playstrm(params,url,category):
     play_video("Biblioteca pelisalacarta",server,url,category,title,thumbnail,plot,strmfile=True,Serie=serie,subtitle=subtitle)
 
 def renderItems(itemlist, parentitem, isPlayable='false'):
+    logger.info("pelisalacarta.platformcode.xbmctools renderItems")
 
     viewmode = "list"
 
@@ -934,11 +918,12 @@ def renderItems(itemlist, parentitem, isPlayable='false'):
                 item.title= '[I]%s[/I]' %(item.title)
 
             if item.folder:
-                addnewfolderextra(item, totalItems = len(itemlist))
+                add_new_folder(item, totalItems = len(itemlist))
             else:
                 if config.get_setting("player_mode")=="1": # SetResolvedUrl debe ser siempre "isPlayable = true"
                     item.isPlayable = 'true'
-                addnewvideo( item, IsPlayable=item.isPlayable, totalItems = len(itemlist))
+                
+                add_new_video( item, IsPlayable=item.isPlayable, totalItems = len(itemlist))
 
             if item.viewmode!="list":
                 viewmode = item.viewmode
@@ -967,11 +952,11 @@ def renderItems(itemlist, parentitem, isPlayable='false'):
     xbmcplugin.endOfDirectory( handle=pluginhandle, succeeded=True )
 
 def wait2second():
-    logger.info("[xbmctools.py] wait2second")
+    logger.info("pelisalacarta.platformcode.xbmctools wait2second")
     import time
     contador = 0
     while xbmc.Player().isPlayingVideo()==False:
-        logger.info("[xbmctools.py] setSubtitles: Waiting 2 seconds for video to start before setting subtitles")
+        logger.info("pelisalacarta.platformcode.xbmctools setSubtitles: Waiting 2 seconds for video to start before setting subtitles")
         time.sleep(2)
         contador = contador + 1
 
@@ -979,11 +964,11 @@ def wait2second():
             break
 
 def setSubtitles():
-    logger.info("[xbmctools.py] setSubtitles")
+    logger.info("pelisalacarta.platformcode.xbmctools setSubtitles")
     import time
     contador = 0
     while xbmc.Player().isPlayingVideo()==False:
-        logger.info("[xbmctools.py] setSubtitles: Waiting 2 seconds for video to start before setting subtitles")
+        logger.info("pelisalacarta.platformcode.xbmctools setSubtitles: Waiting 2 seconds for video to start before setting subtitles")
         time.sleep(2)
         contador = contador + 1
 
@@ -991,11 +976,11 @@ def setSubtitles():
             break
 
     subtitlefile = os.path.join( config.get_data_path(), 'subtitulo.srt' )
-    logger.info("[xbmctools.py] setting subtitle file %s" % subtitlefile)
+    logger.info("pelisalacarta.platformcode.xbmctools setting subtitle file %s" % subtitlefile)
     xbmc.Player().setSubtitles(subtitlefile)
 
 def trailer(item):
-    logger.info("[xbmctools.py] trailer")
+    logger.info("pelisalacarta.platformcode.xbmctools trailer")
     config.set_setting("subtitulo", "false")
     import sys
     xbmc.executebuiltin("XBMC.RunPlugin(%s?channel=%s&action=%s&category=%s&title=%s&url=%s&thumbnail=%s&plot=%s&server=%s)" % ( sys.argv[ 0 ] , "trailertools" , "buscartrailer" , urllib.quote_plus( item.category ) , urllib.quote_plus( item.fulltitle ) , urllib.quote_plus( item.url ) , urllib.quote_plus( item.thumbnail ) , urllib.quote_plus( "" ) ))
@@ -1027,14 +1012,20 @@ def set_infoLabels(listitem,item):
         try:
             import ast
             infodict=ast.literal_eval(item.plot)['infoLabels']
-            if not infodict.has_key('title'): infodict['title'] = item.title
+
+            #if not infodict.has_key('title'): 
+            #    infodict['title'] = item.title
+            infodict['title'] = item.title
+            
             listitem.setInfo( "video", infodict)
         except:
             pass
+
     elif len(item.infoLabels) >0:
         # Nuevo modelo para pasar la informacion al listitem (ver tmdb.set_InfoLabels() )
         # item.infoLabels es un dicionario con los pares de clave/valor descritos en:
         # http://mirrors.xbmc.org/docs/python-docs/14.x-helix/xbmcgui.html#ListItem-setInfo
+        item.infoLabels['title'] = item.title
         listitem.setInfo( "video", item.infoLabels)
 
     elif item.plot !='':

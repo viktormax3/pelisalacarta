@@ -28,6 +28,7 @@ import plugintools
 import navigation
 from core import updater
 from core import config
+from core import logger
 from core.item import Item
 
 plugintools.application_log_enabled = (plugintools.get_setting("debug")=="true")
@@ -41,26 +42,29 @@ config.verify_directories_created()
 
 # Check for new updates
 if config.get_setting("updatecheck2") == "true":
-  logger.info("Verificar actualizaciones activado")
-  from core import updater
-  try:
-    version = updater.checkforupdates()
-    
-    if version:
-      import xbmcgui
-      yes_pressed = xbmcgui.Dialog().yesno( "Versión "+version+" disponible" , "¿Quieres instalarla?" )
 
-      if yes_pressed:
-          item = Item(version=version)
-          updater.update(item)
-  except:
-    import xbmcgui
-    advertencia = xbmcgui.Dialog()
-    advertencia.ok("No se puede conectar","No ha sido posible comprobar","si hay actualizaciones")
-    logger.info("channelselector.mainlist Fallo al verificar la actualización")
+    logger.info("Verificar actualizaciones activado")
+  
+    from core import updater
+  
+    try:
+        version = updater.checkforupdates()
+        
+        if version:
+            import xbmcgui
+            yes_pressed = xbmcgui.Dialog().yesno( "Versión "+version+" disponible" , "¿Quieres instalarla?" )
+      
+            if yes_pressed:
+                item = Item(version=version)
+                updater.update(item)
+    except:
+        import xbmcgui
+        advertencia = xbmcgui.Dialog()
+        advertencia.ok("No se puede conectar","No ha sido posible comprobar","si hay actualizaciones")
+        logger.info("channelselector.mainlist Fallo al verificar la actualización")
 
 else:
-  logger.info("channelselector.mainlist Verificar actualizaciones desactivado")
+    logger.info("channelselector.mainlist Verificar actualizaciones desactivado")
 
 # Get items for main menu
 item = Item( channel="navigation", action="mainlist" )
