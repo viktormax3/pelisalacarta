@@ -21,6 +21,8 @@ __title__ = "Animeid"
 __channel__ = "animeid"
 __language__ = "ES"
 
+CHANNEL_HOST = "http://animeid.tv/"
+
 def isGeneric():
     return True
 
@@ -278,6 +280,12 @@ def findvideos(item):
     data = scrapertools.cache_page(item.url)
     itemlist=[]
     
+    url_anterior = scrapertools.find_single_match(data, '<li class="b"><a href="([^"]+)">« Capítulo anterior')
+    url_siguiente = scrapertools.find_single_match(data, '<li class="b"><a href="([^"]+)">Siguiente capítulo »')
+        
+    if 'infoLabels' in item:
+		del item.infoLabels
+    
     data = scrapertools.find_single_match(data,'<ul id="partes">(.*?)</ul>')
     data = data.replace("\\/","/")
     data = data.replace("%3A",":")
@@ -302,7 +310,18 @@ def findvideos(item):
         videoitem.action="play"
         videoitem.folder=False
         videoitem.title = "["+videoitem.server+"]"
+        
+    if url_anterior:
+        title_anterior = url_anterior.replace("/ver/", '').replace('-', ' ').replace('.html', '')
+        itemlist.append(Item(channel=__channel__, action="findvideos", title="Anterior: " + title_anterior,
+                        url=CHANNEL_HOST + url_anterior, thumbnail=item.thumbnail, plot=item.plot, show=item.show,
+                        fanart=item.thumbnail, folder=True))
 
+    if url_siguiente:
+        title_siguiente = url_siguiente.replace("/ver/", '').replace('-', ' ').replace('.html', '')
+        itemlist.append(Item(channel=__channel__, action="findvideos", title="Siguiente: " + title_siguiente,
+                        url=CHANNEL_HOST + url_siguiente, thumbnail=item.thumbnail, plot=item.plot, show=item.show,
+                        fanart=item.thumbnail, folder=True))
     return itemlist
 
 # Verificación automática de canales: Esta función debe devolver "True" si todo está ok en el canal.

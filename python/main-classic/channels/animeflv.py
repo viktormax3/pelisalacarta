@@ -377,6 +377,10 @@ def episodios(item):
         except ValueError:
             pass
 
+        episode_title = scrapertools.find_single_match(title, "\d+:\s*(.*)")
+        if episode_title == "":
+            episode_title = "Episodio {0}".format(episode)
+
         season, episode = numbered_for_tratk(item.show, season, episode)
 
         if len(str(episode)) == 1:
@@ -384,7 +388,7 @@ def episodios(item):
         else:
             title = "{0}x{1}".format(season, episode)
 
-        title = "{0} {1}".format(item.show, title)
+        title = "{0} - {1} {2}".format(item.show, title, episode_title)
 
         if DEBUG:
             logger.info("title=[{0}], url=[{1}], thumbnail=[{2}]".format(title, url, thumbnail))
@@ -407,8 +411,13 @@ def findvideos(item):
 
     data = scrapertools.anti_cloudflare(item.url, headers=CHANNEL_DEFAULT_HEADERS, host=CHANNEL_HOST)
 
+    if 'infoLabels' in item:
+        del item.infoLabels
+
+    url_anterior = scrapertools.find_single_match(data, '<a href="(/ver/[^"]+)".+?prev.png')
+    url_siguiente = scrapertools.find_single_match(data, '<a href="(/ver/[^"]+)"[^.]+next.png')
+
     data = scrapertools.get_match(data, "var videos \= (.*?)$")
-    # logger.info("data={0}".format(data))
 
     itemlist = []
 
@@ -421,6 +430,18 @@ def findvideos(item):
     for videoitem in itemlist:
         videoitem.channel = __channel__
         videoitem.folder = False
+
+    if url_anterior:
+        title_anterior = url_anterior.replace("/ver/", '').replace('-', ' ').replace('.html', '')
+        itemlist.append(Item(channel=__channel__, action="findvideos", title="Anterior: " + title_anterior,
+                        url=CHANNEL_HOST + url_anterior, thumbnail=item.thumbnail, plot=item.plot, show=item.show,
+                        fanart=item.thumbnail, folder=True))
+
+    if url_siguiente:
+        title_siguiente = url_siguiente.replace("/ver/", '').replace('-', ' ').replace('.html', '')
+        itemlist.append(Item(channel=__channel__, action="findvideos", title="Siguiente: " + title_siguiente,
+                        url=CHANNEL_HOST + url_siguiente, thumbnail=item.thumbnail, plot=item.plot, show=item.show,
+                        fanart=item.thumbnail, folder=True))
 
     return itemlist
 
@@ -450,6 +471,7 @@ def test():
             break
 
     return bien
+
 
 def numbered_for_tratk(show, season, episode):
     """
