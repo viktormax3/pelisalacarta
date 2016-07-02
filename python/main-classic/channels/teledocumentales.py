@@ -14,13 +14,6 @@ from core import scrapertools
 from core import servertools
 from core.item import Item
 
-__channel__ = "teledocumentales"
-__category__ = "D"
-__type__ = "generic"
-__title__ = "Teledocumentales"
-__language__ = "ES"
-__creationdate__ = "20111019"
-
 
 DEBUG = config.get_setting("debug")
 
@@ -29,8 +22,8 @@ def mainlist(item):
     logger.info("[teledocumentales.py] mainlist")
 
     itemlist = []
-    itemlist.append( Item(channel=__channel__, action="ultimo"        , title="Últimos Documentales"    , url="http://www.teledocumentales.com/"))
-    itemlist.append( Item(channel=__channel__, action="ListaCat"      , title="Listado por Genero"      , url="http://www.teledocumentales.com/"))
+    itemlist.append( Item(channel=item.channel, action="ultimo"        , title="Últimos Documentales"    , url="http://www.teledocumentales.com/"))
+    itemlist.append( Item(channel=item.channel, action="ListaCat"      , title="Listado por Genero"      , url="http://www.teledocumentales.com/"))
     
     return itemlist
 
@@ -112,23 +105,6 @@ def play(item):
     
     for videoitem in itemlist:
         videoitem.title = item.title
-        videoitem.channel = __channel__
+        videoitem.channel = item.channel
     
     return itemlist
-
-
-# Verificación automática de canales: Esta función debe devolver "True" si todo está ok en el canal.
-def test():
-    # mainlist
-    mainlist_items = mainlist(Item())
-    
-    # Da por bueno el canal si alguno de los vídeos de "Ultimos videos" devuelve mirrors
-    ultimos_items = ultimo(mainlist_items[0])
-    
-    bien = False
-    for ultimo_item in ultimos_items:
-        play_items = detail(ultimo_item)
-        if len(play_items)>0:
-            return True
-    
-    return False

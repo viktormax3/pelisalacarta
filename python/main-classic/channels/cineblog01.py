@@ -13,11 +13,6 @@ from core import logger
 from core import scrapertools
 from core.item import Item
 
-__channel__ = "cineblog01"
-__category__ = "F,S,A"
-__type__ = "generic"
-__title__ = "Cineblog01 (IT)"
-__language__ = "IT"
 sito="http://www.cb01.eu/"
 
 DEBUG = config.get_setting("debug")
@@ -29,13 +24,13 @@ def mainlist(item):
 	
 
     # Main options
-    itemlist.append( Item(channel=__channel__, action="peliculas"  , title="Film - Novita'" , url=sito))
-    itemlist.append( Item(channel=__channel__, action="menugeneros", title="Film - Per genere" , url=sito))
-    itemlist.append( Item(channel=__channel__, action="menuanyos"  , title="Film - Per anno" , url=sito))
-    itemlist.append( Item(channel=__channel__, action="search"     , title="Film - Cerca" ))
-    itemlist.append( Item(channel=__channel__, action="peliculas"  , title="Serie Tv" , url=sito+"/serietv/" ))
-    itemlist.append( Item(channel=__channel__, action="search", title="Serie Tv - Cerca" , extra="serie"))
-    itemlist.append( Item(channel=__channel__, action="peliculas"  , title="Anime" , url="http://www.cineblog01.cc/anime/" ))
+    itemlist.append( Item(channel=item.channel, action="peliculas"  , title="Film - Novita'" , url=sito))
+    itemlist.append( Item(channel=item.channel, action="menugeneros", title="Film - Per genere" , url=sito))
+    itemlist.append( Item(channel=item.channel, action="menuanyos"  , title="Film - Per anno" , url=sito))
+    itemlist.append( Item(channel=item.channel, action="search"     , title="Film - Cerca" ))
+    itemlist.append( Item(channel=item.channel, action="peliculas"  , title="Serie Tv" , url=sito+"/serietv/" ))
+    itemlist.append( Item(channel=item.channel, action="search", title="Serie Tv - Cerca" , extra="serie"))
+    itemlist.append( Item(channel=item.channel, action="peliculas"  , title="Anime" , url="http://www.cineblog01.cc/anime/" ))
 
     return itemlist
 
@@ -60,7 +55,7 @@ def menugeneros(item):
         scrapedthumbnail = ""
         scrapedplot = ""
         if (DEBUG): logger.info("title=["+scrapedtitle+"], url=["+scrapedurl+"], thumbnail=["+scrapedthumbnail+"]")
-        itemlist.append( Item(channel=__channel__, action="peliculas" , title=scrapedtitle , url=scrapedurl, thumbnail=scrapedthumbnail, plot=scrapedplot))
+        itemlist.append( Item(channel=item.channel, action="peliculas" , title=scrapedtitle , url=scrapedurl, thumbnail=scrapedthumbnail, plot=scrapedplot))
 
     return itemlist
 
@@ -85,7 +80,7 @@ def menuanyos(item):
         scrapedthumbnail = ""
         scrapedplot = ""
         if (DEBUG): logger.info("title=["+scrapedtitle+"], url=["+scrapedurl+"], thumbnail=["+scrapedthumbnail+"]")
-        itemlist.append( Item(channel=__channel__, action="peliculas" , title=scrapedtitle , url=scrapedurl, thumbnail=scrapedthumbnail, plot=scrapedplot))
+        itemlist.append( Item(channel=item.channel, action="peliculas" , title=scrapedtitle , url=scrapedurl, thumbnail=scrapedthumbnail, plot=scrapedplot))
 
     return itemlist
 
@@ -173,12 +168,12 @@ def peliculas(item):
         thumbnail = urlparse.urljoin(item.url,scrapedthumbnail)
         plot = scrapertools.htmlclean(scrapedplot).strip()
         if (DEBUG): logger.info("title=["+title+"], url=["+url+"], thumbnail=["+thumbnail+"]")
-        itemlist.append( Item(channel=__channel__, action="findvideos" , title=title , url=url, thumbnail=thumbnail, plot=plot, viewmode="movie_with_plot", fanart=thumbnail))
+        itemlist.append( Item(channel=item.channel, action="findvideos" , title=title , url=url, thumbnail=thumbnail, plot=plot, viewmode="movie_with_plot", fanart=thumbnail))
 
     # Next page mark
     next_page_url = scrapertools.find_single_match(data,'<li><a href="([^"]+)">></a></li>')
     if next_page_url!="":
-        itemlist.append( Item(channel=__channel__, action="peliculas" , title=">> Next page" , url=next_page_url))
+        itemlist.append( Item(channel=item.channel, action="peliculas" , title=">> Next page" , url=next_page_url))
 
     return itemlist
 
@@ -205,45 +200,13 @@ def listserie(item):
         if (DEBUG): logger.info("title=["+scrapedtitle+"], url=["+scrapedurl+"], thumbnail=["+scrapedthumbnail+"]")
 
         # A�ade al listado de XBMC
-        itemlist.append( Item(channel=__channel__, action="findvideos" , title=scrapedtitle , url=scrapedurl, thumbnail=scrapedthumbnail, plot=scrapedplot))
+        itemlist.append( Item(channel=item.channel, action="findvideos" , title=scrapedtitle , url=scrapedurl, thumbnail=scrapedthumbnail, plot=scrapedplot))
 
     # Put the next page mark
     try:
         next_page = scrapertools.get_match(data,"<link rel='next' href='([^']+)'")
-        itemlist.append( Item(channel=__channel__, action="listserie" , title=">> Next page" , url=next_page, thumbnail=scrapedthumbnail, plot=scrapedplot))
+        itemlist.append( Item(channel=item.channel, action="listserie" , title=">> Next page" , url=next_page, thumbnail=scrapedthumbnail, plot=scrapedplot))
     except:
         pass
 
     return itemlist
-
-# Verificaci�n autom�tica de canales: Esta funci�n debe devolver "True" si todo est� ok en el canal.
-def test():
-    bien = True
-    
-    # mainlist
-    mainlist_items = mainlist(Item())
-    
-    # Comprueba que todas las opciones por categorias tengan algo (excepto los buscadores)
-    for mainlist_item in mainlist_items:
-        if mainlist_item.action.startswith("menu"):
-            exec "itemlist = "+mainlist_item.action+"(mainlist_item)"
-            
-            # Lee la primera categor�a s�lo
-            exec "itemlist2 ="+itemlist[0].action+"(itemlist[0])"
-            if len(itemlist2)==0:
-                return false
-
-    # Comprueba si alguno de los v�deos de "Novedades" devuelve mirrors
-    for mainlist_item in mainlist_items:
-        if mainlist_item.action=="peliculas" or mainlist_item.action=="listserie":
-            exec "itemlist = "+mainlist_item.action+"(mainlist_item)"
-    
-            bien = False
-            for episodio_item in itemlist:
-                from core import servertools
-                mirrors = servertools.find_video_items(item=episodio_item)
-                if len(mirrors)>0:
-                    bien = True
-                    break
-
-    return bien

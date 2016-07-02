@@ -34,13 +34,10 @@ from core import jsontools
 from core import logger
 from core import scrapertools
 from core import servertools
-from core.item import Item
 from platformcode import platformtools
 
 
-__channel__ = "trailertools"
-
-DEBUG = True
+DEBUG = config.get_setting("debug")
 # Para habilitar o no la opción de búsqueda manual
 if config.is_xbmc() or config.get_platform() == "mediaserver":
     keyboard = True
