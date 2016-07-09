@@ -12,46 +12,6 @@
     "default": "true"
   },
   {
-    "id": "fileniumpremium",
-    "label": "Cuenta premium Filenium",
-    "type": "bool",
-    "default": "false"
-  },
-  {
-    "id": "fileniumuser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "fileniumpassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
-  },
-  {
-    "id": "realdebridpremium",
-    "label": "Cuenta premium Real Debrid",
-    "type": "bool",
-    "default": "false"
-  },
-  {
-    "id": "realdebriduser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "realdebridpassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
-  },
-  {
     "id": "alldebridpremium",
     "label": "Cuenta premium All Debrid",
     "type": "bool",
