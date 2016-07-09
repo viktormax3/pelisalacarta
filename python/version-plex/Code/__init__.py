@@ -86,7 +86,7 @@ def channels_list():
     itemlist = channelselector.filterchannels(category="all")
     for item in itemlist:
         Log.Info("item="+repr(item))
-        if item.type=="generic" and item.channel not in ['tengourl','goear']:
+        if item.channel not in ['tengourl']:
             oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action="mainlist"), title=item.title, thumb=item.thumbnail))
 
     return oc
