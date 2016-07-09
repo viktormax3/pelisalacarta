@@ -43,11 +43,13 @@ from core.item import Item
 from platformcode import platformtools
 
 try:
-    from samba import libsmb as samba
+    from customsamba import libsmb as samba
+
+# FIXME: Entiendo que esto se podrá quitar...
 except ImportError:
     librerias = xbmc.translatePath(os.path.join(config.get_runtime_path(), 'lib'))
     sys.path.append(librerias)
-    from samba import libsmb as samba
+    from lib.customamba import libsmb as samba
 
 import urllib2
 
@@ -1048,7 +1050,7 @@ def add_pelicula_to_library(item):
     logger.info("pelisalacarta.platformcode.library add_pelicula_to_library")
 
     new_item = item.clone(action="play_from_library", category="Cine")
-    insertados, sobreescritos, fallidos = library.save_library_movie(new_item)
+    insertados, sobreescritos, fallidos = save_library_movie(new_item)
     itemlist = []
 
     if fallidos == 0:
@@ -1056,9 +1058,10 @@ def add_pelicula_to_library(item):
     else:
         itemlist.append(Item(title="ERROR, la pelicula NO se ha añadido a la biblioteca",  channel=item.channel))
 
+    from platformcode import xbmctools
     xbmctools.renderItems(itemlist, item)
 
-    # library.update()
+    # update()
 
 
 def add_serie_to_library(item, channel):
@@ -1073,16 +1076,17 @@ def add_serie_to_library(item, channel):
     # Obtiene el listado desde el que se llamó
     itemlist = getattr(channel, action)(item)
 
-    insertados, sobreescritos, fallidos = library.save_library_tvshow(item, itemlist)
+    insertados, sobreescritos, fallidos = save_library_tvshow(item, itemlist)
 
     if fallidos > -1 and (insertados + sobreescritos) > 0:
         # Guardar el registro series.json actualizado
-        library.save_tvshow_in_file(item)
+        save_tvshow_in_file(item)
 
     itemlist = []
     if fallidos == -1:
         itemlist.append(Item(title="ERROR, la serie NO se ha añadido a la biblioteca",channel=item.channel))
         logger.error("pelisalacarta.platformcode.library La serie {0} no se ha podido añadir a la biblioteca".format(item.show))
+        from platformcode import xbmctools
         xbmctools.renderItems(itemlist, item)
         return -1
     elif fallidos > 0:
@@ -1093,5 +1097,6 @@ def add_serie_to_library(item, channel):
         itemlist.append(Item(title="La serie se ha añadido a la biblioteca", channel=item.channel))
         logger.info("pelisalacarta.platformcode.library  Se han añadido {0} episodios de la serie {1} a la biblioteca".format(insertados,item.show))
 
+    from platformcode import xbmctools
     xbmctools.renderItems(itemlist, item)
-    # library.update() # TODO evitar bucle
+    # update() # TODO evitar bucle
