@@ -35,7 +35,7 @@ plugintools.application_log_enabled = (plugintools.get_setting("debug")=="true")
 plugintools.module_log_enabled = (plugintools.get_setting("debug")=="true")
 plugintools.http_debug_log_enabled = (plugintools.get_setting("debug")=="true")
 
-plugintools.log("pelisalacarta 4 ui begin")
+plugintools.log("pelisalacarta.default")
 
 # Check if paths are on a default value, and if directories are created
 config.verify_directories_created()
@@ -43,7 +43,7 @@ config.verify_directories_created()
 # Check for new updates
 if config.get_setting("updatecheck2") == "true":
 
-    logger.info("Verificar actualizaciones activado")
+    logger.info("pelisalacarta.default Verificar actualizaciones activado")
   
     from core import updater
   
@@ -61,10 +61,10 @@ if config.get_setting("updatecheck2") == "true":
         import xbmcgui
         advertencia = xbmcgui.Dialog()
         advertencia.ok("No se puede conectar","No ha sido posible comprobar","si hay actualizaciones")
-        logger.info("channelselector.mainlist Fallo al verificar la actualización")
+        logger.info("pelisalacarta.default Fallo al verificar la actualización")
 
 else:
-    logger.info("channelselector.mainlist Verificar actualizaciones desactivado")
+    logger.info("pelisalacarta.default Verificar actualizaciones desactivado")
 
 # Get items for main menu
 item = Item( channel="navigation", action="mainlist" )
