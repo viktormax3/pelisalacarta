@@ -583,6 +583,9 @@
             <fileset dir="version-plex/Code"/>
         </copy>
 
+        <!-- No entiendo por qué, pero si no no funciona -->
+        <copy file="version-plex/core/servertools.py" todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/servers" overwrite="true"/>
+
         <!-- copy plex specific files -->
         <copy file="version-plex/platformtools.py" todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/platformcode" overwrite="true"/>
         <copy file="version-plex/Info.plist" todir="${target}/plex/pelisalacarta.bundle/Contents" overwrite="true"/>
