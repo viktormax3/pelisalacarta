@@ -6,7 +6,11 @@ import bridge
 bridge.init(Log,Prefs,Locale)
 
 import channelselector
+
 from core.item import Item
+from core import channeltools
+from servers import servertools
+
 from DumbTools import DumbKeyboard
 
 ###################################################################################################
@@ -86,7 +90,7 @@ def channels_list():
     itemlist = channelselector.filterchannels(category="all")
     for item in itemlist:
         Log.Info("item="+repr(item))
-        if item.type=="generic" and item.channel not in ['tengourl','goear']:
+        if item.channel not in ['tengourl']:
             oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action="mainlist"), title=item.title, thumb=item.thumbnail))
 
     return oc
@@ -115,39 +119,29 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
         Log.Info("caller_item="+str(caller_item))
 
         Log.Info("Importando...")
-        from core import servertools
         channelmodule = servertools.get_channel_module(channel_name)
         Log.Info("Importado")
 
         Log.Info("Antes de hasattr")
         if hasattr(channelmodule, action):
-            Log.Info("El módulo "+channel_name+" tiene una funcion "+action)
+            Log.Info("El módulo "+caller_item.channel+" tiene una funcion "+action)
+            
             itemlist = getattr(channelmodule, action)(caller_item)
 
             if action=="play" and len(itemlist)>0:
                 itemlist=play_video(itemlist[0])
 
-            Log.Info("Antes de hasattr")
-            if hasattr(channelmodule, action):
-                Log.Info("El módulo "+caller_item.channel+" tiene una funcion "+action)
-                
-                itemlist = getattr(channelmodule, action)(caller_item)
+        else:
+            Log.Info("El módulo "+caller_item.channel+" *NO* tiene una funcion "+action)
 
-                if action=="play" and len(itemlist)>0:
-                    itemlist=play_video(itemlist[0])
-
-            else:
-                Log.Info("El módulo "+caller_item.channel+" *NO* tiene una funcion "+action)
-
-                if action=="findvideos":
-                    Log.Info("Llamando a la funcion findvideos comun")
-                    itemlist=findvideos(caller_item)
-                elif action=="play":
-                    itemlist=play_video(caller_item)
-                elif action=="menu_principal":
-                    return mainlist()
-                    
-                 
+            if action=="findvideos":
+                Log.Info("Llamando a la funcion findvideos comun")
+                itemlist=findvideos(caller_item)
+            elif action=="play":
+                itemlist=play_video(caller_item)
+            elif action=="menu_principal":
+                return mainlist()
+             
         Log.Info("Tengo un itemlist con %d elementos" % len(itemlist))
 
         for item in itemlist:
@@ -205,7 +199,6 @@ def resuelve(url):
     return Redirect(url)
 
 def play_video(item):
-    from core import servertools
     video_urls = servertools.get_video_urls(item.server,item.url)
     itemlist = []
     for video_url in video_urls:
@@ -214,7 +207,6 @@ def play_video(item):
     return itemlist
 
 def findvideos(item):
-    from core import servertools
     return servertools.find_video_items(item=item, channel=item.channel)
 
 @route('/video/pelisalacarta/get_input')
@@ -227,7 +219,6 @@ def get_input(query, dkitem):
     Log.Info("#########################################################")
     Log.Info(dkitem.tostring())
     
-    from core import channeltools
     if '.' in dkitem.channel:
         pack,modulo = dkitem.channel.split('.') #ejemplo: platformcode.platformtools
         channelmodule = channeltools.get_channel_module(modulo,pack)
