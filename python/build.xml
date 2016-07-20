@@ -558,6 +558,7 @@
         <copy todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/servers">
             <fileset dir="main-classic/servers">
                 <include name="*.py"/>
+                <include name="*.xml"/>
             </fileset>
         </copy>
 
@@ -582,9 +583,6 @@
         <copy todir="${target}/plex/pelisalacarta.bundle/Contents/Code" overwrite="true">
             <fileset dir="version-plex/Code"/>
         </copy>
-
-        <!-- No entiendo por qué, pero si no no funciona -->
-        <copy file="version-plex/core/servertools.py" todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/servers" overwrite="true"/>
 
         <!-- copy plex specific files -->
         <copy file="version-plex/platformtools.py" todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/platformcode" overwrite="true"/>
