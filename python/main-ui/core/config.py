@@ -48,11 +48,47 @@ def get_system_platform():
 def open_settings():
     __settings__.openSettings()
 
-def get_setting(name):
+def get_setting(name, channel=""):
+    if channel:
+      from core import channeltools
+      value = channeltools.get_channel_setting(name, channel)
+      if not value is None:
+        return value
+
     return __settings__.getSetting( name )
 
-def set_setting(name,value):
-    __settings__.setSetting( name,value )
+def set_setting(name,value, channel=""):
+    """Fija el valor de configuracion del parametro indicado.
+
+    Establece 'value' como el valor del parametro 'name' en la configuracion global o en la configuracion propia del canal 'channel'.
+    Devuelve el valor cambiado o None si la asignacion no se ha podido completar.
+    
+    Si se especifica el nombre del canal busca en la ruta \addon_data\plugin.video.pelisalacarta\settings_channels el archivo channel_data.json
+    y establece el parametro 'name' al valor indicado por 'value'. Si el archivo channel_data.json no existe busca en la carpeta channels el archivo 
+    channel.xml y crea un archivo channel_data.json antes de modificar el parametro 'name'.
+    Si el parametro 'name' no existe lo añade, con su valor, al archivo correspondiente.
+    
+    
+    Parametros:
+    name -- nombre del parametro
+    value -- valor del parametro
+    channel [opcional] -- nombre del canal
+    
+    Retorna:
+    'value' en caso de que se haya podido fijar el valor y None en caso contrario
+        
+    """ 
+    if channel:
+      from core import channeltools
+      return channeltools.set_channel_setting(name,value, channel)
+    else:
+      try:
+          __settings__.setSetting(name,value)
+      except:
+          logger.info("[config.py] ERROR al fijar el parametro global {0}= {1}".format(name, value))
+          return None
+              
+      return value
 
 def get_localized_string(code):
     dev = __language__(code)

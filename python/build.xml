@@ -558,6 +558,7 @@
         <copy todir="${target}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/servers">
             <fileset dir="main-classic/servers">
                 <include name="*.py"/>
+                <include name="*.xml"/>
             </fileset>
         </copy>
 
