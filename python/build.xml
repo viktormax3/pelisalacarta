@@ -26,13 +26,13 @@
 <project name="pelisalacarta" default="package">
 	<description>pelisalacarta</description>
 
-    <property name="oldversion" value="4.1.0"/>
-    <property name="oldversionboxee" value="10.22"/>
-    <property name="oldversiondate" value="04/04/2016"/>
+    <property name="oldversion" value="4.1.1"/>
+    <property name="oldversionboxee" value="10.23"/>
+    <property name="oldversiondate" value="09/07/2016"/>
 
-    <property name="version" value="4.1.1"/>
-    <property name="versionboxee" value="10.23"/>
-    <property name="versiondate" value="09/07/2016"/>
+    <property name="version" value="4.1.2"/>
+    <property name="versionboxee" value="10.24"/>
+    <property name="versiondate" value="26/07/2016"/>
     <property name="versionchanges" value="Bugfix"/>
 
     <property name="target" value="../../target/python"/>
