@@ -326,6 +326,7 @@
                 <exclude name="**/.*/**"/>
             </fileset>
         </copy>
+        <copy file="main-classic/resources/settings-oldplatform.xml" tofile="${target_base_folder}/boxee/info.mimediacenter.pelisalacarta/resources/settings.xml" overwrite="true"/>
 
         <zip destfile="${target_base_folder}/pelisalacarta-boxee-${version}.zip" basedir="${target_base_folder}/boxee"/>
         <copy file="${target_base_folder}/pelisalacarta-boxee-${version}.zip" tofile="${target_base_folder}/info.mimediacenter.pelisalacarta-${versionboxee}.zip" overwrite="true"/>
@@ -467,7 +468,7 @@
                   <exclude name="**/.*/**"/>
             </fileset>
         </copy>
-        <zip destfile="${target_base_folder}/mediaserver/pelisalacarta-mediaserver-${version}.zip" basedir="${target_base_folder}/mediaserver"/>
+        <zip destfile="${target_base_folder}/pelisalacarta-mediaserver-${version}.zip" basedir="${target_base_folder}/mediaserver"/>
     </target>
 
     <!-- copy-wiimc ============================================================ -->
@@ -662,62 +663,62 @@
 
         <!-- classic -->
 
-        <echo message="Subiendo pelisalacarta-kodi-17-krypton-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/kodi-17-krypton/pelisalacarta-kodi-krypton-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-kodi-17-krypton-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-kodi-krypton-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-kodi-16-jarvis-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/kodi-16-jarvis/pelisalacarta-kodi-jarvis-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-kodi-16-jarvis-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-kodi-jarvis-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-kodi-15-isengard-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/kodi-15-isengard/pelisalacarta-kodi-isengard-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-kodi-15-isengard-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-kodi-isengard-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-kodi-14-helix-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/kodi-14-helix/pelisalacarta-kodi-helix-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-kodi-14-helix-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-kodi-helix-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-xbmc-13-gotham-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/xbmc-13-gotham/pelisalacarta-xbmc-gotham-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-xbmc-13-gotham-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-xbmc-gotham-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-xbmc-12-frodo-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/xbmc-12-frodo/pelisalacarta-xbmc-frodo-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-xbmc-12-frodo-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-xbmc-frodo-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-xbmc-11-eden-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/xbmc-11-eden/pelisalacarta-xbmc-eden-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-xbmc-11-eden-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-xbmc-eden-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-xbmc-10-dharma-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/xbmc-10-dharma/pelisalacarta-xbmc-dharma-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-xbmc-10-dharma-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-xbmc-dharma-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-xbmc-09-plugin-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/xbmc-09-plugin/pelisalacarta-xbmc-plugin-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-xbmc-09-plugin-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-xbmc-plugin-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
         <!-- ui -->
 
-        <echo message="Subiendo pelisalacarta-kodi-17-krypton-ui-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/kodi-17-krypton-ui/pelisalacarta-ui-kodi-krypton-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-kodi-17-krypton-ui-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-ui-kodi-krypton-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-kodi-16-jarvis-ui-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/kodi-16-jarvis-ui/pelisalacarta-ui-kodi-jarvis-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-kodi-16-jarvis-ui-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-ui-kodi-jarvis-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-kodi-15-isengard-ui-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/kodi-16-jarvis-ui/pelisalacarta-ui-kodi-isengard-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-kodi-15-isengard-ui-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-ui-kodi-isengard-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-kodi-14-helix-ui-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/kodi-16-jarvis-ui/pelisalacarta-ui-kodi-helix-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-kodi-14-helix-ui-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-ui-kodi-helix-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-xbmc-13-gotham-ui-${version}.zip"/>
-        <exec executable="scp"><arg value="${target_base_folder}/kodi-16-jarvis-ui/pelisalacarta-ui-xbmc-gotham-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
+        <echo message="Subiendo pelisalacarta-xbmc-13-gotham-ui-${version}"/>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-ui-xbmc-gotham-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
         <!-- other platforms -->
 
-        <echo message="Subiendo pelisalacarta-boxee-${version}.zip"/>
+        <echo message="Subiendo pelisalacarta-boxee-${version}"/>
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-boxee-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-plex-${version}.zip"/>
+        <echo message="Subiendo pelisalacarta-plex-${version}"/>
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-plex-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-mediaserver-${version}.zip"/>
+        <echo message="Subiendo pelisalacarta-mediaserver-${version}"/>
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-mediaserver-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
-        <echo message="Subiendo pelisalacarta-commandline-${version}.zip"/>
+        <echo message="Subiendo pelisalacarta-commandline-${version}"/>
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-cli-${version}.zip"/><arg value="${ruta_remota_descargas}"/></exec>
 
         <!--
