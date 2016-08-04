@@ -16,10 +16,8 @@ import xbmcplugin
 import xbmc
 
 PLATFORM_NAME = "xbmc-plugin"
-
+OLD_PLATFORM = True
 PLUGIN_NAME = "pelisalacarta"
-
-
 
 def get_platform():
     return PLATFORM_NAME
