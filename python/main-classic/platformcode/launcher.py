@@ -177,6 +177,7 @@ def run():
             # Special play action
             if item.action == "play":
                 logger.info("pelisalacarta.platformcode.launcher play")
+                logger.debug("item_toPlay: " + "\n" + item.tostring('\n'))
 
                 # First checks if channel has a "play" function
                 if hasattr(channel, 'play'):
@@ -200,10 +201,6 @@ def run():
             # Special action for findvideos, where the plugin looks for known urls
             elif item.action == "findvideos":
 
-                if item.strm:
-                    # Special action for playing a video from the library
-                    play_from_library(item, channel, server_white_list, server_black_list)
-
                 # First checks if channel has a "findvideos" function
                 if hasattr(channel, 'findvideos'):
                     itemlist = getattr(channel, item.action)(item)
@@ -222,6 +219,10 @@ def run():
                 subtitletools.saveSubtitleName(item)
 
                 platformtools.render_items(itemlist, item)
+
+            # Special action for playing a video from the library
+            elif item.action == "play_from_library":
+                play_from_library(item, server_white_list, server_black_list)
 
             # Special action for adding a movie to the library
             elif item.action == "add_pelicula_to_library":
@@ -262,7 +263,7 @@ def run():
         if hasattr(e, 'reason'):
             logger.info("pelisalacarta.platformcode.launcher Razon del error, codigo: "+str(e.reason[0])+", Razon: "+str(e.reason[1]))
             texto = config.get_localized_string(30050) # "No se puede conectar con el sitio web"
-            ok = ventana_error.ok ("plugin", texto)
+            platformtools.dialog_ok ("plugin", texto)
 
         # Grab server response errors
         elif hasattr(e, 'code'):
@@ -350,38 +351,48 @@ def filtered_servers(itemlist, server_white_list, server_black_list):
 
     return new_list
 
-
-def play_from_library(item, channel, server_white_list, server_black_list):
+def play_from_library(item, server_white_list, server_black_list):
     logger.info("pelisalacarta.platformcode.launcher play_from_library")
+    #logger.debug("item: " + "\n" + item.tostring('\n'))
 
-    logger.info("pelisalacarta.platformcode.launcher play_from_library item.server=#"+item.server+"#")
-    # Ejecuta find_videos, del canal o común
-    if hasattr(channel, 'findvideos'):
-        itemlist = getattr(channel, item.action)(item)
-    else:
-        from core import servertools
-        itemlist = servertools.find_video_items(item)
+    # Llamamos al metodo findvideos del canal biblioteca
+    from channels import biblioteca
+    list_servers = getattr(biblioteca, 'findvideos')(item)
 
     if config.get_setting('filter_servers') == 'true':
-        itemlist = filtered_servers(itemlist, server_white_list, server_black_list)
+        list_servers = filtered_servers(list_servers, server_white_list, server_black_list)
 
-    if len(itemlist) > 0:
-        # El usuario elige el mirror
-        opciones = []
-        for item in itemlist:
-            opciones.append(item.title)
-
+    if len(list_servers) == 0:
+        # Cancelar no hay nada q reproducir
+        logger.debug("Cancelar no hay nada que reproducir")
+        return
+    elif len(list_servers) == 1:
+        # Solo hay un server
+        server_seleccionado = list_servers[0]
+    else:
+        # Si hay mas de una opcion para el video mostrar el cuadro de seleccion
+        opciones = [item.title for item in list_servers]
         seleccion = platformtools.dialog_select(config.get_localized_string(30163), opciones)
-        elegido = itemlist[seleccion]
 
         if seleccion == -1:
+            # Cancelar
+            logger.debug("Se ha pulsado Cancelar en el cuadro de dialogo")
             return
-    else:
-        elegido = item
+        server_seleccionado = list_servers[seleccion]
+
+    #logger.debug("server_seleccionado: " + "\n" + server_seleccionado.tostring('\n'))
+
+
+    # Importamos el canal desde el q reproduciremos
+    try:
+        channel = __import__('channels.%s' % server_seleccionado.channel,
+                             fromlist=["channels.%s" % server_seleccionado.channel])
+    except:
+        exec "import channels." + server_seleccionado.channel + " as channel"
 
     # Ejecuta el método play del canal, si lo hay
     try:
-        itemlist = channel.play(elegido)
+        itemlist = channel.play(server_seleccionado)
         item = itemlist[0]
     except AttributeError:
         item = elegido
@@ -389,3 +400,15 @@ def play_from_library(item, channel, server_white_list, server_black_list):
                                                                                                item.subtitle))
     platformtools.play_video(item, True)
     library.mark_as_watched(item)
+
+
+
+
+
+
+
+
+
+
+
+
