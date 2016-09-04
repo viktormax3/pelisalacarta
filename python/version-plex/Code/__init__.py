@@ -1,17 +1,20 @@
-import re, datetime
+import sys
+import os
+import bridge
+import channelselector
+from core import config
+from core.item import Item
+from core import channeltools
+from core import servertools
+from DumbTools import DumbKeyboard
+
+#Añadimos "lib" al path
+sys.path.append (os.path.join( config.get_runtime_path(), 'lib' ))
 
 # Passing log and config to an external library
 # Credits to https://gist.github.com/mikew/5011984
-import bridge
 bridge.init(Log,Prefs,Locale)
 
-import channelselector
-
-from core.item import Item
-from core import channeltools
-from servers import servertools
-
-from DumbTools import DumbKeyboard
 
 ###################################################################################################
 
