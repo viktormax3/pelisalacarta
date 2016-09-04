@@ -165,7 +165,7 @@ def render_items(itemlist, parent_item):
             xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url='%s?%s' % (sys.argv[0], item.tourl()),
                                         listitem=listitem, isFolder=item.folder)
         else:
-            listitem.addContextMenuItems(context_commands)
+            listitem.addContextMenuItems(context_commands, replaceItems=True)
             xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url='%s?%s' % (sys.argv[0], item.tourl()),
                                         listitem=listitem, isFolder=item.folder,
                                         totalItems=item.totalItems if item.totalItems else 0)
@@ -294,6 +294,16 @@ def set_context_commands(item, parent_item):
             context_commands.append((command.title, "XBMC.RunPlugin(%s?%s)" % (sys.argv[0], command.tourl())))
 
     # Opciones segun criterios
+
+    # Mostrar informacion: si el item tiene plot suponemos q es una serie, temporada, capitulo o pelicula
+    if item.infoLabels['plot']:
+        context_commands.append(("Información", "XBMC.Action(Info)"))
+
+    # Ir al Menu Principal (channel.mainlist)
+    if parent_item.channel not in ["novedades"] and item.action!="mainlist" and  parent_item.action!="mainlist":
+        context_commands.append(("Ir al Menu Principal", "XBMC.Container.Refresh (%s?%s)" %
+                                 (sys.argv[0], Item(channel=item.channel, action="mainlist").tourl())))
+
     # Quitar de Favoritos
     if parent_item.channel == "favoritos":
         context_commands.append(("Quitar a Favoritos", "XBMC.RunPlugin(%s?%s)" %
@@ -321,117 +331,34 @@ def set_context_commands(item, parent_item):
                                                           from_action=item.action).tourl())))
 
     # Descargar pelicula
-    if item.action in ["detail", "findvideos"] and not (item.contentSerieName or item.show):
+    if item.action in ["detail", "findvideos"] and item.contentType == 'movie':
         context_commands.append(("Descargar Pelicula", "XBMC.RunPlugin(%s?%s)" %
                                  (sys.argv[0], item.clone(channel="descargas", action="save_download_movie",
                                                           from_channel=item.channel, from_action=item.action).tourl())))
 
     # Descargar serie
-    if item.action in ["episodios", "get_episodios"] and (item.contentSerieName or item.show):
+    if item.action in ["episodios", "get_episodios"] and item.contentType != 'movie':
         context_commands.append(("Descargar Serie", "XBMC.RunPlugin(%s?%s)" %
                                  (sys.argv[0], item.clone(channel="descargas", action="save_download_tvshow",
                                                           from_channel=item.channel, from_action=item.action).tourl())))
 
     # Descargar episodio
-    if item.action in ["detail", "findvideos"] and (item.contentSerieName or item.show):
+    if item.action in ["detail", "findvideos"] and item.contentType != 'movie':
         context_commands.append(("Descargar Episodio", "XBMC.RunPlugin(%s?%s)" %
                                  (sys.argv[0], item.clone(channel="descargas", action="save_download",
                                                           from_channel=item.channel, from_action=item.action).tourl())))
 
-    # Menus para la Biblioteca - Inicio
 
-    # PELICULAS
-    if item.channel == "biblioteca" and item.action == "findvideos" and not(item.contentSerieName or item.show):
-        context_commands.append(("Información", "XBMC.Action(Info)"))
-        if hasattr(item, 'infoLabels'):
-            contador = item.infoLabels.get('playcount', 0)
+    # Abrir configuración
+    if parent_item.channel not in ["configuracion","novedades","buscador"]:
+        context_commands.append(("Abrir Configuración", "XBMC.Container.Update(%s?%s)" %
+                                 (sys.argv[0], Item(channel="configuracion", action="mainlist").tourl())))
 
-            if contador > 0:
-                texto = "Marcar como no visto"
-                contador = 0
-            else:
-                texto = "Marcar como visto"
-                contador = 1
 
-            new_item = item.clone(channel="biblioteca", action="marcar_episodio")
-            new_item.infoLabels['playcount'] = contador
 
-            context_commands.append((texto, "XBMC.RunPlugin(%s?%s)" % (sys.argv[0], new_item.tourl())))
 
-        context_commands.append(("Eliminar", "XBMC.RunPlugin(%s?%s)" %
-                                 (sys.argv[0], item.clone(channel=item.channel, action="eliminar").tourl())))
 
-        # TODO
-        context_commands.append(("Cambiar contenido", "XBMC.RunPlugin(%s?%s)" %
-                                 (sys.argv[0], item.clone(channel="descargas", action="save_download",
-                                                          from_channel=item.channel, from_action=item.action).tourl())))
-
-    # SERIES
-    if item.channel == "biblioteca" and item.action == "get_temporadas" and (item.contentSerieName or item.show):
-        # opciones para la serie
-        context_commands.append(("Información", "XBMC.Action(Info)"))
-        # TODO
-        context_commands.append(("Marcar como visto", "XBMC.RunPlugin(%s?%s)" %
-                                 (sys.argv[0], item.clone(channel="descargas", action="save_download",
-                                                          from_channel=item.channel, from_action=item.action).tourl())))
-        # TODO
-        context_commands.append(("Marcar como no visto", "XBMC.RunPlugin(%s?%s)" %
-                                 (sys.argv[0], item.clone(channel="descargas", action="save_download",
-                                                          from_channel=item.channel, from_action=item.action).tourl())))
-        context_commands.append(("Eliminar", "XBMC.RunPlugin(%s?%s)" %
-                                 (sys.argv[0], item.clone(channel=item.channel, action="eliminar").tourl())))
-
-        if item.active:
-            texto = "No buscar automáticamente nuevos episodios"
-            actualizar = False
-        else:
-            texto = "Buscar automáticamente nuevos episodios"
-            actualizar = True
-
-        new_item = item.clone(channel="biblioteca", action="actualizacion_automatica")
-        new_item.active = actualizar
-        context_commands.append((texto, "XBMC.RunPlugin(%s?%s)" % (sys.argv[0], new_item.tourl())))
-
-        # TODO
-        context_commands.append(("Cambiar contenido", "XBMC.RunPlugin(%s?%s)" %
-                                 (sys.argv[0], item.clone(channel="descargas", action="save_download",
-                                                          from_channel=item.channel, from_action=item.action).tourl())))
-
-    if item.channel == "biblioteca" and item.action == "get_episodios" and (item.contentSerieName or item.show):
-        # TODO que se oculte tb la carpeta padre
-        # opciones para temporadas
-        new_item = item.clone(channel="biblioteca", action="marcar_temporada")
-
-        new_item.infoLabels['playcount'] = 1
-        context_commands.append(("Marcar como visto", "XBMC.RunPlugin(%s?%s)" %
-                                 (sys.argv[0], new_item.tourl())))
-
-        new_item.infoLabels['playcount'] = 0
-        context_commands.append(("Marcar como no visto", "XBMC.RunPlugin(%s?%s)" %
-                                 (sys.argv[0], new_item.tourl())))
-
-    if item.channel == "biblioteca" and item.action == "findvideos" and (item.contentSerieName or item.show):
-        # opciones para episodio
-        if hasattr(item, 'infoLabels'):
-            new_item = item.clone(channel="biblioteca", action="marcar_episodio")
-
-            if item.infoLabels.get('playcount', 0):
-                texto = "Marcar como no visto"
-                new_item.infoLabels['playcount'] = 0
-            else:
-                texto = "Marcar como visto"
-                new_item.infoLabels['playcount'] = 1
-
-            context_commands.append((texto, "XBMC.RunPlugin(%s?%s)" % (sys.argv[0], new_item.tourl())))
-
-    # Menus para la Biblioteca - Fin
-
-    # Opciones para todos los items
-    # Abrir configuración desde cualquier lugar
-    context_commands.append(("Abrir Configuración", "XBMC.RunPlugin(%s?%s)" %
-                             (sys.argv[0], Item(channel="configuracion", action="mainlist").tourl())))
-
-    return context_commands
+    return sorted(context_commands, key=lambda comand: comand[0])
 
 
 def is_playing():
@@ -476,9 +403,13 @@ def play_video(item, strm=False):
 def get_info_video(item, mediaurl, strm):
     logger.info("pelisalacarta.platformcode.platformtools get_info_video")
     # Obtención datos de la Biblioteca (solo strms que estén en la biblioteca)
-    if strm:
+    logger.debug("######################################0")
+    '''if strm:
+        logger.debug("######################################1")
+        raise
         xlistitem = get_library_info(mediaurl)
     else:
+        logger.debug("######################################2")
         play_title = item.fulltitle
         play_thumbnail = item.thumbnail
         play_plot = item.plot
@@ -497,149 +428,11 @@ def get_info_video(item, mediaurl, strm):
         xlistitem.setInfo("video", {"Title": play_title, "Plot": play_plot, "Studio": item.channel,
                                     "Genre": item.category})
 
-        set_infolabels(xlistitem, item)
+        set_infolabels(xlistitem, item)'''
 
+    xlistitem = xbmcgui.ListItem(thumbnailImage=item.thumbnail)
+    set_infolabels(xlistitem, item)
     return xlistitem
-
-
-def get_seleccion(default_action, opciones, seleccion, video_urls):
-    # preguntar
-    if default_action == "0":
-        # "Elige una opción"
-        seleccion = dialog_select(config.get_localized_string(30163), opciones)
-    # Ver en calidad baja
-    elif default_action == "1":
-        seleccion = 0
-    # Ver en alta calidad
-    elif default_action == "2":
-        seleccion = len(video_urls) - 1
-    # jdownloader
-    elif default_action == "3":
-        seleccion = seleccion
-    else:
-        seleccion = 0
-    return seleccion
-
-
-def show_channel_settings(list_controls=None, dict_values=None, caption="", callback=None, item=None,
-                          custom_button=None):
-    """
-    Muestra un cuadro de configuracion personalizado para cada canal y guarda los datos al cerrarlo.
-    
-    Parametros: ver descripcion en xbmc_config_menu.SettingsWindow
-    @param list_controls: lista de elementos a mostrar en la ventana.
-    @type list_controls: list
-    @param dict_values: valores que tienen la lista de elementos.
-    @type dict_values: dict
-    @param caption: titulo de la ventana
-    @type caption: str
-    @param callback: función que se llama tras cerrarse la ventana.
-    @type callback: str
-    @param item: item para el que se muestra la ventana de configuración.
-    @type item: Item
-    @param custom_button: botón personalizado, que se muestra junto a "OK" y "Cancelar".
-    @type custom_button: dict
-
-    @return: devuelve la ventana con los elementos
-    @rtype: SettingsWindow
-    """
-    from xbmc_config_menu import SettingsWindow
-    return SettingsWindow("ChannelSettings.xml", config.get_runtime_path())\
-        .start(list_controls=list_controls, dict_values=dict_values, title=caption, callback=callback, item=item,
-               custom_button=custom_button)
-
-
-def show_video_info(data, caption="", callback=None, item=None):
-    """
-    Muestra una ventana con la info del vídeo. Opcionalmente se puede indicar el titulo de la ventana mendiante
-    el argumento 'caption'.
-
-    Si se pasa un item como argumento 'data' usa el scrapper Tmdb para buscar la info del vídeo
-        En caso de peliculas:
-            Coge el titulo de los siguientes campos (en este orden)
-                  1. contentTitle (este tiene prioridad 1)
-                  2. fulltitle (este tiene prioridad 2)
-                  3. title (este tiene prioridad 3)
-            El primero que contenga "algo" lo interpreta como el titulo (es importante asegurarse que el titulo este en
-            su sitio)
-
-        En caso de series:
-            1. Busca la temporada y episodio en los campos contentSeason y contentEpisodeNumber
-            2. Intenta Sacarlo del titulo del video (formato: 1x01)
-
-            Aqui hay dos opciones posibles:
-                  1. Tenemos Temporada y episodio
-                    Muestra la información del capitulo concreto
-                    Se puede navegar con las flechas para cambiar de temporada / eìsodio
-                    Flecha Arriba: Aumentar temporada
-                    Flecha Abajo: Disminuir temporada
-                    Flecha Derecha: Aumentar eìsodio
-                    Flecha Izquierda: Disminuir eìsodio
-                  2. NO Tenemos Temporada y episodio
-                    En este caso muestra la informacion generica de la serie
-
-    Si se pasa como argumento 'data' un dict() muestra en la ventana directamente la información pasada (sin usar el
-    scrapper)
-        Formato:
-            En caso de peliculas:
-                dict({
-                         "type"           : "movie",
-                         "title"          : "Titulo de la pelicula",
-                         "original_title" : "Titulo original de la pelicula",
-                         "date"           : "Fecha de lanzamiento",
-                         "language"       : "Idioma original de la pelicula",
-                         "rating"         : "Puntuacion de la pelicula",
-                         "genres"         : "Generos de la pelicula",
-                         "thumbnail"      : "Ruta para el thumbnail",
-                         "fanart"         : "Ruta para el fanart",
-                         "overview"       : "Sinopsis de la pelicula"
-                      }
-            En caso de series:
-                dict({
-                         "type"           : "tv",
-                         "title"          : "Titulo de la serie",
-                         "episode_title"  : "Titulo del episodio",
-                         "date"           : "Fecha de emision",
-                         "language"       : "Idioma original de la serie",
-                         "rating"         : "Puntuacion de la serie",
-                         "genres"         : "Generos de la serie",
-                         "thumbnail"      : "Ruta para el thumbnail",
-                         "fanart"         : "Ruta para el fanart",
-                         "overview"       : "Sinopsis de la del episodio o de la serie",
-                         "seasons"        : "Numero de Temporadas",
-                         "season"         : "Temporada",
-                         "episodes"       : "Numero de episodios de la temporada",
-                         "episode"        : "Episodio"
-                      }
-    Si se pasa como argumento 'data' un listado de dict() con la estructura anterior, muestra los botones 'Anterior' y
-    'Siguiente' para ir recorriendo la lista. Ademas muestra los botones 'Aceptar' y 'Cancelar' que llamaran a la
-    funcion 'callback' del canal desde donde se realiza la llamada pasandole como parametros el elemento actual (dict())
-    o None respectivamente.
-
-    @param data: información para obtener datos del scraper.
-    @type data: item, dict, list(dict)
-    @param caption: titulo de la ventana.
-    @type caption: str
-    @param callback: función que se llama después de cerrarse la ventana de información
-    @type callback: str
-    @param item: elemento del que se va a mostrar la ventana de información
-    @type item: Item
-    """
-
-    from xbmc_info_window import InfoWindow
-    return InfoWindow("InfoWindow.xml", config.get_runtime_path()).Start(data, caption=caption, callback=callback,
-                                                                         item=item)
-
-
-def alert_no_disponible_server(server):
-    # 'El vídeo ya no está en %s' , 'Prueba en otro servidor o en otro canal'
-    dialog_ok(config.get_localized_string(30055), (config.get_localized_string(30057) % server),
-              config.get_localized_string(30058))
-
-
-def alert_unsopported_server():
-    # 'Servidor no soportado o desconocido' , 'Prueba en otro servidor o en otro canal'
-    dialog_ok(config.get_localized_string(30065), config.get_localized_string(30058))
 
 
 def get_library_info(mediaurl):
@@ -772,6 +565,143 @@ def get_library_info(mediaurl):
         listitem.setInfo("video", infodict)
 
     return listitem
+
+
+def get_seleccion(default_action, opciones, seleccion, video_urls):
+    # preguntar
+    if default_action == "0":
+        # "Elige una opción"
+        seleccion = dialog_select(config.get_localized_string(30163), opciones)
+    # Ver en calidad baja
+    elif default_action == "1":
+        seleccion = 0
+    # Ver en alta calidad
+    elif default_action == "2":
+        seleccion = len(video_urls) - 1
+    # jdownloader
+    elif default_action == "3":
+        seleccion = seleccion
+    else:
+        seleccion = 0
+    return seleccion
+
+
+def show_channel_settings(list_controls=None, dict_values=None, caption="", callback=None, item=None,
+                          custom_button=None):
+    """
+    Muestra un cuadro de configuracion personalizado para cada canal y guarda los datos al cerrarlo.
+    
+    Parametros: ver descripcion en xbmc_config_menu.SettingsWindow
+    @param list_controls: lista de elementos a mostrar en la ventana.
+    @type list_controls: list
+    @param dict_values: valores que tienen la lista de elementos.
+    @type dict_values: dict
+    @param caption: titulo de la ventana
+    @type caption: str
+    @param callback: función que se llama tras cerrarse la ventana.
+    @type callback: str
+    @param item: item para el que se muestra la ventana de configuración.
+    @type item: Item
+    @param custom_button: botón personalizado, que se muestra junto a "OK" y "Cancelar".
+    @type custom_button: dict
+
+    @return: devuelve la ventana con los elementos
+    @rtype: SettingsWindow
+    """
+    from xbmc_config_menu import SettingsWindow
+    return SettingsWindow("ChannelSettings.xml", config.get_runtime_path())\
+        .start(list_controls=list_controls, dict_values=dict_values, title=caption, callback=callback, item=item,
+               custom_button=custom_button)
+
+
+def show_video_info(data, caption="", callback=None, item=None):
+    """
+    Muestra una ventana con la info del vídeo. Opcionalmente se puede indicar el titulo de la ventana mendiante
+    el argumento 'caption'.
+
+    Si se pasa un item como argumento 'data' usa el scrapper Tmdb para buscar la info del vídeo
+        En caso de peliculas:
+            Coge el titulo de los siguientes campos (en este orden)
+                  1. contentTitle (este tiene prioridad 1)
+                  2. fulltitle (este tiene prioridad 2)
+                  3. title (este tiene prioridad 3)
+            El primero que contenga "algo" lo interpreta como el titulo (es importante asegurarse que el titulo este en
+            su sitio)
+
+        En caso de series:
+            1. Busca la temporada y episodio en los campos contentSeason y contentEpisodeNumber
+            2. Intenta Sacarlo del titulo del video (formato: 1x01)
+
+            Aqui hay dos opciones posibles:
+                  1. Tenemos Temporada y episodio
+                    Muestra la información del capitulo concreto
+                  2. NO Tenemos Temporada y episodio
+                    En este caso muestra la informacion generica de la serie
+
+    Si se pasa como argumento 'data' un  objeto InfoLabels(ver item.py) muestra en la ventana directamente
+    la información pasada (sin usar el scrapper)
+        Formato:
+            En caso de peliculas:
+                infoLabels({
+                         "type"           : "movie",
+                         "title"          : "Titulo de la pelicula",
+                         "original_title" : "Titulo original de la pelicula",
+                         "date"           : "Fecha de lanzamiento",
+                         "language"       : "Idioma original de la pelicula",
+                         "rating"         : "Puntuacion de la pelicula",
+                         "votes"          : "Numero de votos",
+                         "genres"         : "Generos de la pelicula",
+                         "thumbnail"      : "Ruta para el thumbnail",
+                         "fanart"         : "Ruta para el fanart",
+                         "plot"           : "Sinopsis de la pelicula"
+                      }
+            En caso de series:
+                infoLabels({
+                         "type"           : "tv",
+                         "title"          : "Titulo de la serie",
+                         "episode_title"  : "Titulo del episodio",
+                         "date"           : "Fecha de emision",
+                         "language"       : "Idioma original de la serie",
+                         "rating"         : "Puntuacion de la serie",
+                         "votes"          : "Numero de votos",
+                         "genres"         : "Generos de la serie",
+                         "thumbnail"      : "Ruta para el thumbnail",
+                         "fanart"         : "Ruta para el fanart",
+                         "plot"           : "Sinopsis de la del episodio o de la serie",
+                         "seasons"        : "Numero de Temporadas",
+                         "season"         : "Temporada",
+                         "episodes"       : "Numero de episodios de la temporada",
+                         "episode"        : "Episodio"
+                      }
+    Si se pasa como argumento 'data' un listado de InfoLabels() con la estructura anterior, muestra los botones
+    'Anterior' y 'Siguiente' para ir recorriendo la lista. Ademas muestra los botones 'Aceptar' y 'Cancelar' que
+    llamaran a la funcion 'callback' del canal desde donde se realiza la llamada pasandole como parametros el elemento
+    actual (InfoLabels()) o None respectivamente.
+
+    @param data: información para obtener datos del scraper.
+    @type data: item, InfoLabels, list(InfoLabels)
+    @param caption: titulo de la ventana.
+    @type caption: str
+    @param callback: función que se llama después de cerrarse la ventana de información
+    @type callback: str
+    @param item: elemento del que se va a mostrar la ventana de información
+    @type item: Item
+    """
+
+    from xbmc_info_window import InfoWindow
+    return InfoWindow("InfoWindow.xml", config.get_runtime_path()).Start(data, caption=caption, callback=callback,
+                                                                         item=item)
+
+
+def alert_no_disponible_server(server):
+    # 'El vídeo ya no está en %s' , 'Prueba en otro servidor o en otro canal'
+    dialog_ok(config.get_localized_string(30055), (config.get_localized_string(30057) % server),
+              config.get_localized_string(30058))
+
+
+def alert_unsopported_server():
+    # 'Servidor no soportado o desconocido' , 'Prueba en otro servidor o en otro canal'
+    dialog_ok(config.get_localized_string(30065), config.get_localized_string(30058))
 
 
 def handle_wait(time_to_wait, title, text):
