@@ -169,7 +169,7 @@ def render_items(itemlist, parent_item):
             xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url='%s?%s' % (sys.argv[0], item.tourl()),
                                         listitem=listitem, isFolder=item.folder,
                                         totalItems=item.totalItems if item.totalItems else 0)
-
+        logger.debug(str(item))
     # Vista 5x3 hasta llegar al listado de canales
     if parent_item.channel not in ["channelselector", ""]:
         xbmcplugin.setContent(int(sys.argv[1]), "movies")
@@ -264,19 +264,20 @@ def set_context_commands(item, parent_item):
                     from_channel=item.channel
                 ).tourl())))
 
-            if command == "guardar filtro":
+            elif command == "guardar filtro":
                 context_commands.append(("guardar filtro serie", "XBMC.RunPlugin(%s?%s)" % (sys.argv[0], item.clone(
                     channel="filtertools",
                     action="save_filter",
                     from_channel=item.channel
                 ).tourl())))
 
-            if command == "borrar filtro":
+            elif command == "borrar filtro":
                 context_commands.append(("Eliminar Filtro", "XBMC.RunPlugin(%s?%s)" % (sys.argv[0], item.clone(
                     channel="filtertools",
                     action="del_filter",
                     from_channel=item.channel
                 ).tourl())))
+
 
         # Formato dict
         if type(command) == dict:
@@ -293,11 +294,44 @@ def set_context_commands(item, parent_item):
         if type(command) == Item:
             context_commands.append((command.title, "XBMC.RunPlugin(%s?%s)" % (sys.argv[0], command.tourl())))
 
+
     # Opciones segun criterios
 
     # Mostrar informacion: si el item tiene plot suponemos q es una serie, temporada, capitulo o pelicula
     if item.infoLabels['plot']:
         context_commands.append(("Información", "XBMC.Action(Info)"))
+
+    # ExtendedInfo: Si esta instalado el addon y se cumplen una serie de condiciones
+    if xbmc.getCondVisibility('System.HasAddon(script.extendedinfo)'):
+        if item.contentType == "episode" and item.contentEpisodeNumber and item.contentSeason \
+                and (item.infoLabels['tmdb_id'] or item.contentSerieName):
+            param = "tvshow_id =%s, tvshow=%s, season=%s, episode=%s" \
+                    % (item.infoLabels['tmdb_id'], item.contentSerieName, item.contentSeason,
+                       item.contentEpisodeNumber)
+            context_commands.append(("ExtendedInfo",
+                                     "XBMC.RunScript(script.extendedinfo,info=extendedepisodeinfo,%s)" % (param)))
+
+        elif item.contentType == "season" and item.contentSeason \
+                and (item.infoLabels['tmdb_id'] or item.contentSerieName):
+            param = "tvshow_id =%s,tvshow=%s, season=%s" \
+                    % (item.infoLabels['tmdb_id'], item.contentSerieName, item.contentSeason)
+            context_commands.append(("ExtendedInfo",
+                                     "XBMC.RunScript(script.extendedinfo,info=seasoninfo,%s)" % (param)))
+
+        elif item.contentType == "tvshow" and (item.infoLabels['tmdb_id'] or item.infoLabels['tvdb_id']
+                                               or item.infoLabels['imdb_id'] or item.contentSerieName):
+            param = "id =%s,tvdb_id=%s,imdb_id=%s,name=%s" \
+                    % (item.infoLabels['tmdb_id'], item.infoLabels['tvdb_id'], item.infoLabels['imdb_id'],
+                       item.contentSerieName)
+            context_commands.append(("ExtendedInfo",
+                                     "XBMC.RunScript(script.extendedinfo,info=extendedtvinfo,%s)" % (param)))
+
+        elif item.contentType == "movie" and (item.infoLabels['tmdb_id'] or item.infoLabels['imdb_id']
+                                              or item.contentTitle):
+            param = "id =%s,imdb_id=%s,name=%s" \
+                    % (item.infoLabels['tmdb_id'], item.infoLabels['imdb_id'], item.contentTitle)
+            context_commands.append(("ExtendedInfo",
+                                     "XBMC.RunScript(script.extendedinfo,info=extendedinfo,%s)" % (param)))
 
     # Ir al Menu Principal (channel.mainlist)
     if parent_item.channel not in ["novedades"] and item.action!="mainlist" and  parent_item.action!="mainlist":
@@ -347,7 +381,6 @@ def set_context_commands(item, parent_item):
         context_commands.append(("Descargar Episodio", "XBMC.RunPlugin(%s?%s)" %
                                  (sys.argv[0], item.clone(channel="descargas", action="save_download",
                                                           from_channel=item.channel, from_action=item.action).tourl())))
-
 
     # Abrir configuración
     if parent_item.channel not in ["configuracion","novedades","buscador"]:
@@ -434,7 +467,7 @@ def get_info_video(item, mediaurl, strm):
     set_infolabels(xlistitem, item)
     return xlistitem
 
-
+'''
 def get_library_info(mediaurl):
     """
     Obtiene información de la Biblioteca si existe (ficheros strm) o de los parámetros
@@ -565,7 +598,7 @@ def get_library_info(mediaurl):
         listitem.setInfo("video", infodict)
 
     return listitem
-
+'''
 
 def get_seleccion(default_action, opciones, seleccion, video_urls):
     # preguntar
