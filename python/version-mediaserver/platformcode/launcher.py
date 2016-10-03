@@ -540,14 +540,14 @@ def add_to_favorites(item):
     title = platformtools.dialog_input(default=downloadtools.limpia_nombre_excepto_1(item.fulltitle)+" ["+item.channel+"]")
     if title is not None:
         item.title = title
-        favoritos.savebookmark(item)
+        favoritos.addFavourite(item)
         platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30102) +"\n"+ item.title +"\n"+ config.get_localized_string(30108))
     return
     
 def remove_from_favorites(item):
     from channels import favoritos
     # En "extra" está el nombre del fichero en favoritos
-    favoritos.deletebookmark(item.extra)
+    favoritos.delFavourite(item.extra)
     platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30102) +"\n"+ item.title +"\n"+ config.get_localized_string(30105))
     platformtools.itemlist_refresh()
     return
@@ -590,7 +590,7 @@ def add_to_downloads(item):
     title = platformtools.dialog_input(default=downloadtools.limpia_nombre_excepto_1(item.fulltitle))
     if title is not None:
       item.title = title
-      descargas.savebookmark(item)
+      descargas.addFavourite(item)
 
     platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30109))
     return
@@ -598,7 +598,7 @@ def add_to_downloads(item):
 def remove_from_downloads(item):
   from core import descargas
   # La categoría es el nombre del fichero en la lista de descargas
-  descargas.deletebookmark(item.extra)
+  descargas.delFavourite(item.extra)
 
   platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30106))
   platformtools.itemlist_refresh()
