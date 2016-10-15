@@ -58,10 +58,6 @@ def get_next_items( item ):
                 plugintools.log("navigation.get_next_items Channel list menu")
                 itemlist = channelselector.filterchannels(item.category,"bannermenu")
 
-        elif item.channel=="configuracion":
-            plugintools.open_settings_dialog()
-            return []
-
         else:
 
             if item.action=="":
@@ -125,7 +121,7 @@ def get_next_items( item ):
                     itemlist = servertools.find_video_items(item)
 
                 if len(itemlist)==0:
-                    itemlist = [ Item(title="No se han encontrado vídeos", thumbnail=os.path.join( plugintools.get_runtime_path() , "resources" , "images" , "thumb_error.png" )) ]
+                    itemlist = [ Item(title="No se han encontrado vídeos", thumbnail="http://media.tvalacarta.info/pelisalacarta/thumb_error.png") ]
 
             else:
 
@@ -145,17 +141,17 @@ def get_next_items( item ):
 
                     if loaded_item.thumbnail=="":
                         if loaded_item.folder:
-                            loaded_item.thumbnail = os.path.join( plugintools.get_runtime_path() , "resources" , "images" , "thumb_folder.png" )
+                            loaded_item.thumbnail = "http://media.tvalacarta.info/pelisalacarta/thumb_folder.png"
                         else:
-                            loaded_item.thumbnail = os.path.join( plugintools.get_runtime_path() , "resources" , "images" , "thumb_nofolder.png" )
+                            loaded_item.thumbnail = "http://media.tvalacarta.info/pelisalacarta/thumb_nofolder.png"
 
                 if len(itemlist)==0:
-                    itemlist = [ Item(title="No hay elementos para mostrar", thumbnail=os.path.join( plugintools.get_runtime_path() , "resources" , "images" , "thumb_error.png" )) ]
+                    itemlist = [ Item(title="No hay elementos para mostrar", thumbnail="http://media.tvalacarta.info/pelisalacarta/thumb_error.png" ) ]
 
     except:
         import traceback
         plugintools.log("navigation.get_next_items "+traceback.format_exc())
-        itemlist = [ Item(title="Se ha producido un error", thumbnail=os.path.join( plugintools.get_runtime_path() , "resources" , "images" , "thumb_error.png" )) ]
+        itemlist = [ Item(title="Se ha producido un error", thumbnail="http://media.tvalacarta.info/pelisalacarta/thumb_error.png") ]
 
 
     return itemlist
