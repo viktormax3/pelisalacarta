@@ -70,7 +70,7 @@ def get_next_items( item ):
             except:
                 exec "import core."+item.channel+" as channel"
 
-            from platformcode import xbmctools
+            from platformcode import platformtools
 
             if item.action=="play":
                 plugintools.log("navigation.get_next_items play")
@@ -84,7 +84,7 @@ def get_next_items( item ):
 
                         # FIXME: Este error ha que tratarlo de otra manera, al dar a volver sin ver el vídeo falla
                         try:
-                            xbmctools.play_video(item)
+                            platformtools.play_video(item)
                         except:
                             pass
 
@@ -98,7 +98,7 @@ def get_next_items( item ):
                     # FIXME: Este error ha que tratarlo de otra manera, por al dar a volver sin ver el vídeo falla
                     # Mejor hacer el play desde la ventana
                     try:
-                        xbmctools.play_video(item)
+                        platformtools.play_video(item)
                     except:
                         import traceback
                         plugintools.log(traceback.format_exc())
