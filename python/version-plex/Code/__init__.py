@@ -94,7 +94,7 @@ def channels_list():
     for item in itemlist:
         Log.Info("item="+repr(item))
         if item.channel not in ['tengourl']:
-            oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action="mainlist"), title=item.title, thumb=item.thumbnail))
+            oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action="mainlist", caller_item_serialized = item.tourl()), title=item.title, thumb=item.thumbnail))
 
     return oc
 
@@ -185,7 +185,7 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
                                 thumb = item.thumbnail
                             ))
                 else:
-                    oc.add(DirectoryObject(key=Callback(canal, channel_name=channel_name, action=item.action, caller_item_serialized=item.tourl()), title=item.title, thumb=item.thumbnail))
+                    oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action=item.action, caller_item_serialized=item.tourl()), title=item.title, thumb=item.thumbnail))
             else:
                 Log.Info("Llamando a la funcion play comun")
                 videoClipObject = VideoClipObject(title=item.title,thumb=item.thumbnail, url="pelisalacarta://"+item.url )
