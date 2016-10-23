@@ -374,7 +374,6 @@
         </copy>
 
         <!-- copy plex specific files -->
-        <copy file="version-plex/platformtools.py" todir="${target_base_folder}/plex/pelisalacarta.bundle/Contents/Libraries/Shared/platformcode" overwrite="true"/>
         <copy file="version-plex/Info.plist" todir="${target_base_folder}/plex/pelisalacarta.bundle/Contents" overwrite="true"/>
         <copy file="version-plex/DefaultPrefs.json" todir="${target_base_folder}/plex/pelisalacarta.bundle/Contents" overwrite="true"/>
 
