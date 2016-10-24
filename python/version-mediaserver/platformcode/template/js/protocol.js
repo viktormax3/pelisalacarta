@@ -374,42 +374,48 @@ function GetResponses(data) {
     }
 }
 
-function DefaultConfig() {
-        Objetos = document.getElementById("Config-popup").getElementsByTagName("input")
+function CustomButton(data) {
+        if (data == null){
+            Objetos = document.getElementById("Config-popup").getElementsByTagName("input")
+            
+            for(x=0;x<Objetos.length;x++){
+              switch (Objetos[x].type) {
+                    case "text":
+                        Objetos[x].value = default_settings[Objetos[x].id]
+                        break;
+                    case "password":
+                        Objetos[x].value = default_settings[Objetos[x].id]
+                        break;
+                    case "checkbox":
+                        value = default_settings[Objetos[x].id]
+                        if (value == true) {
+                          value = "checked"
+                        } else{
+                          value = ""
+                        }
+                        Objetos[x].checked = value
+                        break;
+                    case "select-one":
+                        Objetos[x].selectedIndex = default_settings[Objetos[x].id]
+                        break;
+                }
+            }
+            Objetos = document.getElementById("Config-popup").getElementsByTagName("select")
+            for(x=0;x<Objetos.length;x++){
+              switch (Objetos[x].type) {
+                    case "select-one":
+                        if (Objetos[x].name == "enum"){
+                          Objetos[x].selectedIndex = default_settings[Objetos[x].id]
+                        } else if (Objetos[x].name == "labelenum"){
+                          Objetos[x].value = default_settings[Objetos[x].id]
+                        }
+                        break;
+                }
+            }
+        } else{
         
-        for(x=0;x<Objetos.length;x++){
-          switch (Objetos[x].type) {
-                case "text":
-                    Objetos[x].value = default_settings[Objetos[x].id]
-                    break;
-                case "password":
-                    Objetos[x].value = default_settings[Objetos[x].id]
-                    break;
-                case "checkbox":
-                    value = default_settings[Objetos[x].id]
-                    if (value == true) {
-                      value = "checked"
-                    } else{
-                      value = ""
-                    }
-                    Objetos[x].checked = value
-                    break;
-                case "select-one":
-                    Objetos[x].selectedIndex = default_settings[Objetos[x].id]
-                    break;
-            }
-        }
-        Objetos = document.getElementById("Config-popup").getElementsByTagName("select")
-        for(x=0;x<Objetos.length;x++){
-          switch (Objetos[x].type) {
-                case "select-one":
-                    if (Objetos[x].name == "enum"){
-                      Objetos[x].selectedIndex = default_settings[Objetos[x].id]
-                    } else if (Objetos[x].name == "labelenum"){
-                      Objetos[x].value = default_settings[Objetos[x].id]
-                    }
-                    break;
-            }
+        EnviarDatos({"id":document.getElementById("Config-popup").RequestID, "result":"custom_button" });
+        if (data["close"] == true){CerrarDialogos();};
         }
 
 }

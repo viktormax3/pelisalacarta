@@ -24,7 +24,7 @@ def isGeneric():
     return True 
 
 
-def show_channel_settings(list_controls=None, dict_values=None, caption="", callback=None,item=None, channelpath= None):
+def show_channel_settings(list_controls=None, dict_values=None, caption="", callback=None,item=None, custom_button= None, channelpath= None):
     ''' Funcion que permite utilizar cuadros de configuracion personalizados.
     
     show_channel_settings(listado_controles, dict_values, caption, callback, item)
@@ -164,7 +164,16 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", call
     #Si no se pasan dict_values, creamos un dict en blanco
     if  dict_values == None:
       dict_values = {}
-    
+         
+    if type(custom_button) == dict:
+      custom_button = {"label"    : custom_button.get("label", ""),
+                       "function" : custom_button.get("function", ""),
+                       "visible"  : bool(custom_button.get("visible", True)),
+                       "close"    : bool(custom_button.get("close", False))} 
+
+    else:
+      custom_button = None  
+
     #Ponemos el titulo
     if caption =="": 
       caption = str(config.get_localized_string("30100")) + " -- " + channelname.capitalize()
@@ -219,9 +228,9 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", call
             item.value = dict_values[c["id"]]
             itemlist.append(item)        
 
+    
             
-        
-    params = {"list_controls":list_controls, "dict_values":dict_values, "caption":caption, "channelname":channelname, "callback":callback, "item":item}
+    params = {"list_controls":list_controls, "dict_values":dict_values, "caption":caption, "channelpath":channelpath, "callback":callback, "item":item, "custom_button": custom_button}
     if itemlist:
     
         #Creamos un itemlist nuevo añadiendo solo los items que han pasado la evaluacion
@@ -237,7 +246,13 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", call
         # Añadir item aceptar y cancelar
         evaluated.append(Item(channel=__channel__, action="ok_Button_click", title="Aceptar"))
         evaluated.append(Item(channel=channelname, action="mainlist", title="Cancelar"))  
-        evaluated.append(Item(channel=__channel__, action="default_Button_click", title="Por defecto")) 
+        
+        if custom_button is None:
+          evaluated.append(Item(channel=__channel__, action="default_Button_click", title="Por defecto")) 
+        else:
+          if custom_button['visible'] == True:
+            evaluated.append(Item(channel=__channel__, action="default_Button_click", title=custom_button["label"]))
+
          
     return evaluated
 
@@ -413,7 +428,7 @@ def ok_Button_click(item):
     
     list_controls = params["list_controls"]
     dict_values = params["dict_values"]
-    channel = params["channelname"]
+    channel = os.path.basename(params["channelpath"]).replace(".py", "")
     callback = params["callback"]
     item = params["item"]
       
@@ -439,10 +454,31 @@ def default_Button_click(item):
     
     list_controls = params["list_controls"]
     dict_values = params["dict_values"]
-    
-    for c in list_controls:
-      if not 'default' in c: c["default"] = ''
-      dict_values[c["id"]] = c["default"]
+    custom_button = params["custom_button"]
+    item = params["item"]
+    channelname = os.path.basename(params["channelpath"]).replace(".py", "")
+                
+    if custom_button is not None:
+      try:
+        cb_channel = __import__('channels.%s' % channelname, None, None, ["channels.%s" % channelname])
+      except ImportError:
+        logger.error('Imposible importar %s' % channelname)
+      else:
+        itemlist =  getattr(cb_channel, custom_button['function'])(item)
       
-    return show_channel_settings(**params)
+        if custom_button["close"] == True:
+          if not type(itemlist)== list:
+            itemlist = getattr(cb_channel, "mainlist")(item)
+          return itemlist
+          
+        else:
+           return show_channel_settings(**params)
+      
+    else:
+    
+      for c in list_controls:
+        if not 'default' in c: c["default"] = ''
+        dict_values[c["id"]] = c["default"]
+      
+      return show_channel_settings(**params)
     

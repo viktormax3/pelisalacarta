@@ -482,7 +482,7 @@ class platform(Platformtools):
     JsonData["data"] = {}
     self.send_message(JsonData)
 
-  def show_channel_settings(self, list_controls=None, dict_values=None, caption="", callback=None, item=None, custom_button=None, channelpath=channelpath):
+  def show_channel_settings(self, list_controls=None, dict_values=None, caption="", callback=None, item=None, custom_button=None, channelpath=None):
     from core import config
     from core import channeltools
     import inspect
@@ -492,7 +492,15 @@ class platform(Platformtools):
               
     title = caption
 
+    if type(custom_button) == dict:
+      custom_button = {"label"    : custom_button.get("label", ""),
+                       "function" : custom_button.get("function", ""),
+                       "visible"  : bool(custom_button.get("visible", True)),
+                       "close"    : bool(custom_button.get("close", False))} 
 
+    else:
+      custom_button = None
+          
     #Obtenemos el canal desde donde se ha echo la llamada y cargamos los settings disponibles para ese canal
     if not channelpath:
       channelpath = inspect.currentframe().f_back.f_back.f_code.co_filename
@@ -528,6 +536,7 @@ class platform(Platformtools):
     JsonData["action"]="OpenConfig"   
     JsonData["data"]={}
     JsonData["data"]["title"]=caption
+    JsonData["data"]["custom_button"]=custom_button
     JsonData["data"]["items"]=[]
     
 
@@ -561,31 +570,42 @@ class platform(Platformtools):
         JsonData["data"]["items"].append(c)
       
     ID = self.send_message(JsonData)
+    close = False
+    while True:
+      while self.get_data(ID) == None:
+        pass
+      data = self.get_data(ID)
+      self.controller.data = {}
+      
 
-    while self.get_data(ID) == None:
-      pass
-    data = self.get_data(ID)
-    
-    JsonData["action"]="HideLoading"
-    JsonData["data"] = {}
-    self.send_message(JsonData)
-    if not data == False:
-      for v in data:
-          if data[v] == "true": data[v] = True
-          if data[v] == "false": data[v] = False
-          if unicode(data[v]).isnumeric():  data[v] =  int(data[v])
-        
-      if not callback:
+      if type(data) == dict:
+        JsonData["action"]="HideLoading"
+        JsonData["data"] = {}
+        self.send_message(JsonData)
+      
         for v in data:
-          config.set_setting(v,data[v],channelname)
-      else:
-        exec "from channels import " + channelname + " as cb_channel"
-        exec "return_value = cb_channel." + callback + "(item, data)"
-        return return_value
+            if data[v] == "true": data[v] = True
+            if data[v] == "false": data[v] = False
+            if unicode(data[v]).isnumeric():  data[v] =  int(data[v])
+          
+        if not callback:
+          for v in data:
+            config.set_setting(v,data[v],channelname)
+        else:
+          exec "from channels import " + channelname + " as cb_channel"
+          exec "return_value = cb_channel." + callback + "(item, data)"
+          return return_value
 
-        
-    
+      elif data == "custom_button":
+        try:
+            cb_channel = __import__('channels.%s' % channelname, None, None, ["channels.%s" % channelname])
+        except ImportError:
+            logger.error('Imposible importar %s' % channelname)
+        else:
+          return_value = getattr(cb_channel, custom_button['function'])(item)
+          if custom_button["close"] == True:
+            return return_value
 
-     
+       
 
     
