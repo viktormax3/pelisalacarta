@@ -7,7 +7,6 @@
 import os,re
 import logger
 PLATFORM_NAME="mediaserver"
-OLD_PLATFORM = False
 PLUGIN_NAME="pelisalacarta"
 
 settings_dic ={}

@@ -151,6 +151,13 @@ function AbrirConfig(id, data, Secciones,Lista){
   document.getElementById("Config-popup").RequestID = id
   document.getElementById("Config").innerHTML = Lista;
   document.getElementById("Config-Titulo").innerHTML = data["title"];
+  if (data["custom_button"] != null){
+    document.getElementById("custom_button").innerHTML = data["custom_button"]["label"];
+    document.getElementById("custom_button").onclick = function(){CustomButton(data["custom_button"])};
+  }else{
+    document.getElementById("custom_button").innerHTML = "Por defecto";
+    document.getElementById("custom_button").onclick = function(){CustomButton(null)};
+  }
   if (Secciones != ""){
     document.getElementById("Config-secciones").innerHTML = Secciones
     document.getElementById("Config-secciones").style.display="block";
