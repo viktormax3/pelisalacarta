@@ -21,8 +21,8 @@ class HandleWebSocket(WebSocketServer.WebSocket):
     def handleMessage(self):
         try:
             if self.data:
-                import json
-                json_message = json.loads(str(self.data))
+                from core import jsontools as json
+                json_message = json.load_json(str(self.data))
 
             if "request" in json_message:
                 t = Thread(target=self.controller.run, args=[json_message["request"].encode("utf8")], name=self.ID)
