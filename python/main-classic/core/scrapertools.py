@@ -1334,16 +1334,38 @@ def get_domain_from_url(url):
 
     return filename
 
-# Parses the title of a tv show episode and returns the season id + episode id in format "1x01"
 def get_season_and_episode(title):
-    logger.info("get_season_and_episode('"+title+"')")
+    """
+    Retorna el numero de temporada y de episodio en formato "1x01" obtenido del titulo de un episodio
+    Ejemplos de diferentes valores para title y su valor devuelto:
+        "serie 101x1.strm", "s101e1.avi", "t101e1.avi"  -> '101x01'
+        "Name TvShow 1x6.avi" -> '1x06'
+        "Temp 3 episodio 2.avi" -> '3x02'
+        "Alcantara season 13 episodie 12.avi" -> '13x12'
+        "Temp1 capitulo 14" -> '1x14'
+        "Temporada 1: El origen Episodio 9" -> '' (entre el numero de temporada y los episodios no puede haber otro texto)
+        "Episodio 25: titulo episodio" -> '' (no existe el numero de temporada)
+        "Serie X Temporada 1" -> '' (no existe el numero del episodio)
+    @type title: str
+    @param title: titulo del episodio de una serie
+    @rtype: str
+    @return: Numero de temporada y episodio en formato "1x01" o cadena vacia si no se han encontrado
+    """
+    filename = ""
 
-    patron ="(\d+)[x|X](\d+)"
-    matches = re.compile(patron).findall(title)
-    logger.info(str(matches))
-    filename=matches[0][0]+"x"+matches[0][1]
+    patrons = ["(\d+)x(\d+)", "(?:s|t)(\d+)e(\d+)",
+               "(?:season|temp\w*)\s*(\d+)\s*(?:capitulo|epi\w*)\s*(\d+)"]
 
-    logger.info("get_season_and_episode('"+title+"') -> "+filename)
+    for patron in patrons:
+        try:
+            matches = re.compile(patron, re.I).search(title)
+            if matches:
+                filename = matches.group(1) + "x" + matches.group(2).zfill(2)
+                break
+        except:
+            pass
+
+    logger.info("'" + title + "' -> '" + filename + "'")
 
     return filename
 

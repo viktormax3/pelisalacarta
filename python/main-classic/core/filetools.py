@@ -223,10 +223,17 @@ def open_for_reading(path):
     @return: datos del fichero
     """
     path = encode(path)
-    if path.lower().startswith("smb://"):
-        return samba.get_file_handle_for_reading(os.path.basename(path), os.path.dirname(path))
-    else:
-        return open(path, "rb")
+    try:
+      if path.lower().startswith("smb://"):
+          return samba.get_file_handle_for_reading(os.path.basename(path), os.path.dirname(path))
+      else:
+          return open(path, "rb")
+    except:
+      import traceback
+      logger.info("pelisalacarta.core.open_for_reading mkdir: Error al abrir el archivo " + traceback.format_exc())
+      platformtools.dialog_notification("Error al abrir", path)
+      return False
+     
 
 
 def rename(path, new_name):
@@ -261,6 +268,87 @@ def rename(path, new_name):
             platformtools.dialog_notification("Error al renombrar", path)
             return False
 
+    return True
+
+def move(path, dest):
+    """
+    Mueve un archivo
+    @param path: ruta del fichero a mover
+    @type path: str
+    @param dest: ruta donde mover
+    @type dest: str
+    @rtype: bool
+    @return: devuelve False en caso de error
+    """
+    #samba/samba
+    if path.lower().startswith("smb://") and dest.lower().startswith("smb://"):
+        try:
+          dest = encode(dest, True)
+          path = encode(path, True)
+          #Calculamos la ruta de destino relativa a la ruta de origen tipo "../../Carpeta/archivo.mp4"
+          new_file =  "/".join(os.path.relpath(os.path.dirname(dest), os.path.dirname(path)).split(os.sep) + [os.path.basename(dest)])
+
+          samba.rename(os.path.basename(path), new_file, os.path.dirname(path))
+          return True
+        except:
+            import traceback
+            logger.info(
+                "pelisalacarta.core.filetools mkdir: Error al mover el archivo" + traceback.format_exc())
+            platformtools.dialog_notification("Error al mover", path)
+            return False
+              
+    #local/local
+    elif not path.lower().startswith("smb://") and not dest.lower().startswith("smb://"):
+        dest = encode(dest)
+        path = encode(path)
+        try:
+            os.rename(path, dest)
+            return True
+        except OSError:
+            import traceback
+            logger.info(
+                "pelisalacarta.core.filetools move: Error al mover el archivo" + traceback.format_exc())
+            platformtools.dialog_notification("Error al mover", path)
+            return False
+
+    #mixto En este caso se copia el archivo y luego se elimina el de origen
+    else:
+      if copy(path, dest) == True and remove(path) == True:
+        return True
+      else:
+        return False
+
+def copy(path, dest):
+    """
+    Copia un archivo
+    @param path: ruta del fichero a copiar
+    @type path: str
+    @param dest: ruta donde copiar
+    @type dest: str
+    @rtype: bool
+    @return: devuelve False en caso de error
+    """
+    dest = encode(dest)
+    
+    f = open_for_reading(path)
+    
+    if f:
+      try:
+        if dest.lower().startswith("smb://"):
+          samba.write_file(os.path.basename(dest), f, os.path.dirname(dest))
+        else:
+          open(dest, "wb").write(f.read())
+      except:
+        logger.info("pelisalacarta.core.filetools copy: No es posible escribir el archivo de destino")
+        f.close()
+        return False
+      
+    else:
+      logger.info("pelisalacarta.core.filetools copy: No es posible leer el arcivo de origen")
+      f.close()
+      return False
+      
+    f.close()
     return True
 
 

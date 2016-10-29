@@ -374,23 +374,28 @@ def set_context_commands(item, parent_item):
                                                           from_action=item.action).tourl())))
 
     # Descargar pelicula
-    if item.action in ["detail", "findvideos"] and item.contentType == 'movie':
+    if item.contentType == "movie":
         context_commands.append(("Descargar Pelicula", "XBMC.RunPlugin(%s?%s)" %
-                                 (sys.argv[0], item.clone(channel="descargas", action="save_download_movie",
+                                 (sys.argv[0], item.clone(channel="descargas", action="save_download",
                                                           from_channel=item.channel, from_action=item.action).tourl())))
 
     # Descargar serie
-    if item.action in ["episodios", "get_episodios"] and item.contentType != 'movie':
+    if item.contentType == "tvshow":
         context_commands.append(("Descargar Serie", "XBMC.RunPlugin(%s?%s)" %
-                                 (sys.argv[0], item.clone(channel="descargas", action="save_download_tvshow",
+                                 (sys.argv[0], item.clone(channel="descargas", action="save_download",
                                                           from_channel=item.channel, from_action=item.action).tourl())))
 
     # Descargar episodio
-    if item.action in ["detail", "findvideos"] and item.contentType != 'movie':
+    if item.contentType == "episode":
         context_commands.append(("Descargar Episodio", "XBMC.RunPlugin(%s?%s)" %
                                  (sys.argv[0], item.clone(channel="descargas", action="save_download",
                                                           from_channel=item.channel, from_action=item.action).tourl())))
 
+    # Descargar temporada
+    if item.contentType == "season":
+        context_commands.append(("Descargar Temporada", "XBMC.RunPlugin(%s?%s)" %
+                                 (sys.argv[0], item.clone(channel="descargas", action="save_download",
+                                                          from_channel=item.channel, from_action=item.action).tourl())))
     # Abrir configuración
     if parent_item.channel not in ["configuracion", "novedades", "buscador"]:
         context_commands.append(("Abrir Configuración", "XBMC.Container.Update(%s?%s)" %
@@ -405,7 +410,15 @@ def is_playing():
 
 def play_video(item, strm=False):
     logger.info("pelisalacarta.platformcode.platformtools play_video")
-    # logger.debug(item.tostring('\n'))
+    #logger.debug(item.tostring('\n'))
+
+    if item.channel == 'descargas':
+        logger.info("Reproducir video local: %s [%s]" % (item.title, item.url))
+        playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+        playlist.clear()
+        playlist.add(item.url)
+        xbmc.Player().play(playlist)
+        return
 
     default_action = config.get_setting("default_action")
     logger.info("default_action=" + default_action)
@@ -612,7 +625,7 @@ def handle_wait(time_to_wait, title, text):
 
 def get_dialogo_opciones(item, default_action, strm):
     logger.info("platformtools get_dialogo_opciones")
-    # logger.debug(item.tostring('\n'))
+    #logger.debug(item.tostring('\n'))
     from core import servertools
 
     opciones = []
@@ -719,7 +732,7 @@ def set_opcion(item, seleccion, opciones, video_urls):
     elif opciones[seleccion] == config.get_localized_string(30153):
         item.video_urls = video_urls
         from channels import descargas
-        descargas.save_download_movie(item)
+        descargas.save_download(item)
         salir = True
 
     # "Quitar de favoritos"
