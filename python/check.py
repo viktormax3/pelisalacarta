@@ -55,7 +55,13 @@ def compatibility_check(file):
   for m in p.finditer(data):
     lines = data[:m.start()].splitlines()
     print_error(len(lines), m.group(), file)
-    
+
+  #Uso diccionario por compresion  
+  p = re.compile("^[^\r\n#]*\{[^\r\n]* for [^\r\n]*\}[^\r\n]*", re.MULTILINE)
+  for m in p.finditer(data):
+    lines = data[:m.start()].splitlines()
+    print_error(len(lines), m.group(), file)
+      
   #with open(...) as f:
   p = re.compile("^[^\r\n#]*with [^\r\n]+ as [^\:\r\n]+\:[^\r\n]*", re.MULTILINE)
   for m in p.finditer(data):
