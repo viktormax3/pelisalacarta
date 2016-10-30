@@ -217,12 +217,12 @@ def save_library_tvshow(item, episodelist):
     # logger.debug(item.tostring('\n'))
     path = ""
 
-    # Itentamos obtener el titulo correcto:
+    ''''# Itentamos obtener el titulo correcto:
     # 1. contentSerieName: Este deberia ser el sitio correcto
     # 2. show
     if not item.contentSerieName:
         # Colocamos el titulo en su sitio para que tmdb lo localize
-        item.contentSerieName = item.show
+        item.contentSerieName = item.show'''
 
     # Si llegados a este punto no tenemos titulo o tmdb_id, salimos
     if not (item.contentSerieName or item.infoLabels['tmdb_id']) or not item.channel:
@@ -266,7 +266,6 @@ def save_library_tvshow(item, episodelist):
                 raise
 
     tvshow_path = filetools.join(path, "tvshow.nfo")
-    item_tvshow = None
     if not filetools.exists(tvshow_path):
         # Creamos tvshow.nfo, si no existe, con la url_scraper, info de la serie y marcas de episodios vistos
         logger.info("Creando tvshow.nfo: " + tvshow_path)
@@ -277,19 +276,23 @@ def save_library_tvshow(item, episodelist):
                            infoLabels=item.infoLabels, path=path.replace(TVSHOWS_PATH, ""))
         item_tvshow.library_playcounts = {}
         item_tvshow.library_urls = {item.channel: item.url}
+        if episodelist and episodelist[0].list_idiomas:
+            # Si el canal permite tener filtros
+            item_tvshow.library_filter_show = {item.channel: episodelist[0].show}
 
     else:
         # Si existe tvshow.nfo, pero estamos añadiendo un nuevo canal actualizamos el listado de urls
         url_scraper = filetools.read(tvshow_path, 0, 1)
         item_tvshow = Item().fromjson(filetools.read(tvshow_path, 1))
         item_tvshow.library_urls[item.channel] = item.url
-
+        if episodelist and episodelist[0].list_idiomas:
+            # Si el canal permite tener filtros
+            item_tvshow.library_filter_show[item.channel] = episodelist[0].show
 
     if not item_tvshow.active and item.channel != "descargas":
         item_tvshow.active = True  # para que se actualice cuando se llame a library_service
 
     filetools.write(tvshow_path, url_scraper + item_tvshow.tojson())
-
 
     if not episodelist:
         # La lista de episodios esta vacia
@@ -376,6 +379,10 @@ def save_library_episodes(path, episodelist, serie, silent=False, overwrite=True
             item_strm.contentTitle = season_episode
             # logger.debug(item_strm.tostring('\n'))
 
+            # si el canal tiene filtro se le pasa el nombre que tiene guardado para que filtre correctamente.
+            if item_strm.list_idiomas:
+                item_strm.library_filter_show = serie.library_filter_show
+
             filetools.write(strm_path, '%s?%s' % (addon_name, item_strm.tourl()))
             # filetools.write(strm_path + '.debug', '%s?%s' % (addon_name, item_strm.tojson())) # For debug
 
@@ -411,6 +418,8 @@ def save_library_episodes(path, episodelist, serie, silent=False, overwrite=True
                         news_in_playcounts[season_episode] = 0
                         # Marcamos la temporada como no vista
                         news_in_playcounts["season %s" % e.contentSeason] = 0
+                        # Marcamos la serie como no vista
+                        news_in_playcounts[serie.title] = 0
                     else:
                         logger.info("pelisalacarta.platformcode.library savelibrary Sobreescrito: %s" % json_path)
                         sobreescritos += 1
@@ -504,8 +513,7 @@ def add_serie_to_library(item, channel=None):
 
     """
     logger.info("pelisalacarta.platformcode.library add_serie_to_library, show=#" + item.show + "#")
-    #logger.debug(item.tostring('\n'))
-    itemlist = []
+    # logger.debug(item.tostring('\n'))
 
     if item.channel == "descargas":
         itemlist = [item.clone()]
@@ -522,18 +530,14 @@ def add_serie_to_library(item, channel=None):
         if item.from_channel:
             item.__dict__["channel"] = item.__dict__.pop("from_channel")
 
-
         if not channel:
             try:
                 channel = __import__('channels.%s' % item.channel, fromlist=["channels.%s" % item.channel])
             except ImportError:
                 exec "import channels." + item.channel + " as channel"
 
-
         # Obtiene el listado de episodios
         itemlist = getattr(channel, item.action)(item)
-
-
 
     if not itemlist:
         platformtools.dialog_ok("Biblioteca", "ERROR, la serie NO se ha añadido a la biblioteca",
@@ -849,7 +853,3 @@ def clean(mostrar_dialogo=False):
                "params": {"showdialogs": mostrar_dialogo}}
     data = get_data(payload)
     logger.info("pelisalacarta.platformcode.library clean data: %s" % data)
-
-
-
-
