@@ -247,7 +247,7 @@ print "[config.py] language file path "+TRANSLATION_FILE_PATH
 print "[config.py] temp path = "+get_temp_file("test")
 print "[config.py] plugin path = "+get_boxee_plugin_path()
 print "[config.py] version = "+get_version()
-'''
+
 # Si no existe la versión, borra el directorio de plugin/video/info.mimediacenter.tvalacarta (copia del apps/info.mimediacenter.tvalacarta)
 if not os.path.exists( os.path.join(get_boxee_plugin_path(),get_version()) ):
     print "[config.py] borra el directorio "+get_boxee_plugin_path()
@@ -267,4 +267,3 @@ if not os.path.exists( get_boxee_plugin_path() ):
     f = open( os.path.join(get_boxee_plugin_path(),get_version()), 'w')
     f.write("done")
     f.close()
-'''
