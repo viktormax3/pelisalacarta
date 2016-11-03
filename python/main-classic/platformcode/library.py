@@ -29,25 +29,21 @@ import errno
 import math
 import sys
 import urllib2
-from threading import Thread
-
 import xbmc
+from threading import Thread
 from core import config
 from core import filetools
 from core import jsontools
 from core import logger
 from core import scrapertools
-
-try:
-    from core import tmdb
-except ImportError:
-    tmdb = None
+from core import tmdb
 from core.item import Item
 from platformcode import platformtools
 
 addon_name = sys.argv[0].strip()
 if not addon_name or addon_name.startswith("default.py"):
     addon_name = "plugin://plugin.video.pelisalacarta/"
+
 
 modo_cliente = int(config.get_setting("library_mode"))
 # Host name where XBMC is running, leave as localhost if on this PC
@@ -60,7 +56,6 @@ xbmc_port = int(config.get_setting("xbmc_port"))
 # parameter. For POSTs, we add the payload as JSON the the HTTP request body
 xbmc_json_rpc_url = "http://" + xbmc_host + ":" + str(xbmc_port) + "/jsonrpc"
 
-DEBUG = config.get_setting("debug")
 
 LIBRARY_PATH = config.get_library_path()
 if not filetools.exists(LIBRARY_PATH):
@@ -70,17 +65,9 @@ if not filetools.exists(LIBRARY_PATH):
 # TODO permitir cambiar las rutas y nombres en settings para 'cine' y 'series'
 FOLDER_MOVIES = "CINE"  # config.get_localized_string(30072)
 MOVIES_PATH = filetools.join(LIBRARY_PATH, FOLDER_MOVIES)
-if not filetools.exists(MOVIES_PATH):
-    logger.info("pelisalacarta.platformcode.library Movies path doesn't exist:" + MOVIES_PATH)
-    filetools.mkdir(MOVIES_PATH)
-
 FOLDER_TVSHOWS = "SERIES"  # config.get_localized_string(30073)
 TVSHOWS_PATH = filetools.join(LIBRARY_PATH, FOLDER_TVSHOWS)
-if not filetools.exists(TVSHOWS_PATH):
-    logger.info("pelisalacarta.platformcode.library Tvshows path doesn't exist:" + TVSHOWS_PATH)
-    filetools.mkdir(TVSHOWS_PATH)
 
-otmdb = None
 
 
 def save_library_movie(item):
@@ -145,6 +132,7 @@ def save_library_movie(item):
                 break
 
     if not path:
+        # Crear carpeta
         path = filetools.join(MOVIES_PATH, ("%s [%s]" % (base_name, _id)).strip())
         logger.info("pelisalacarta.platformcode.library save_library_movie Creando directorio pelicula:" + path)
         try:
@@ -153,28 +141,32 @@ def save_library_movie(item):
             if exception.errno != errno.EEXIST:
                 raise
 
-    # Crear base_name.strm con un item para ir a get_canales si no existe
-    strm_path = filetools.join(path, "%s.strm" % base_name)
     nfo_path = filetools.join(path, "%s [%s].nfo" % (base_name, _id))
+    if not filetools.exists(nfo_path):
+        # Creamos .nfo si no existe
+        logger.info("Creando .nfo: " + nfo_path)
+        url_scraper = "https://www.themoviedb.org/movie/%s\n" % item.infoLabels['tmdb_id']
+        item_nfo = Item(title=item.contentTitle, channel="biblioteca", action='findvideos',
+                    library_playcounts={"%s [%s]" % (base_name, _id): 0}, infoLabels=item.infoLabels,
+                    library_urls={})
+
+    else:
+        # Si existe .nfo, pero estamos añadiendo un nuevo canal lo abrimos
+        url_scraper = filetools.read(nfo_path, 0, 1)
+        item_nfo = Item().fromjson(filetools.read(nfo_path, 1))
+
+
+    strm_path = filetools.join(path, "%s.strm" % base_name)
     if not filetools.exists(strm_path):
+        # Crear base_name.strm si no existe
         item_strm = item.clone(channel='biblioteca', action='play_from_library',
                                strm_path=strm_path.replace(MOVIES_PATH, ""), contentType='movie',
                                infoLabels={'title': item.contentTitle})
+        filetools.write(strm_path, '%s?%s' % (addon_name, item_strm.tourl()))
+        item_nfo.strm_path = strm_path.replace(MOVIES_PATH, "")
 
-        if filetools.write(strm_path, '%s?%s' % (addon_name, item_strm.tourl())):
-            # Crear base_name.nfo si no existe con la url_scraper, info de la pelicula y marcas de vista
-            if not filetools.exists(nfo_path):
-                url_scraper = "https://www.themoviedb.org/movie/%s\n" % item.infoLabels['tmdb_id']
-                item_nfo = Item(title=item.contentTitle, channel="biblioteca", action='findvideos',
-                                library_playcounts={"%s [%s]" % (base_name, _id): 0}, infoLabels=item.infoLabels,
-                                strm_path=strm_path.replace(MOVIES_PATH, ""))
-
-                if not filetools.write(nfo_path, url_scraper + item_nfo.tojson()):
-                    # Si no se puede crear base_name.nfo borramos base_name.strm
-                    filetools.remove(strm_path)
-
-    # Solo si existen base_name.nfo y base_name.strm continuamos
-    if filetools.exists(nfo_path) and filetools.exists(strm_path):
+    # Solo si existen item_nfo y .strm continuamos
+    if item_nfo and filetools.exists(strm_path):
         json_path = filetools.join(path, ("%s [%s].json" % (base_name, item.channel)).lower())
         if filetools.exists(json_path):
             logger.info("pelisalacarta.platformcode.library savelibrary el fichero existe. Se sobreescribe")
@@ -184,12 +176,15 @@ def save_library_movie(item):
 
         if filetools.write(json_path, item.tojson()):
             p_dialog.update(100, 'Añadiendo película...', item.contentTitle)
-            p_dialog.close()
+            item_nfo.library_urls[item.channel] = item.url
 
-            # actualizamos la biblioteca de Kodi con la pelicula
-            update(FOLDER_MOVIES, filetools.basename(path) + "/")
+            if filetools.write(nfo_path, url_scraper + item_nfo.tojson()):
+                # actualizamos la biblioteca de Kodi con la pelicula
+                if config.is_xbmc():
+                    update(FOLDER_MOVIES, filetools.basename(path) + "/")
 
-            return insertados, sobreescritos, fallidos
+                p_dialog.close()
+                return insertados, sobreescritos, fallidos
 
     # Si llegamos a este punto es por q algo ha fallado
     logger.error("No se ha podido guardar %s en la biblioteca" % item.contentTitle)
@@ -384,7 +379,6 @@ def save_library_episodes(path, episodelist, serie, silent=False, overwrite=True
                 item_strm.library_filter_show = serie.library_filter_show
 
             filetools.write(strm_path, '%s?%s' % (addon_name, item_strm.tourl()))
-            # filetools.write(strm_path + '.debug', '%s?%s' % (addon_name, item_strm.tojson())) # For debug
 
         nfo_path = filetools.join(path, "%s.nfo" % season_episode)
         item_nfo = None
@@ -451,7 +445,8 @@ def save_library_episodes(path, episodelist, serie, silent=False, overwrite=True
             fallidos = -1
 
         # ... y actualizamos la biblioteca de Kodi
-        update(FOLDER_TVSHOWS, filetools.basename(path) + "/")
+        if config.is_xbmc():
+            update(FOLDER_TVSHOWS, filetools.basename(path) + "/")
 
     if fallidos == len(episodelist):
         fallidos = -1
@@ -709,15 +704,15 @@ def execute_sql_kodi(sql):
     Ejecuta la consulta sql contra la base de datos de kodi
     @param sql: Consulta sql valida
     @type sql: str
-    @rtype total_changes: int
     @return: Numero de registros modificados o devueltos por la consulta
-    @rtype nun_records: sqlite3.Cursor
-    @return: Objeto con el resultado de la consulta
+    @rtype nun_records: int
+    @return: lista con el resultado de la consulta
+    @rtype records: list of tuples
     """
     logger.info("pelisalacarta.platformcode.library execute_sql_kodi")
     file_db = ""
     nun_records = 0
-    cursor = None
+    records = None
 
     # Buscamos el nombre de la BBDD de videos segun la version de kodi
     code_db = {'10': 'MyVideos37.db', '11': 'MyVideos60.db', '12': 'MyVideos75.db', '13': 'MyVideos78.db',
@@ -738,24 +733,28 @@ def execute_sql_kodi(sql):
                 break
 
     if file_db:
-        logger.debug("Archivo de BD: %s" % file_db)
+        logger.info("Archivo de BD: %s" % file_db)
         conn = None
         try:
             import sqlite3
             conn = sqlite3.connect(file_db)
             cursor = conn.cursor()
 
-            logger.debug("Ejecutando sql: %s" % sql)
+            logger.info("Ejecutando sql: %s" % sql)
             cursor.execute(sql)
             conn.commit()
 
+            records = cursor.fetchall()
             if sql.lower().startswith("select"):
-                nun_records = len(cursor.fetchall())
+                nun_records = len(records)
+                if nun_records == 1 and records[0][0] is None:
+                    nun_records = 0
+                    records = []
             else:
                 nun_records = conn.total_changes
 
             conn.close()
-            logger.debug("Consulta ejecutada. Registros: %s" % nun_records)
+            logger.info("Consulta ejecutada. Registros: %s" % nun_records)
 
         except:
             logger.error("Error al ejecutar la consulta sql")
@@ -765,7 +764,7 @@ def execute_sql_kodi(sql):
     else:
         logger.debug("Base de datos no encontrada")
 
-    return nun_records, cursor
+    return nun_records, records
 
 
 def get_data(payload):
@@ -853,3 +852,160 @@ def clean(mostrar_dialogo=False):
                "params": {"showdialogs": mostrar_dialogo}}
     data = get_data(payload)
     logger.info("pelisalacarta.platformcode.library clean data: %s" % data)
+
+
+def establecer_contenido(content_type, silent=False):
+    if config.is_xbmc():
+        continuar = False
+
+        librarypath = config.get_setting("librarypath")
+        if librarypath == "":
+            continuar = True
+            if content_type == FOLDER_MOVIES:
+                if not xbmc.getCondVisibility('System.HasAddon(metadata.themoviedb.org)'):
+                    if not silent:
+                        # Preguntar si queremos instalar metadata.themoviedb.org
+                        install = platformtools.dialog_yesno("The Movie Database",
+                                                             "No se ha encontrado el Scraper de películas de TheMovieDB.",
+                                                             "¿Desea instalarlo ahora?")
+                    else:
+                        install = True
+
+                    if install:
+                        try:
+                            # Instalar metadata.themoviedb.org
+                            xbmc.executebuiltin('xbmc.installaddon(metadata.themoviedb.org)', True)
+                            logger.info("Instalado el Scraper de películas de TheMovieDB")
+                        except:
+                            pass
+
+                    continuar = (install and xbmc.getCondVisibility('System.HasAddon(metadata.themoviedb.org)'))
+
+            else:
+                if not xbmc.getCondVisibility('System.HasAddon(metadata.tvshows.themoviedb.org)'):
+                    if not silent:
+                        # Preguntar si queremos instalar metadata.tvshows.themoviedb.org
+                        install = platformtools.dialog_yesno("The Movie Database",
+                                                             "No se ha encontrado el Scraper de series de TheMovieDB.",
+                                                             "¿Desea instalarlo ahora?")
+                    else:
+                        install = True
+
+                    if install:
+                        try:
+                            # Instalar metadata.tvshows.themoviedb.org
+                            xbmc.executebuiltin('xbmc.installaddon(metadata.tvshows.themoviedb.org)', True)
+                            logger.info("Instalado el Scraper de series de TheMovieDB")
+                        except:
+                            pass
+
+                    continuar = (install and xbmc.getCondVisibility('System.HasAddon(metadata.tvshows.themoviedb.org)'))
+
+            idPath = 0
+            idParentPath = 0
+            strPath = ""
+            if continuar:
+                continuar = False
+                librarypath = "special://home/userdata/addon_data/plugin.video." + config.PLUGIN_NAME + "/library/"
+
+                # Buscamos el idPath
+                sql = 'SELECT MAX(idPath) FROM path'
+                nun_records, records = execute_sql_kodi(sql)
+                if nun_records == 1:
+                    idPath = records[0][0] + 1
+
+
+                # Buscamos el idParentPath
+                sql = 'SELECT idPath, strPath FROM path where strPath LIKE "%s"' % \
+                                            librarypath.replace('/profile/', '/%/').replace('/home/userdata/', '/%/')
+                nun_records, records = execute_sql_kodi(sql)
+                if nun_records == 1:
+                    idParentPath = records[0][0]
+                    librarypath = records[0][1]
+                    continuar = True
+                else:
+                    # No existe librarypath en la BD: la insertamos
+                    sql = 'INSERT INTO path (idPath, strPath,  scanRecursive, useFolderNames, noUpdate, exclude) VALUES ' \
+                          '(%s, "%s", 0, 0, 0, 0)' % (idPath, librarypath)
+                    nun_records, records = execute_sql_kodi(sql)
+                    if nun_records == 1:
+                        continuar = True
+                        idParentPath = idPath
+                        idPath += 1
+
+            if continuar:
+                continuar = False
+
+                # Fijamos strContent, strScraper, scanRecursive y strSettings
+                if content_type == FOLDER_MOVIES:
+                    strContent = 'movies'
+                    strScraper = 'metadata.themoviedb.org'
+                    scanRecursive = 2147483647
+                    strSettings = "<settings><setting id='RatingS' value='TMDb' /><setting id='certprefix' value='Rated ' />" \
+                                  "<setting id='fanart' value='true' /><setting id='keeporiginaltitle' value='false' />" \
+                                  "<setting id='language' value='es' /><setting id='tmdbcertcountry' value='us' />" \
+                                  "<setting id='trailer' value='true' /></settings>"
+                else:
+                    strContent = 'tvshows'
+                    strScraper = 'metadata.tvshows.themoviedb.org'
+                    scanRecursive = 0
+                    strSettings = "<settings><setting id='fanart' value='true' />" \
+                                  "<setting id='keeporiginaltitle' value='false' />" \
+                                  "<setting id='language' value='es' /></settings>"
+
+                # Fijamos strPath
+                strPath = librarypath + content_type + "/"
+                logger.info("%s: %s" % (content_type, strPath))
+
+                # Comprobamos si ya existe strPath en la BD para evitar duplicados
+                sql = 'SELECT idPath FROM path where strPath="%s"' % strPath
+                nun_records, records = execute_sql_kodi(sql)
+                sql = ""
+                if nun_records == 0:
+                    # Insertamos el scraper
+                    sql = 'INSERT INTO path (idPath, strPath, strContent, strScraper, scanRecursive, useFolderNames, ' \
+                          'strSettings, noUpdate, exclude, idParentPath) VALUES (%s, "%s", "%s", "%s", %s, 0, ' \
+                          '"%s", 0, 0, %s)' % (
+                          idPath, strPath, strContent, strScraper, scanRecursive, strSettings, idParentPath)
+                else:
+                    if not silent:
+                        # Preguntar si queremos configurar themoviedb.org como opcion por defecto
+                        actualizar = platformtools.dialog_yesno("The Movie Database",
+                                                             "¿Desea configurar este Scraper en español "
+                                                             "como opción por defecto?")
+                    else:
+                        actualizar = True
+
+                    if actualizar:
+                        # Actualizamos el scraper
+                        idPath = records[0][0]
+                        sql = 'UPDATE path SET strContent="%s", strScraper="%s", scanRecursive=%s, strSettings="%s" ' \
+                              'WHERE idPath=%s' % (strContent, strScraper, scanRecursive, strSettings, idPath)
+
+                if sql:
+                    nun_records, records = execute_sql_kodi(sql)
+                    if nun_records == 1:
+                        continuar = True
+                        logger.info("Biblioteca  %s configurada" % content_type)
+
+        if not continuar:
+            heading = "Biblioteca no configurada"
+            msg_text = "Asegurese de tener instalado el scraper de The Movie Database"
+            platformtools.dialog_notification(heading, msg_text, icon=1, time=8000)
+            logger.info("%s: %s" % (heading,msg_text))
+
+
+
+'''
+Main
+'''
+if not filetools.exists(MOVIES_PATH):
+    logger.info("pelisalacarta.platformcode.library Movies path doesn't exist:" + MOVIES_PATH)
+    if filetools.mkdir(MOVIES_PATH):
+        establecer_contenido(FOLDER_MOVIES)
+
+
+if not filetools.exists(TVSHOWS_PATH):
+    logger.info("pelisalacarta.platformcode.library Tvshows path doesn't exist:" + TVSHOWS_PATH)
+    if filetools.mkdir(TVSHOWS_PATH):
+        establecer_contenido(FOLDER_TVSHOWS)
