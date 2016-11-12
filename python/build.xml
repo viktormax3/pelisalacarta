@@ -26,9 +26,9 @@
 <project name="pelisalacarta" default="package">
     <description>pelisalacarta</description>
 
-    <property name="version" value="4.1.2"/>
-    <property name="versionboxee" value="10.24"/>
-    <property name="versiondate" value="2/Agosto/2016"/>
+    <property name="version" value="4.2.0-beta1"/>
+    <property name="versionboxee" value="10.25"/>
+    <property name="versiondate" value="5/Noviembre/2016"/>
 
     <property name="target_base_folder" value="../../target/python"/>
 
@@ -116,7 +116,6 @@
                 <exclude name="resources/images/fanart/**"/>
                 <exclude name="resources/images/posters/**"/>
                 <exclude name="resources/images/squares/**"/>
-                <exclude name="resources/settings-oldplatform.xml"/>
             </fileset>
         </copy>
 
@@ -155,7 +154,6 @@
                 <exclude name="resources/images/fanart/**"/>
                 <exclude name="resources/images/posters/**"/>
                 <exclude name="resources/images/squares/**"/>
-                <exclude name="resources/settings-oldplatform.xml"/>
             </fileset>
         </copy>
 
@@ -200,7 +198,9 @@
         <delete file="${target_base_folder}/pelisalacarta-ui-${target_platform_name}-${version}.zip"/>
 
         <!-- Replaces the settings.xml file -->
-        <copy file="main-classic/resources/settings-oldplatform.xml" tofile="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" overwrite="true"/>
+        <!--copy file="main-classic/resources/settings-oldplatform.xml" tofile="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" overwrite="true"/-->
+        <replaceregexp match="&lt;category.*?&gt;" replace="" file="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" flags="sg"/>
+        <replaceregexp match="&lt;/category.*?&gt;" replace="" file="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" flags="sg"/>
 
         <!-- Builds zip files again -->
         <zip destfile="${target_base_folder}/pelisalacarta-${target_platform_name}-${version}.zip" basedir="${target_base_folder}/${target_platform_folder}"/>
@@ -221,7 +221,9 @@
         <delete file="${target_base_folder}/pelisalacarta-ui-${target_platform_name}-${version}.zip"/>
 
         <!-- Replaces the settings.xml file -->
-        <copy file="main-classic/resources/settings-oldplatform.xml" tofile="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" overwrite="true"/>
+        <!--copy file="main-classic/resources/settings-oldplatform.xml" tofile="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" overwrite="true"/-->
+        <replaceregexp match="&lt;category.*?&gt;" replace="" file="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" flags="sg"/>
+        <replaceregexp match="&lt;/category.*?&gt;" replace="" file="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" flags="sg"/>
 
         <!-- Builds zip files again -->
         <zip destfile="${target_base_folder}/pelisalacarta-${target_platform_name}-${version}.zip" basedir="${target_base_folder}/${target_platform_folder}"/>
@@ -242,7 +244,9 @@
         <delete file="${target_base_folder}/pelisalacarta-ui-${target_platform_name}-${version}.zip"/>
 
         <!-- Replaces the settings.xml file -->
-        <copy file="main-classic/resources/settings-oldplatform.xml" tofile="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" overwrite="true"/>
+        <!--copy file="main-classic/resources/settings-oldplatform.xml" tofile="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" overwrite="true"/-->
+        <replaceregexp match="&lt;category.*?&gt;" replace="" file="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" flags="sg"/>
+        <replaceregexp match="&lt;/category.*?&gt;" replace="" file="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/settings.xml" flags="sg"/>
 
         <!-- Builds zip files again -->
         <zip destfile="${target_base_folder}/pelisalacarta-${target_platform_name}-${version}.zip" basedir="${target_base_folder}/${target_platform_folder}"/>
@@ -266,7 +270,6 @@
                 <exclude name="resources/images/fanart/**"/>
                 <exclude name="resources/images/posters/**"/>
                 <exclude name="resources/images/squares/**"/>
-                <exclude name="resources/settings-oldplatform.xml"/>
                 <exclude name="addon.xml"/>
                 <exclude name="fanart.jpg"/>
                 <exclude name="icon.png"/>
@@ -299,7 +302,6 @@
                 <exclude name="resources/images/fanart/**"/>
                 <exclude name="resources/images/posters/**"/>
                 <exclude name="resources/images/squares/**"/>
-                <exclude name="resources/settings-oldplatform.xml"/>
                 <exclude name="addon.xml"/>
                 <exclude name="fanart.jpg"/>
                 <exclude name="icon.png"/>
@@ -410,7 +412,6 @@
                 <exclude name="resources/images/squares/**"/>
                 <exclude name="resources/settings.xml"/>
                 <exclude name="resources/subtitle.mp4"/>
-                <exclude name="resources/settings-oldplatform.xml"/>
             </fileset>
         </copy>
         <copy file="version-command-line/resources/settings.conf" todir="${target_base_folder}/command-line/pelisalacarta-cli/resources" overwrite="true"/>
@@ -443,7 +444,6 @@
               <exclude name="resources/images/fanart/**"/>
               <exclude name="resources/images/posters/**"/>
               <exclude name="resources/images/squares/**"/>
-              <exclude name="resources/settings-oldplatform.xml"/>
             </fileset>
         </copy>
         <copy todir="${target_base_folder}/mediaserver/pelisalacarta" overwrite="true">
