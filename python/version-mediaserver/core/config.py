@@ -14,13 +14,27 @@ def is_xbmc():
     return False
 
 def get_library_support():
-    return False
+    return True
 
 def get_platform():
   return PLATFORM_NAME
   
 def get_system_platform():
     return "mediaserver"
+
+def get_library_path():
+
+    default = os.path.join(get_runtime_path(), "library")
+
+
+    value = get_setting("librarypath")
+    if value == "":
+        value = default
+
+    if value.lower().startswith("smb://") and not value.endswith("/"):
+        value += "/"
+
+    return value
     
 def get_local_ip():
   import socket
@@ -141,7 +155,7 @@ def get_localized_string(code):
     translationsfile = open(TRANSLATION_FILE_PATH,"r")
     translations = translationsfile.read()
     translationsfile.close()
-    cadenas = re.findall('<string id="%d">([^<]+)<' % code,translations)
+    cadenas = re.findall('<string id="%s">([^<]+)<' % code,translations)
     if len(cadenas)>0:
         return cadenas[0]
     else:
