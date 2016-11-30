@@ -12,20 +12,17 @@ import WebSocketServer
 from platformcode import platformtools
 import random
 import traceback
-
+from core import jsontools as json
 
 class HandleWebSocket(WebSocketServer.WebSocket):
     ID = "%032x" % (random.getrandbits(128))
-    controller = None
-
     def handleMessage(self):
         try:
             if self.data:
-                from core import jsontools as json
                 json_message = json.load_json(str(self.data))
 
             if "request" in json_message:
-                t = Thread(target=self.controller.run, args=[json_message["request"].encode("utf8")], name=self.ID)
+                t = Thread(target=run, args=[self.controller, json_message["request"].encode("utf8")], name=self.ID)
                 t.setDaemon(True)
                 t.start()
 
@@ -33,7 +30,7 @@ class HandleWebSocket(WebSocketServer.WebSocket):
                 if type(json_message["data"]["result"]) == unicode:
                     json_message["data"]["result"] = json_message["data"]["result"].encode("utf8")
 
-                self.controller.set_data(json_message["data"])
+                self.controller.data = json_message["data"]
 
         except:
             logger.error(traceback.format_exc())
@@ -42,15 +39,15 @@ class HandleWebSocket(WebSocketServer.WebSocket):
     def handleConnected(self):
         try:
             from platformcode.controllers.html import html
-            self.controller = html(self)
-            platformtools.controllers[self.ID] = self.controller
+            self.controller = html(self, self.ID)
             self.server.fnc_info()
         except:
             logger.error(traceback.format_exc())
+            self.close()
+        
 
     def handleClose(self):
-        self.controller = None
-        del platformtools.controllers[self.ID]
+        del self.controller
         self.server.fnc_info()
 
 
@@ -66,6 +63,12 @@ def start(fnc_info):
 def stop():
     server.close()
 
+def run(controller, path):
+  try:
+    controller.run(path)
+  except:
+    logger.error(traceback.format_exc())
+    show_error_message(traceback.format_exc())
 
 def show_error_message(err_info):
     from core import scrapertools

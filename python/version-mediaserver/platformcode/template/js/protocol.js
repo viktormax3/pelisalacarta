@@ -2,6 +2,7 @@ var default_settings = {}
 function GetResponses(data) {
     response = JSON.parse(data)
     data = response["data"];
+    console.debug(response)
     switch (response["action"]) {
         case "connect":
             document.getElementById("Version").innerHTML = data["version"]
@@ -130,7 +131,7 @@ function GetResponses(data) {
                     Navegacion[Navegacion.length - 1].Scroll        = document.getElementById("Contenedor").scrollTop;
                     Navegacion[Navegacion.length - 1].Focus         = Array.prototype.indexOf.call(document.getElementById("itemlist").children, ItemFocus.parentNode);
                     Navegacion.push({});
-                    Navegacion[Navegacion.length - 1].Titulo        = ItemFocus.children[1].textContent;
+                    Navegacion[Navegacion.length - 1].Titulo        = "" //ItemFocus.children[1].textContent;
                     Navegacion[Navegacion.length - 1].Url           = UltimoRequest;
                     Navegacion[Navegacion.length - 1].Time          = new Date().getTime() - UltimoRequestTime;
                     document.getElementById("Contenedor").innerHTML = '<ul class="ListItem" id="itemlist">' + ItemList + '</ul>';
@@ -243,6 +244,11 @@ function GetResponses(data) {
         case "HideLoading":
             CerrarLoading()
             break;
+        case "OpenInfo":
+            CerrarLoading()
+            AbrirInfo(response["id"], data)
+            break;
+
         case "OpenConfig":
             CerrarLoading()
             Opciones = {};
@@ -419,6 +425,10 @@ function CustomButton(data) {
         }
 
 }
+function InfoWindow(Comando) {
+    EnviarDatos({"id":document.getElementById("Info-popup").RequestID, "result":Comando });
+}
+
 function GuardarConfig(Guardar) {
     var Ajustes = {};
     if (Guardar === true) {

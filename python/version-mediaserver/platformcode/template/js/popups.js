@@ -7,14 +7,16 @@ function AbrirLoading(){
   document.getElementById("Loading").style.top = document.getElementById("Pagina").offsetHeight / 2 - document.getElementById("Loading").offsetHeight / 2 + "px"
 }
 function CerrarLoading(){
-  document.getElementById("Loading").style.display="none";
-  document.getElementById("Overlay").style.display="none";
-  try{ 
-    ItemFocus.focus()
-  }catch(e){
+  if (document.getElementById("Loading").style.display == "block"){
+    document.getElementById("Loading").style.display="none";
+    document.getElementById("Overlay").style.display="none";
     try{ 
-      document.getElementById("Contenedor").children[0].children[0].children[0].focus();
+      ItemFocus.focus()
     }catch(e){
+      try{ 
+        document.getElementById("Contenedor").children[0].children[0].children[0].focus();
+      }catch(e){
+      }
     }
   }
 }
@@ -29,6 +31,7 @@ function CerrarDialogos() {
   document.getElementById("AlertYesNo-popup").style.display="none";
   document.getElementById("Keyboard-popup").style.display="none";
   document.getElementById("ProgressBar-popup").style.display="none";
+  document.getElementById("Info-popup").style.display="none";
   try{ 
     ItemFocus.focus()
   }catch(e){
@@ -179,4 +182,49 @@ function AbrirConfig(id, data, Secciones,Lista){
     document.getElementById("Config-undefined").scrollTop = 0;
   }
   document.getElementById("Config-popup").style.top = document.getElementById("Pagina").offsetHeight / 2 - document.getElementById("Config-popup").offsetHeight / 2 + "px"
+}
+
+function AbrirInfo(id, data){
+  document.getElementById("Info-popup").RequestID = id
+  document.getElementById("Info-Titulo").innerHTML = data["title"];
+  document.getElementById("Info-Background").src = data["fanart"];
+  document.getElementById("Info-Image").src = data["thumbnail"];
+
+  if (data["buttons"]){ //Activar botones
+    document.getElementById("Info-Botones").style.display="block";
+    document.getElementById("Info-Numero").innerHTML = data["count"];
+  }else{
+    document.getElementById("Info-Botones").style.display="none";
+  }
+  
+  document.getElementById("Info-Head1").innerHTML = data["lines"][0]["title"];
+  document.getElementById("Info-Head2").innerHTML = data["lines"][1]["title"];
+  document.getElementById("Info-Head3").innerHTML = data["lines"][2]["title"];
+  document.getElementById("Info-Head4").innerHTML = data["lines"][3]["title"];
+  document.getElementById("Info-Head5").innerHTML = data["lines"][4]["title"];
+  document.getElementById("Info-Head6").innerHTML = data["lines"][5]["title"];
+  document.getElementById("Info-Head7").innerHTML = data["lines"][6]["title"];
+  document.getElementById("Info-Head8").innerHTML = data["lines"][7]["title"];
+  
+  
+  document.getElementById("Info-Line1").innerHTML = data["lines"][0]["text"];
+  document.getElementById("Info-Line2").innerHTML = data["lines"][1]["text"];
+  document.getElementById("Info-Line3").innerHTML = data["lines"][2]["text"];
+  document.getElementById("Info-Line4").innerHTML = data["lines"][3]["text"];
+  document.getElementById("Info-Line5").innerHTML = data["lines"][4]["text"];
+  document.getElementById("Info-Line6").innerHTML = data["lines"][5]["text"];
+  document.getElementById("Info-Line7").innerHTML = data["lines"][6]["text"];
+  document.getElementById("Info-Line8").innerHTML = data["lines"][7]["text"];
+
+
+  document.getElementById("Overlay").style.display="block";
+  document.getElementById("Info-popup").style.display="block";
+  
+  if (data["buttons"]){
+    document.getElementById("Info-popup").children[3].children[3].focus();
+  }else{
+    document.getElementById("Info-popup").children[0].focus();
+  }
+
+  document.getElementById("Info-popup").style.top = document.getElementById("Pagina").offsetHeight / 2 - document.getElementById("Info-popup").offsetHeight / 2 + "px"
 }

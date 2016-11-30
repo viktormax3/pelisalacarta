@@ -123,7 +123,35 @@
         <a href="#" class="Boton BotonIcon BotonClose" onmouseover="this.focus()" onclick="CerrarDialogos();GuardarConfig(false);" >Cerrar</a>
         <a href="#" class="Boton" onmouseover="this.focus()" onclick="CustomButton();" id="custom_button" ></a>
       </div>
+    </div > 
+    <!--/Info -->	
+    <div id="Info-popup" class="Video_Info">
+      <a href="#" onmouseover="this.focus()" onclick="CerrarDialogos();InfoWindow('close')" class="BotonCerrar"></a>
+      <div class="Titulo" id="Info-Titulo">
+      </div>
+      <div id="Info" class="Info-Fondo">
+        <img class="Info-Background" id="Info-Background">
+        <img class="Info-Image" id="Info-Image">
+        <span class="Info-Linea1_head" id="Info-Head1"></span><span class="Info-Linea1" id="Info-Line1"></span>
+        <span class="Info-Linea2_head" id="Info-Head2"></span><span class="Info-Linea2" id="Info-Line2"></span>
+        <span class="Info-Linea3_head" id="Info-Head3"></span><span class="Info-Linea3" id="Info-Line3"></span>
+        <span class="Info-Linea4_head" id="Info-Head4"></span><span class="Info-Linea4" id="Info-Line4"></span>
+        <span class="Info-Linea5_head" id="Info-Head5"></span><span class="Info-Linea5" id="Info-Line5"></span>
+        <span class="Info-Linea6_head" id="Info-Head6"></span><span class="Info-Linea6" id="Info-Line6"></span>
+        <span class="Info-Linea7_head" id="Info-Head7"></span><span class="Info-Linea7" id="Info-Line7"></span>
+        <span class="Info-Linea8_head" id="Info-Head8"></span><span class="Info-Linea8" id="Info-Line8"></span>
+        <span class="Info-Paginas" id="Info-Numero"></span>
+
+      </div>
+      <div id="Info-Botones" class="Botones">
+        <a href="#" id="Info-BotonAnterior" class="Boton" onmouseover="this.focus()" onclick="InfoWindow('previous')" >Anterior</a>
+        <a href="#" id="Info-BotonSiguiente" class="Boton" onmouseover="this.focus()" onclick="InfoWindow('next')" >Siguiente</a>
+        <a href="#" class="Boton BotonIcon BotonClose" onmouseover="this.focus()" onclick="CerrarDialogos();InfoWindow('close')" >Cancelar</a>
+        <a href="#" class="Boton BotonIcon BotonOK" onmouseover="this.focus()" onclick="CerrarDialogos();InfoWindow('ok')" >Aceptar</a>
+        
+      </div>
     </div >  
+ 
     <div class="Pagina" id="Pagina">
     
       <div class="Cabeza"id="Header">

@@ -677,6 +677,122 @@ div.Lista > div.ListaContenido > ul.Lista > li.Lista > a.Lista:focus {
     background-color: #01455c;
     border-color: #ffffff;
 }
+/*------------------------Popup Info------------------------*/
+
+div.Video_Info {
+    display: none;
+    background-color: #00779F;
+    width: 600px;
+    margin: auto;
+    top: 150px;
+    position: relative;
+    z-index: 101;
+    border-style: solid;
+    border-color: #ffffff;
+    border-width: 2px;
+}
+div.Video_Info > div.Info-Fondo {
+    height: 300px;
+    overflow-y: auto;
+    background-color: #00779f;
+}
+div.Video_Info > div.Info-Fondo > img.Info-Background {
+    height: 296px;
+    width: 400px;
+    opacity: 0.5;
+    float: left;
+}
+div.Video_Info > div.Info-Fondo > img.Info-Image {
+    height: 296px;
+    width: 200px;
+    float: left;
+}
+div.Video_Info > div.Info-Fondo > span { 
+    position: absolute;
+    float: left;
+    font-size: 15px;
+    max-width: 300px;
+    color: #fcfc58;
+    font-weight: bold;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Paginas {
+    right:10px;
+    top: 300px;
+
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea1_head {
+    left:10px;
+    top: 30px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea1 {
+    left:150px;
+    top: 30px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea2_head {
+    left:10px;
+    top: 50px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea2 {
+    left:150px;
+    top: 50px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea3_head {
+    left:10px;
+    top: 70px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea3 {
+    left:150px;
+    top: 70px;
+    position: absolute;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea4_head {
+    left:10px;
+    top: 90px;
+
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea4 {
+    left:150px;
+    top: 90px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea5_head {
+    left:10px;
+    top: 110px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea5 {
+    left:150px;
+    top: 110px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea6_head {
+    left:10px;
+    top: 130px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea6 {
+    left:150px;
+    top: 130px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea7_head {
+    left:10px;
+    top: 150px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea7 {
+    left:150px;
+    top: 150px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea8_head {
+    left: 0px;
+    top: 170px;
+    width: 400px;
+    text-align: center;
+    max-width: 400px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea8 {
+    left: 10px;
+    top: 190px;
+    max-width: 380px;
+    max-height: 135px;
+    overflow: hidden;
+    text-align: justify;
+}
 /*------------------------Popup Config------------------------*/
 
 div.Config {

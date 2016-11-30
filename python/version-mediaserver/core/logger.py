@@ -33,15 +33,15 @@ filemode='w')
 logger_object=logging.getLogger("mediaserver")
 
 
-def info(texto):
+def info(texto=""):
   if config.get_setting("debug") == "true":
       logger_object.info(unicode(str(texto),"utf-8","ignore").replace("\n","\n"+ " "*67))
 
-def debug(texto):
+def debug(texto=""):
   if config.get_setting("debug") == "true":
       logger_object.debug(unicode(str(texto),"utf-8","ignore").replace("\n","\n"+ " "*67))
 
-def error(texto):
+def error(texto=""):
     logger_object.error(unicode(str(texto),"utf-8","ignore").replace("\n","\n"+ " "*67))
 
 
