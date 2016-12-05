@@ -88,192 +88,38 @@ class InfoWindow(object):
 
         return languages.get(lng, lng)
 
-    @staticmethod
-    def get_date(date):
-        # Cambiamos el formato de la fecha
-        if date:
-            return date.split("-")[2] + "/" + date.split("-")[1] + "/" + date.split("-")[0]
-        else:
-            return "N/A"
 
-    def get_episode_from_title(self, item):
-        # Patron para temporada y episodio "1x01"
-        pattern = re.compile("([0-9]+)[ ]*[x|X][ ]*([0-9]+)")
-
-        # Busca en title
-        matches = pattern.findall(item.title)
-        if len(matches):
-            self.item_temporada = matches[0][0]
-            self.item_episodio = matches[0][1]
-
-        # Busca en fulltitle
-        matches = pattern.findall(item.fulltitle)
-        if len(matches):
-            self.item_temporada = matches[0][0]
-            self.item_episodio = matches[0][1]
-
-        # Busca en contentTitle
-        matches = pattern.findall(item.contentTitle)
-        if len(matches):
-            self.item_temporada = matches[0][0]
-            self.item_episodio = matches[0][1]
-
-    def get_item_info(self, item):
-        # Recogemos los parametros del Item que nos interesan:
-        self.item_title = item.title
-        if item.fulltitle:
-            self.item_title = item.fulltitle
-        if item.contentTitle:
-            self.item_title = item.contentTitle
-
-        if item.show:
-            self.item_serie = item.show
-        if item.contentSerieName:
-            self.item_serie = item.contentSerieName
-
-        if item.contentSeason:
-            self.item_temporada = item.contentSeason
-        if item.contentEpisodeNumber:
-            self.item_episodio = item.contentEpisodeNumber
-
-        # i no existen contentepisodeNumber o contentSeason intenta sacarlo del titulo
-        if not self.item_episodio or not self.item_temporada:
-            self.get_episode_from_title(item)
-
-
-    def get_tmdb_movie_data(self, text):
-        # Buscamos la pelicula si no lo esta ya
-        if not self.otmdb:
-            self.otmdb = Tmdb(texto_buscado=text, idioma_busqueda="es", tipo="movie")
-
-        # Si no hay resultados salimos
-        if not self.otmdb.get_id():
-            return False
-
-        # Informacion de la pelicula
-        infoLabels = self.otmdb.get_infoLabels()
-        infoLabels["mediatype"] = "movie"
-        infoLabels["language"] = self.get_language(infoLabels["original_language"])
-        infoLabels["puntuacion"] = str(infoLabels["rating"]) + "/10 (" + str(infoLabels["votes"]) + ")"
-
-        self.result = infoLabels
-
-        return True
-
-    def get_tmdb_tv_data(self, text):
-        # Buscamos la serie si no esta cargada
-        if not self.otmdb:
-            self.otmdb = Tmdb(texto_buscado=text, idioma_busqueda="es", tipo="tv")
-
-        # Si no hay resultados salimos
-        if not self.otmdb.get_id():
-            return False
-
-        # informacion generica de la serie
-        infoLabels = self.otmdb.get_infoLabels()
-        infoLabels["mediatype"] = "tvshow"
-        infoLabels["language"] = self.get_language(infoLabels["original_language"])
-        infoLabels["puntuacion"] = str(infoLabels["rating"]) + "/10 (" + str(infoLabels["votes"]) + ")"
-
-        self.result = infoLabels
-
-        # Si tenemos informacion de temporada
-        if self.item_temporada:
-            if not self.result["seasons"]:
-                self.otmdb = Tmdb(id_Tmdb=infoLabels['tmdb_id'], idioma_busqueda="es", tipo="tv")
-                #logger.debug(str(self.otmdb.get_infoLabels()))
-
-                self.result["seasons"] = str(self.otmdb.result.get("number_of_seasons", 0))
-
-            if self.item_temporada > self.result["seasons"]:
-                self.item_temporada = self.result["season_count"]
-
-            if self.item_episodio > self.otmdb.result.get("seasons")[self.item_temporada-1]["episode_count"]:
-                self.item_episodio = self.otmdb.result.get("seasons")[self.item_temporada]["episode_count"]
-
-            # Solicitamos información del episodio concreto
-            episode_info = self.otmdb.get_episodio(self.item_temporada, self.item_episodio)
-
-            # informacion de la temporada
-            self.result["season"] = str(self.item_temporada)
-            self.result["temporada_nombre"] = episode_info.get("temporada_nombre", "N/A")
-            self.result["episodes"] = str(episode_info.get('temporada_num_episodios', "N/A"))
-            if episode_info.get("temporada_poster"):
-                self.result["thumbnail"] = episode_info.get("temporada_poster")
-            if episode_info.get("temporada_sinopsis"):
-                self.result["plot"] = episode_info.get("temporada_sinopsis")
-
-            # Si tenemos numero de episodio:
-            if self.item_episodio:
-                # informacion del episodio
-                self.result["episode"] = str(self.item_episodio)
-                self.result["episode_title"] = episode_info.get("episodio_titulo", "N/A")
-                self.result["date"] = self.get_date(self.otmdb.temporada[self.item_temporada]["episodes"][self.item_episodio-1].get("air_date"))
-                if episode_info.get("episodio_imagen"):
-                    self.result["fanart"] = episode_info.get("episodio_imagen")
-                if episode_info.get("episodio_sinopsis"):
-                    self.result["plot"] = episode_info.get("episodio_sinopsis")
-
-        return True
-
-    def get_tmdb_data(self, data_in):
+    def get_scraper_data(self, data_in):
         self.otmdb = None
-        #logger.debug(str(data_in))
+        # logger.debug(str(data_in))
 
         if self.listData:
-            infoLabels = InfoLabels()
-
             # Datos comunes a todos los listados
-            infoLabels = Tmdb().get_infoLabels(infoLabels=infoLabels, origen=data_in)
+            infoLabels = self.scraper().get_infoLabels(origen=data_in)
+
             if "original_language" in infoLabels:
                 infoLabels["language"] = self.get_language(infoLabels["original_language"])
             if "vote_average" in data_in and "vote_count" in data_in:
                 infoLabels["puntuacion"] = str(data_in["vote_average"]) + "/10 (" + str(data_in["vote_count"]) + ")"
 
-            self.from_tmdb = False
             self.result = infoLabels
 
-        else:
-            if isinstance(data_in,Item):
-                self.from_tmdb = True
-                self.get_item_info(data_in)
-
-                # Modo Pelicula
-                if not self.item_serie:
-                    encontrado = self.get_tmdb_movie_data(self.item_title)
-                    if not encontrado:
-                        encontrado = self.get_tmdb_tv_data(self.item_title)
-
-                else:
-                    encontrado = self.get_tmdb_tv_data(self.item_serie)
-                    if not encontrado:
-                        encontrado = self.get_tmdb_movie_data(self.item_serie)
-
-            if isinstance(data_in,dict):
-                self.from_tmdb = False
-                self.result = InfoLabels(data_in)
-
-        #logger.debug(str(self.result))
-
-    def Start(self, handler, data, caption="Información del vídeo", callback=None, item=None):
+    def Start(self, handler, data, caption="Información del vídeo", item=None, scraper=Tmdb):
         # Capturamos los parametros
         self.caption = caption
-        self.callback = callback
         self.item = item
         self.indexList = -1
         self.listData = []
         self.handler = handler
+        self.scraper = scraper
 
-        # Obtenemos el canal desde donde se ha echo la llamada y cargamos los settings disponibles para ese canal
-        channelpath = inspect.currentframe().f_back.f_back.f_back.f_code.co_filename
-        self.channel = os.path.basename(channelpath).replace(".py", "")
         logger.debug(data)
         if type(data) == list:
             self.listData = data
             self.indexList = 0
             data = self.listData[self.indexList]
 
-        self.get_tmdb_data(data)
+        self.get_scraper_data(data)
 
         ID = self.update_window()
         
@@ -334,32 +180,19 @@ class InfoWindow(object):
           while self.handler.get_data(ID) == None:
             pass
           
-          if self.handler.get_data(ID) in  ["close", "ok"]:
-            cb_channel = None
-            if self.callback:
-                try:
-                    cb_channel = __import__('core.%s' % self.channel, None, None, ["core.%s" % self.channel])
-                    
-                except ImportError:
-                    logger.error('Imposible importar %s' % self.channel)
-            if self.handler.get_data(ID) == "ok":
-              if cb_channel:
-                  return getattr(cb_channel, self.callback)(self.item, self.listData[self.indexList])
-              else:
-                  return self.result
-            else:
-              if cb_channel:
-                  return getattr(cb_channel, self.callback)(self.item, None)
-              else:
-                  return None
+          if self.handler.get_data(ID) == "ok":
+            return self.listData[self.indexList]
+            
+          elif self.handler.get_data(ID) == "close":
+            return None
             
           elif self.handler.get_data(ID) == "next" and self.indexList < len(self.listData) - 1:
             self.indexList += 1
-            self.get_tmdb_data(self.listData[self.indexList])
+            self.get_scraper_data(self.listData[self.indexList])
             ID = self.update_window()
             
             
           elif self.handler.get_data(ID) == "previous" and self.indexList > 0:
             self.indexList -= 1
-            self.get_tmdb_data(self.listData[self.indexList])
+            self.get_scraper_data(self.listData[self.indexList])
             ID = self.update_window()

@@ -5,7 +5,7 @@
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
 #------------------------------------------------------------
 import os,re
-import logger
+
 PLATFORM_NAME="mediaserver"
 PLUGIN_NAME="pelisalacarta"
 
@@ -168,10 +168,11 @@ def get_runtime_path():
     return os.getcwd()
 # Test if all the required directories are created
 def verify_directories_created():
+    import logger
     logger.info("Comprobando directorios")
     if not os.path.exists(get_data_path()): os.mkdir(get_data_path())
     
-    config_paths = [["library_path",     "Library"],
+    config_paths = [["librarypath",     "Library"],
                     ["downloadpath",     "Downloads"],
                     ["downloadlistpath", os.path.join("Downloads","List")],
                     ["bookmarkpath",     "Favorites"]]

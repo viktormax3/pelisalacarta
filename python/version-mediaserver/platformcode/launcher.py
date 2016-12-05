@@ -46,7 +46,8 @@ def start():
     
     # Test if all the required directories are created
     config.verify_directories_created()
-    
+    import library_service
+    library_service.start()
       
 
 def run(item):
@@ -65,7 +66,6 @@ def run(item):
 
     #Importa el canal para el item, todo item debe tener un canal, sino sale de la función
     if item.channel: channelmodule = ImportarCanal(item)
-    else: return []
     
     # If item has no action, stops here
     if item.action == "":
@@ -460,18 +460,11 @@ def remove_from_favorites(item):
     return
 
 def download(item):
-    from core import downloadtools
-    if not item.fulltitle: item.fulltitle = item.title
-    title = platformtools.dialog_input(default=item.fulltitle)
-    if title is not None:
-      devuelve = downloadtools.downloadbest(item.video_urls,title)
-    
-      if devuelve==0:
-          platformtools.dialog_ok("Pelisalacarta", "Descargado con éxito")
-      elif devuelve==-1:
-          platformtools.dialog_ok("Pelisalacarta", "Descarga abortada")
-      else:
-          platformtools.dialog_ok("Pelisalacarta", "Error en la descarga")
+    from channels import descargas
+    if item.contentType == "list" or item.contentType == "tvshow":
+      item.contentType = "video"
+    item.play_menu = True
+    descargas.save_download(item)
     return
 
 def add_to_library(item):
@@ -485,50 +478,9 @@ def add_to_library(item):
     library.savelibrary(item)
     platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30135))
     return
-
-def add_to_downloads(item):
-    if "item_action" in item: 
-      item.action = item.item_action
-      del item.item_action
-
-    from core import descargas
-    from core import downloadtools
-    if not item.fulltitle: item.fulltitle = item.title
-    title = platformtools.dialog_input(default=downloadtools.limpia_nombre_excepto_1(item.fulltitle))
-    if title is not None:
-      item.title = title
-      descargas.addFavourite(item)
-
-    platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30109))
-    return
-
-def remove_from_downloads(item):
-  from core import descargas
-  # La categoría es el nombre del fichero en la lista de descargas
-  descargas.delFavourite(item.extra)
-
-  platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30106))
-  platformtools.itemlist_refresh()
-  return
-
+    
 def delete_file(item):
   os.remove(item.url)
-  platformtools.itemlist_refresh()
-  return
-
-
-def move_to_downloads(item):
-  from core import descargas
-  descargas.mover_descarga_error_a_pendiente(item.extra)
-  platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30101))
-  platformtools.itemlist_refresh()
-  return
-
-def remove_from_downloads_error(item):
-  from core import descargas
-  descargas.mover_descarga_error_a_pendiente(item.extra)
-
-  platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30107))
   platformtools.itemlist_refresh()
   return
 
@@ -555,9 +507,9 @@ def send_to_pyload(item):
 
 def search_trailer(item):
   config.set_setting("subtitulo", "false")
-  import sys
   item.channel = "trailertools"
   item.action ="buscartrailer"
+  item.contextual=True
   run(item)
   return
 
@@ -572,25 +524,18 @@ def check_video_options(item, video_urls):
   
   if item.server=="local":                            
     itemlist.append(item.clone(option=config.get_localized_string(30164), action="delete_file"))
+    
   if not item.server=="local" and playable:           
     itemlist.append(item.clone(option=config.get_localized_string(30153), action="download", video_urls = video_urls))
 
   if item.channel=="favoritos":                       
     itemlist.append(item.clone(option=config.get_localized_string(30154), action="remove_from_favorites"))
+    
   if not item.channel=="favoritos" and playable:      
     itemlist.append(item.clone(option=config.get_localized_string(30155), action="add_to_favorites", item_action = item.action))
 
-  if not item.strmfile and playable:                  
+  if not item.strmfile and playable and item.contentType == "movie":                  
     itemlist.append(item.clone(option=config.get_localized_string(30161), action="add_to_library", item_action = item.action))
-
-  if item.channel!="descargas" and playable:          
-    itemlist.append(item.clone(option=config.get_localized_string(30157), action="add_to_downloads", item_action = item.action))
-  if not item.channel!="descargas" and item.category=="errores":
-    itemlist.append(item.clone(option=config.get_localized_string(30159), action="remove_from_downloads_error"))
-  if not item.channel!="descargas" and item.category=="errores" and playable:
-    itemlist.append(item.clone(option=config.get_localized_string(30160), action="move_to_downloads"))
-  if not item.channel!="descargas" and not item.category=="errores":
-    itemlist.append(item.clone(option=config.get_localized_string(30156), action="remove_from_downloads"))
 
   if config.get_setting("jdownloader_enabled")=="true" and playable:
     itemlist.append(item.clone(option=config.get_localized_string(30158), action="send_to_jdownloader"))
