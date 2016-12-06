@@ -1,10 +1,11 @@
-function WebSocketConnect() {
-    if (websocket!=""){websocket.close()}
+function websocket_connect() {
+    if (websocket){websocket.close()}
     document.getElementById("Conexion").innerHTML = "Conectando...";
-    document.getElementById("Loading-Text").innerHTML = "Estableciendo conexión...";
-    websocket = new WebSocket(WebSocketHost);
+    
+    loading.show("Estableciendo conexión...")
+    websocket = new WebSocket(websocket_host);
     websocket.onopen = function(evt) {
-        document.getElementById("Loading-Text").innerHTML = "Cargando...";
+        loading.show()
         document.getElementById("Conexion").innerHTML = "Conectado";
     };
 
@@ -13,7 +14,7 @@ function WebSocketConnect() {
     };
 
     websocket.onmessage = function(evt) {
-        GetResponses(evt.data);
+        get_response(evt.data);
     };
 
     websocket.onerror = function(evt) {
@@ -23,7 +24,7 @@ function WebSocketConnect() {
 
 function WebSocketSend(data) {
     if (websocket.readyState != 1) {
-        WebSocketConnect()
+        websocket_connect()
         setTimeout(WebSocketSend, 500, data);
         return;
     } else {
@@ -32,19 +33,21 @@ function WebSocketSend(data) {
     }
 }
 
-
-function DescargarContenido(url) {
-    AbrirLoading()
-    ItemList = "";
-
-    UltimoRequest = url;
-    UltimoRequestTime = new Date().getTime();
+function send_request(url) {
+    if (url == "go_back"){ 
+      nav_history.go(-1)
+      return
+    }
+    
+    nav_history.newRequest(url)
+    
+    loading.show()
     Send = {}
     Send["request"] = url
     WebSocketSend(Send);
 }
 
-function EnviarDatos(dato) {
+function send_data(dato) {
     Send = {}
     Send["data"] = dato
     WebSocketSend(Send)
