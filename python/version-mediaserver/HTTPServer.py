@@ -86,6 +86,7 @@ class Handler(BaseHTTPRequestHandler):
               if not "socket.py" in traceback.format_exc():
                   logger.error(traceback.format_exc())
             finally:
+              c.__del__()
               del c
         return
     

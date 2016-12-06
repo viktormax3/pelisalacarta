@@ -37,6 +37,7 @@ from core import logger
 from core.item import Item
 from core import library
 from platformcode import platformtools
+import threading
 
 
 def convert_old_to_v4():
@@ -215,8 +216,8 @@ def check_for_update(overwrite=True):
                 updatelibrary_wait = [0, 10000, 20000, 30000, 60000]
                 wait = updatelibrary_wait[int(config.get_setting("updatelibrary_wait", "biblioteca"))]
                 if wait > 0:
-                    import xbmc
-                    xbmc.sleep(wait)
+                    import time
+                    time.sleep(wait)
 
             heading = 'Actualizando biblioteca....'
             p_dialog = platformtools.dialog_progress_bg('pelisalacarta', heading)
@@ -310,6 +311,45 @@ def check_for_update(overwrite=True):
         if p_dialog:
             p_dialog.close()
 
+
+def start(thread = True):
+    if thread:
+      t = threading.Thread(target=start, args=[False])
+      t.setDaemon(True)
+      t.start()
+    else:
+      # Se ejecuta en cada inicio
+      if config.get_setting("library_version") != 'v4':
+          platformtools.dialog_ok(config.PLUGIN_NAME.capitalize(), "Se va a actualizar la biblioteca al nuevo formato",
+                                  "Seleccione el nombre correcto de cada serie, si no está seguro pulse 'Cancelar'.")
+
+          if not convert_old_to_v4():
+              platformtools.dialog_ok(config.PLUGIN_NAME.capitalize(),
+                                      "ERROR, al actualizar la biblioteca al nuevo formato")
+          else:
+              check_for_update(overwrite=False)
+      else:
+          check_for_update(overwrite=False)
+
+
+      # Se ejecuta ciclicamente
+      import time
+      while (True):
+          if config.get_setting("updatelibrary", "biblioteca") == 2: # "Actualizar...Cada dia
+              hoy = datetime.date.today()
+              last_check = config.get_setting("updatelibrary_last_check", "biblioteca")
+              if last_check:
+                  y, m, d = last_check.split('-')
+                  last_check = datetime.date(int(y), int(m), int(d))
+              else:
+                  last_check = hoy - datetime.timedelta(days=1)
+
+              if last_check < hoy and datetime.datetime.now().hour >= 4:
+                  logger.info("Inicio actualización programada: %s" % datetime.datetime.now())
+                  check_for_update(overwrite=False)
+
+          if (time.sleep(3600)): #cada hora
+              break
 
 if __name__ == "__main__":
     # Se ejecuta en cada inicio

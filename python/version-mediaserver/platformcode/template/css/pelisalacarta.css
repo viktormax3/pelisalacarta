@@ -430,7 +430,7 @@ div.ProgressBarBG > div.ProgressTitulo {
     color: #F6AB36;
 }
 
-/*------------------------Teclado------------------------*/
+/*------------------------keychardo------------------------*/
 
 div.Keyboard {
     display: none;
@@ -534,6 +534,12 @@ div.Player > div.Player-Player > div.VideoCaja > div.VideoContenido {
     right: 0;
     margin-bottom: -5px;
 }
+div.Player > div.Player-Player > div.VideoCaja > div.VideoContenido > .player {
+    width:100%;
+    height:100%;
+    top:0px;
+    left:0px;
+}
 /*------------------------Servidor------------------------*/
 
 div.Servidor {
@@ -622,26 +628,30 @@ div.Lista > div.ListaContenido > ul.Lista {
     background-color: #00779f;
     max-height: 500px;
     overflow: auto;
-    padding: 0px;
+    padding: 0;
     margin: 0px;
+    padding-top: 5px;
 }
 div.Lista > div.ListaContenido > ul.Lista > li.Lista {
     border-color: transparent;
     border-style: solid;
-    border-width: 6px;
+    border-width: 5px;
+    display: run-in;
+    border-top-width: 0px;
 }
 div.Lista > div.ListaContenido > ul.Lista > li.Lista > a.Lista > h3 {
     color: #FFF;
     font-size: 16px;
-    margin-bottom: 7.2px;
-    margin-left: 0px;
-    margin-right: 0px;
-    margin-top: 10px;
+    margin: 0px;
     overflow: hidden;
     white-space: nowrap;
-    display:block;
-    width:295px;
+    display: block;
+    width: 295px;
+    max-width: 295px;
     text-overflow: ellipsis;
+    display: table-cell;
+    vertical-align: middle;
+    height: 25px;
 }
 div.Lista > div.ListaContenido > ul.Lista > li.Lista > a.Lista:after {
     background-color: rgba(0, 0, 0, 0.3);
@@ -665,8 +675,8 @@ div.Lista > div.ListaContenido > ul.Lista > li.Lista > a.Lista {
     border-style: solid;
     border-width: 4px;
     display: block;
-    height: 30px;
-    padding-bottom: 5px;
+    height: 25px;
+    padding-bottom: 0px;
     padding-left: 40px;
     padding-right: 5px;
     padding-top: 0px;
@@ -676,6 +686,140 @@ div.Lista > div.ListaContenido > ul.Lista > li.Lista > a.Lista {
 div.Lista > div.ListaContenido > ul.Lista > li.Lista > a.Lista:focus {
     background-color: #01455c;
     border-color: #ffffff;
+}
+/*------------------------Popup Info------------------------*/
+a.Disabled:focus {
+  background-color: #418196;
+  color: #a7b4c0;
+  border-color: #FFFFFF
+}
+a.Disabled {
+  background-color: #418196;
+  color: #a7b4c0;
+  border-color: #005D7C;
+}
+
+div.Video_Info {
+    display: none;
+    background-color: #00779F;
+    width: 600px;
+    margin: auto;
+    top: 150px;
+    position: relative;
+    z-index: 101;
+    border-style: solid;
+    border-color: #ffffff;
+    border-width: 2px;
+}
+div.Video_Info > div.Info-Fondo {
+    height: 300px;
+    overflow-y: auto;
+    background-color: #00779f;
+}
+div.Video_Info > div.Info-Fondo > img.Info-Background {
+    height: 296px;
+    width: 400px;
+    opacity: 0.5;
+    float: left;
+}
+div.Video_Info > div.Info-Fondo > img.Info-Image {
+    height: 296px;
+    width: 200px;
+    float: left;
+}
+div.Video_Info > div.Info-Fondo > span { 
+  position: absolute;
+  float: left;
+  font-size: 15px;
+  max-width: 240px;
+  width: 240px;
+  color: #fff;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  height: 20px;
+  text-shadow: 1px 1px #000;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Paginas {
+    right:10px;
+    top: 300px;
+    width: auto;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea1_head {
+    left:10px;
+    top: 30px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea1 {
+    left:150px;
+    top: 30px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea2_head {
+    left:10px;
+    top: 50px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea2 {
+    left:150px;
+    top: 50px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea3_head {
+    left:10px;
+    top: 70px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea3 {
+    left:150px;
+    top: 70px;
+    position: absolute;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea4_head {
+    left:10px;
+    top: 90px;
+
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea4 {
+    left:150px;
+    top: 90px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea5_head {
+    left:10px;
+    top: 110px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea5 {
+    left:150px;
+    top: 110px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea6_head {
+    left:10px;
+    top: 130px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea6 {
+    left:150px;
+    top: 130px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea7_head {
+    left:10px;
+    top: 150px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea7 {
+    left:150px;
+    top: 150px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea8_head {
+    left: 0px;
+    top: 170px;
+    width: 400px;
+    text-align: center;
+    max-width: 400px;
+}
+div.Video_Info > div.Info-Fondo > span.Info-Linea8 {
+    left: 10px;
+    top: 190px;
+    max-width: 380px;
+    width: 380px;
+    max-height: 135px;
+    height: 135px;
+    overflow: hidden;
+    text-align: justify;
+    white-space: normal;
 }
 /*------------------------Popup Config------------------------*/
 
@@ -790,6 +934,78 @@ ul.ListItem {
     margin: 0px;
     overflow-y: auto;
     padding: 0px;
+}
+
+ul.ListItem > li.ListItem_list > a.ListItemButton {
+    background-color: #005D7C;
+    border-color: transparent;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 4px;
+    display: block;
+    height: 28px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 5px;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    margin-right: 20px;
+    width: 38px;
+}
+
+ul.ListItem > li.ListItem_list {
+    border-bottom-color: transparent;
+    border-bottom-style: solid;
+    border-bottom-width: 7px;
+    border-radius: 5px;
+    display: block;
+    font-size: 16px;
+    padding-right: 20px;
+    position: relative;
+}
+ul.ListItem > li.ListItem_list > a.ListItem {
+    background-color: #005D7C;
+    border-color: transparent;
+    border-radius: 5px;
+    border-style: solid;
+    height: 28px;
+    border-width: 4px;
+    color: #FFF;
+    display: block;
+    
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+    text-decoration: none;
+    padding-left: 3px;
+}
+ul.ListItem > li.ListItem_list > a.ListItem > div.ListItem {
+    left: 0;
+    top: 0;
+    position: absolute;
+    width: 100%;
+}
+ul.ListItem > li.ListItem_list > a.ListItem > h3.ListItem {
+    margin: 0px;
+    font-size: 16px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: table-cell;
+    text-align: center;
+    vertical-align:middle;
+    height:21px
+}
+ul.ListItem > li.ListItem_list > a.ListItem > p.ListItem {
+    display:none;
+}
+
+ul.ListItem > li.ListItem_list > a.ListItem > div.ListItem > img.ListItem {
+    display: none;
 }
 ul.ListItem > li.ListItemBanner > a.ListItem {
     background-color: #005D7C;
@@ -979,6 +1195,7 @@ ul.ListItem > li.ListItem {
     padding-right: 20px;
     position: relative;
 }
+ul.ListItem > li.ListItem_list > a.ListItem:focus,
 ul.ListItem > li.ListItemBanner > a.ListItem:focus,
 ul.ListItem > li.ListItemChannels > a.ListItem:focus,
 ul.ListItem > li.ListItem > a.ListItem:focus {
@@ -1005,6 +1222,7 @@ ul.ListItem > li.ListItem > a.ListItemButton {
     margin-right: 20px;
     width: 38px;
 }
+ul.ListItem > li.ListItem_list > a.ListItemButton:after,
 ul.ListItem > li.ListItemBanner > a.ListItemButton:after,
 ul.ListItem > li.ListItemChannels > a.ListItemButton:after,
 ul.ListItem > li.ListItem > a.ListItemButton:after {
@@ -1025,6 +1243,7 @@ ul.ListItem > li.ListItem > a.ListItemButton:after {
     top: 50%;
     width: 22px;
 }
+ul.ListItem > li.ListItem_list > a.ListItemButton:focus,
 ul.ListItem > li.ListItemBanner > a.ListItemButton:focus,
 ul.ListItem > li.ListItemChannels > a.ListItemButton:focus,
 ul.ListItem > li.ListItem > a.ListItemButton:focus {
@@ -1033,16 +1252,9 @@ ul.ListItem > li.ListItem > a.ListItemButton:focus {
     background-color: #01455c;
     border-color: #ffffff;
 }
+ul.ListItem > li.ListItem_list > a.ListItemMenu,
 ul.ListItem > li.ListItemBanner > a.ListItemMenu,
 ul.ListItem > li.ListItemChannels > a.ListItemMenu,
 ul.ListItem > li.ListItem > a.ListItemMenu {
     margin-right: 40px;
-}
-ul.ListItem > li.ListItemBanner > a.ListItemButton:focus,
-ul.ListItem > li.ListItemChannels > a.ListItemButton:focus,
-ul.ListItem > li.ListItem > a.ListItemButton:focus {
-    border-style: solid;
-    border-width: 4px;
-    background-color: #01455c;
-    border-color: #ffffff;
 }
