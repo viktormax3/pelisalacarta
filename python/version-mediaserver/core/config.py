@@ -5,7 +5,7 @@
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
 #------------------------------------------------------------
 import os,re
-import logger
+
 PLATFORM_NAME="mediaserver"
 PLUGIN_NAME="pelisalacarta"
 
@@ -14,13 +14,27 @@ def is_xbmc():
     return False
 
 def get_library_support():
-    return False
+    return True
 
 def get_platform():
   return PLATFORM_NAME
   
 def get_system_platform():
     return "mediaserver"
+
+def get_library_path():
+
+    default = os.path.join(get_runtime_path(), "library")
+
+
+    value = get_setting("librarypath")
+    if value == "":
+        value = default
+
+    if value.lower().startswith("smb://") and not value.endswith("/"):
+        value += "/"
+
+    return value
     
 def get_local_ip():
   import socket
@@ -141,7 +155,7 @@ def get_localized_string(code):
     translationsfile = open(TRANSLATION_FILE_PATH,"r")
     translations = translationsfile.read()
     translationsfile.close()
-    cadenas = re.findall('<string id="%d">([^<]+)<' % code,translations)
+    cadenas = re.findall('<string id="%s">([^<]+)<' % code,translations)
     if len(cadenas)>0:
         return cadenas[0]
     else:
@@ -154,10 +168,11 @@ def get_runtime_path():
     return os.getcwd()
 # Test if all the required directories are created
 def verify_directories_created():
+    import logger
     logger.info("Comprobando directorios")
     if not os.path.exists(get_data_path()): os.mkdir(get_data_path())
     
-    config_paths = [["library_path",     "Library"],
+    config_paths = [["librarypath",     "Library"],
                     ["downloadpath",     "Downloads"],
                     ["downloadlistpath", os.path.join("Downloads","List")],
                     ["bookmarkpath",     "Favorites"]]
