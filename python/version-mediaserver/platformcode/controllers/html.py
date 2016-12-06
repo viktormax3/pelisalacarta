@@ -16,6 +16,7 @@ from core.item import Item
 import threading
 import random
 from platformcode import launcher
+from core.tmdb import Tmdb
 
 class html(Controller):
     pattern = re.compile("##")
@@ -26,15 +27,18 @@ class html(Controller):
         self.platformtools = platform(self)
         self.data = {}
         if self.handler:
+            self.client_ip = handler.client.getpeername()[0]
             self.send_message({"action": "connect", "data":{"version": "pelisalacarta %s" % config.get_plugin_version(), "date":config.get_plugin_date()}})
-            launcher.start()
+            t = threading.Thread(target=launcher.start, name=ID)
+            t.setDaemon(True)
+            t.start()
 
 
     def run(self, path):
         if path:
           item = Item().fromurl(path)
         else:
-          item = Item(channel="channelselector", action="mainlist")
+          item = Item(channel="channelselector", action="mainlist", viewmode="banner")
 
         launcher.run(item)
 
@@ -89,27 +93,26 @@ class platform(Platformtools):
         if not len(itemlist):
             itemlist.append(Item(title="No hay elementos que mostrar"))
         
-        #Tipo de vista    
-        if (parent_item.channel=="channelselector" and parent_item.action=="mainlist") or (parent_item.channel=="novedades" and parent_item.action=="mainlist") or (parent_item.channel=="buscador" and parent_item.action=="mainlist") or (parent_item.channel=="channelselector" and parent_item.action=="channeltypes"):
-          viewmode = 0
-        elif parent_item.channel=="channelselector" and parent_item.action=="listchannels":
-          viewmode = 1
-        else:
-          viewmode = 2
+        if parent_item.channel == "channelselector" and not parent_item.action == "filterchannels":
+          parent_item.viewmode = "banner"
+        elif parent_item.channel == "channelselector" and  parent_item.action == "filterchannels":
+          parent_item.viewmode = "channel"
 
+        
         #Item Atrás
         if not (parent_item.channel=="channelselector" and parent_item.action=="mainlist") and not itemlist[0].action=="go_back":
-          if viewmode !=2:
+          if parent_item.viewmode in ["banner", "channel"]:
             itemlist.insert(0,Item(title="Atrás", action="go_back",thumbnail=os.path.join(config.get_runtime_path(),"resources","images","bannermenu","thumb_atras.png")))
           else:
             itemlist.insert(0,Item(title="Atrás", action="go_back",thumbnail=os.path.join(config.get_runtime_path(),"resources","images","squares","thumb_atras.png")))
                
         JsonData = {}
-        JsonData["action"]="EndItems"
-        JsonData["data"]={}
-        JsonData["data"]["itemlist"]=[]
-        JsonData["data"]["mode"]=viewmode   
-        JsonData["data"]["host"]=self.controller.host
+        JsonData["action"] = "EndItems"
+        JsonData["data"] = {}
+        JsonData["data"]["itemlist"] = []
+        JsonData["data"]["viewmode"] = parent_item.viewmode   
+        JsonData["data"]["category"] = parent_item.category.capitalize()
+        JsonData["data"]["host"] = self.controller.host
         
         # Recorremos el itemlist
         for item in itemlist:
@@ -118,13 +121,14 @@ class platform(Platformtools):
             if not item.thumbnail and item.folder == True: item.thumbnail = "http://media.tvalacarta.info/pelisalacarta/thumb_folder.png"
             if not item.thumbnail and item.folder == False: item.thumbnail = "http://media.tvalacarta.info/pelisalacarta/thumb_nofolder.png"
             if "http://media.tvalacarta.info/" in item.thumbnail and not item.thumbnail.startswith("http://media.tvalacarta.info/pelisalacarta/thumb_"):
-              if viewmode != 2: 
+            
+              if parent_item.viewmode in ["banner", "channel"]: 
                 item.thumbnail = config.get_thumbnail_path("bannermenu") + os.path.basename(item.thumbnail)
               else:
                 item.thumbnail = config.get_thumbnail_path() + os.path.basename(item.thumbnail)
             
             #Estas imagenes no estan en bannermenu, asi que si queremos bannermenu, para que no se vean mal las quitamos    
-            elif viewmode != 2 and item.thumbnail.startswith("http://media.tvalacarta.info/pelisalacarta/thumb_"):
+            elif parent_item.viewmode in ["banner", "channel"] and item.thumbnail.startswith("http://media.tvalacarta.info/pelisalacarta/thumb_"):
               item.thumbnail = ""
               
 
@@ -135,26 +139,40 @@ class platform(Platformtools):
             # Si el item no contiene fanart,le ponemos la del item padre
             if item.fanart == "":
                 item.fanart = parent_item.fanart
-
+            
+            title = item.title.replace(" ", "&nbsp;")
             # Formatear titulo
             if item.text_color:
-                item.title = '[COLOR %s]%s[/COLOR]' % (item.text_color, item.title)
+                title = '[COLOR %s]%s[/COLOR]' % (item.text_color, title)
             if item.text_blod:
-                item.title = '[B]%s[/B]' % item.title
+                title = '[B]%s[/B]' % title
             if item.text_italic:
-                item.title = '[I]%s[/I]' % item.title
-
+                title = '[I]%s[/I]' % title
+            
+            
+            matches = re.compile("(\[I\])(?:.*?)(\[\/I\])").findall(title)
+            for match in matches:
+              title=title.replace(match[0], "<i>").replace(match[1],"</i>")
+              
+            matches = re.compile("(\[B\])(?:.*?)(\[\/B\])").findall(title)
+            for match in matches:
+              title=title.replace(match[0], "<b>").replace(match[1],"</b>")
+              
+            matches = re.compile("(\[COLOR ([^\]]+)\])(?:.*?)(\[\/COLOR\])").findall(title)
+            for match in matches:
+              title=title.replace(match[0],"<span style='color:"+match[1]+"'>").replace(match[2],"</span>")
+              
             JsonItem = {}
-            JsonItem["title"]=item.title
+            JsonItem["title"]=title
             JsonItem["thumbnail"]= item.thumbnail
             JsonItem["fanart"]=item.fanart
             JsonItem["plot"]=item.plot
             JsonItem["action"]=item.action
             JsonItem["url"]=item.tourl()
             JsonItem["context"]=[]
-            
-            for Comando in self.set_context_commands(item, parent_item):
-              JsonItem["context"].append({"title":Comando[0],"url": Comando[1]})
+            if not item.action == "go_back":
+              for Comando in self.set_context_commands(item, parent_item):
+                JsonItem["context"].append({"title":Comando[0],"url": Comando[1]})
               
             JsonData["data"]["itemlist"].append(JsonItem)
 
@@ -675,7 +693,6 @@ class platform(Platformtools):
           pass
         data = self.get_data(ID)
         self.controller.data = {}
-        
 
         if type(data) == dict:
           JsonData["action"]="HideLoading"
@@ -704,8 +721,10 @@ class platform(Platformtools):
             return_value = getattr(cb_channel, custom_button['function'])(item)
             if custom_button["close"] == True:
               return return_value
-
+        
+        elif data == False:
+          return None
          
-    def show_video_info(self,data, caption="Información del vídeo", callback=None, item=None):
+    def show_video_info(self,data, caption="", item=None, scraper=Tmdb):
         from platformcode import html_info_window
-        return html_info_window.InfoWindow().Start(self, data, caption, callback, item)
+        return html_info_window.InfoWindow().Start(self, data, caption, item, scraper)

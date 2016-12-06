@@ -15,7 +15,7 @@ import traceback
 from core import jsontools as json
 
 class HandleWebSocket(WebSocketServer.WebSocket):
-    ID = "%032x" % (random.getrandbits(128))
+    
     def handleMessage(self):
         try:
             if self.data:
@@ -38,6 +38,7 @@ class HandleWebSocket(WebSocketServer.WebSocket):
 
     def handleConnected(self):
         try:
+            self.ID = "%032x" % (random.getrandbits(128))
             from platformcode.controllers.html import html
             self.controller = html(self, self.ID)
             self.server.fnc_info()
@@ -47,6 +48,7 @@ class HandleWebSocket(WebSocketServer.WebSocket):
         
 
     def handleClose(self):
+        self.controller.__del__()
         del self.controller
         self.server.fnc_info()
 
@@ -78,7 +80,7 @@ def show_error_message(err_info):
         platformtools.dialog_ok(
                 "Se ha producido un error en el canal " + canal,
                 "Esto puede ser devido a varias razones: \n \
-                - \El servidor no está disponible, o no esta respondiendo.\n \
+                - El servidor no está disponible, o no esta respondiendo.\n \
                 - Cambios en el diseño de la web.\n \
                 - Etc...\n \
                 Comprueba el log para ver mas detalles del error.")

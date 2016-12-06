@@ -1,5 +1,5 @@
 window.onkeydown =  function(e){
-  if (e.keyCode==27){CerrarDialogos();}
+  if (e.keyCode==27){dialog.closeall();}
   try{
     if(e.target.tagName=="BODY"){BodyKeyDown(e)}
     if(e.target.id=="Loading"){LoadingKeyDown(e)}
@@ -11,6 +11,7 @@ window.onkeydown =  function(e){
     if(e.target.parentNode.id=="Servidor-popup"){ServidorKeyDown(e)} 
     if(e.target.parentNode.id=="ProgressBar-popup"){ProgressKeyDown(e)} 
     if(e.target.parentNode.id=="Config-popup"){ConfigKeyDown(e)}
+    if(e.target.parentNode.id=="Info-popup"){InfoKeyDown(e)}
     
     if(e.target.parentNode.parentNode.id=="Alert-popup"){AlertKeyDown(e)}
     if(e.target.parentNode.parentNode.id=="AlertYesNo-popup"){AlertYesNoKeyDown(e)}
@@ -18,6 +19,7 @@ window.onkeydown =  function(e){
     if(e.target.parentNode.parentNode.id=="Keyboard-popup"){KeyboardKeyDown(e)}
     if(e.target.parentNode.parentNode.id=="ProgressBar-popup"){ProgressKeyDown(e)}
     if(e.target.parentNode.parentNode.id=="Config-popup"){ConfigKeyDown(e)}
+    if(e.target.parentNode.parentNode.id=="Info-popup"){InfoKeyDown(e)}
     
     if(e.target.parentNode.parentNode.parentNode.id=="Contenedor"){ListItemKeyDown(e)}
     if(e.target.parentNode.parentNode.parentNode.id=="Keyboard-popup"){KeyboardKeyDown(e)}
@@ -51,13 +53,12 @@ function ListItemKeyDown(e){
       e.preventDefault();
       if (e.target.parentNode.children.length ==2){
         e.target.parentNode.children[1].onclick.apply(e.target.parentNode.children[1]);
-        ItemFocus = e.target;
+        focused_item = e.target;
       }
       break;
     case 8: //Atras
       e.preventDefault();
-      if (Navegacion.length >1){Back();}
-      else{HED.helpers.quit();}
+      if (nav_history.current > 0){send_request("go_back");}
       break;
     
     case 37: //Left
@@ -91,7 +92,7 @@ function ListItemKeyDown(e){
 function LoadingKeyDown(e){
   switch (e.keyCode) {
     case 8: //Atras
-      CerrarLoading()
+      loading.close()
       e.preventDefault();
       break;
   }
@@ -101,7 +102,6 @@ function BodyKeyDown(e){
   switch (e.keyCode) {
     case 8: //Atras
       e.preventDefault();
-      HED.window.get().destroy()
       break;
       
     case 37: //Left
@@ -126,11 +126,46 @@ function BodyKeyDown(e){
   }
 }
 
+function InfoKeyDown(e){
+  switch (e.keyCode) {
+    case 8: //Atras
+      e.preventDefault(); 
+      dialog.closeall()
+      break;
+    case 38: //UP
+      e.preventDefault(); 
+      if (e.target.parentNode.parentNode.id=="Info-popup"){document.activeElement.parentNode.parentNode.children[0].focus()}
+      break;
+      
+    case 37: //Left
+      e.preventDefault(); 
+      if (e.target.parentNode.parentNode.id=="Info-popup"){
+        index = Array.prototype.indexOf.call(document.activeElement.parentNode.children, document.activeElement);
+        document.activeElement.parentNode.children[index-1].focus()
+      }
+      break;
+      
+    case 39: //RIGHT
+      e.preventDefault(); 
+      if (e.target.parentNode.parentNode.id=="Info-popup"){
+        index = Array.prototype.indexOf.call(document.activeElement.parentNode.children, document.activeElement);
+        document.activeElement.parentNode.children[index+1].focus()
+      }
+      break;
+      
+    case 40: //DOWN
+      e.preventDefault(); 
+      if (e.target.parentNode.id=="Info-popup"){document.activeElement.parentNode.children[3].children[3].focus()}
+      break;
+  }
+}
+
+
 function ListaKeyDown(e){
   switch (e.keyCode) {
     case 8: //Atras
       e.preventDefault(); 
-      CerrarDialogos()
+      dialog.closeall()
       break;
 
     case 38: //UP
@@ -156,7 +191,7 @@ function ConfigKeyDown(e){
     case 8: //Atras
       if ((e.target.tagName != "INPUT" || (e.target.type != "text" && e.target.type != "password")) && e.target.tagName != "SELECT"){
         e.preventDefault(); 
-        CerrarDialogos()
+        dialog.closeall()
       }
       break;
       
@@ -231,7 +266,7 @@ function AlertKeyDown(e){
   switch (e.keyCode) {
     case 8: //Atras
       e.preventDefault(); 
-      CerrarDialogos()
+      dialog.closeall()
       break;
       
     case 38: //UP
@@ -250,7 +285,7 @@ function ProgressKeyDown(e){
   switch (e.keyCode) {
     case 8: //Atras
       e.preventDefault(); 
-      CerrarDialogos()
+      dialog.closeall()
       break;
       
     case 38: //UP
@@ -269,7 +304,7 @@ function AlertYesNoKeyDown(e){
   switch (e.keyCode) {
     case 8: //Atras
       e.preventDefault(); 
-      CerrarDialogos()
+      dialog.closeall()
       break;
     case 38: //UP
       e.preventDefault(); 
@@ -304,7 +339,7 @@ function ServidorKeyDown(e){
     case 8: //Atras
       if (e.target.tagName != "INPUT"){
         e.preventDefault(); 
-        CerrarDialogos()
+        dialog.closeall()
       }
       break;
       
@@ -360,7 +395,7 @@ function KeyboardKeyDown(e){
     case 8: //Atras
       if (e.target.id != "Keyboard-Text"){
         e.preventDefault(); 
-        CerrarDialogos()
+        dialog.closeall()
       }
       break;
     case 38: //UP
@@ -399,200 +434,200 @@ function KeyboardKeyDown(e){
 function Buscar(keyCode) {
   switch (keyCode) {
     case 96:
-      Tecla["keyCode"]=keyCode
-      Tecla["Char"] = "0"
+      keychar["keyCode"]=keyCode
+      keychar["Char"] = "0"
       break;
       
     case 97:
-      Tecla["keyCode"]=keyCode
-      Tecla["Char"] = "1"
+      keychar["keyCode"]=keyCode
+      keychar["Char"] = "1"
       break;
       
     case 98:
-      if (Tecla["keyCode"]==keyCode){
-        switch (Tecla["Char"]){
+      if (keychar["keyCode"]==keyCode){
+        switch (keychar["Char"]){
           case "a":
-            Tecla["Char"] = "b"
+            keychar["Char"] = "b"
             break;
           case "b":
-            Tecla["Char"] = "c"
+            keychar["Char"] = "c"
             break;
           case "c":
-            Tecla["Char"] = "2"
+            keychar["Char"] = "2"
             break;
           case "2":
-            Tecla["Char"] = "a"
+            keychar["Char"] = "a"
             break;
         }
       }else{
-        Tecla["keyCode"]=keyCode
-        Tecla["Char"] = "a"
+        keychar["keyCode"]=keyCode
+        keychar["Char"] = "a"
       }       
       break;
       
     case 99:
-      if (Tecla["keyCode"]==keyCode){
-        switch (Tecla["Char"]){
+      if (keychar["keyCode"]==keyCode){
+        switch (keychar["Char"]){
           case "d":
-            Tecla["Char"] = "e"
+            keychar["Char"] = "e"
             break;
           case "e":
-            Tecla["Char"] = "f"
+            keychar["Char"] = "f"
             break;
           case "f":
-            Tecla["Char"] = "3"
+            keychar["Char"] = "3"
             break;
           case "3":
-            Tecla["Char"] = "d"
+            keychar["Char"] = "d"
             break;
         }
       }else{
-        Tecla["keyCode"]=keyCode
-        Tecla["Char"] = "d"
+        keychar["keyCode"]=keyCode
+        keychar["Char"] = "d"
       }   
       break;
       
     case 100:
-      if (Tecla["keyCode"]==keyCode){
-        switch (Tecla["Char"]){
+      if (keychar["keyCode"]==keyCode){
+        switch (keychar["Char"]){
           case "g":
-            Tecla["Char"] = "h"
+            keychar["Char"] = "h"
             break;
           case "h":
-            Tecla["Char"] = "i"
+            keychar["Char"] = "i"
             break;
           case "i":
-            Tecla["Char"] = "4"
+            keychar["Char"] = "4"
             break;
           case "4":
-            Tecla["Char"] = "g"
+            keychar["Char"] = "g"
             break;
         }
       }else{
-        Tecla["keyCode"]=keyCode
-        Tecla["Char"] = "g"
+        keychar["keyCode"]=keyCode
+        keychar["Char"] = "g"
       }
       break;
       
     case 101:
-      if (Tecla["keyCode"]==keyCode){
-        switch (Tecla["Char"]){
+      if (keychar["keyCode"]==keyCode){
+        switch (keychar["Char"]){
           case "j":
-            Tecla["Char"] = "k"
+            keychar["Char"] = "k"
             break;
           case "k":
-            Tecla["Char"] = "l"
+            keychar["Char"] = "l"
             break;
           case "l":
-            Tecla["Char"] = "5"
+            keychar["Char"] = "5"
             break;
           case "5":
-            Tecla["Char"] = "j"
+            keychar["Char"] = "j"
             break;
         }
       }else{
-        Tecla["keyCode"]=keyCode
-        Tecla["Char"] = "j"
+        keychar["keyCode"]=keyCode
+        keychar["Char"] = "j"
       }
       break;
       
     case 102:
-      if (Tecla["keyCode"]==keyCode){
-        switch (Tecla["Char"]){
+      if (keychar["keyCode"]==keyCode){
+        switch (keychar["Char"]){
           case "m":
-            Tecla["Char"] = "n"
+            keychar["Char"] = "n"
             break;
           case "n":
-            Tecla["Char"] = "o"
+            keychar["Char"] = "o"
             break;
           case "o":
-            Tecla["Char"] = "6"
+            keychar["Char"] = "6"
             break;
           case "6":
-            Tecla["Char"] = "m"
+            keychar["Char"] = "m"
             break;
         }
       }else{
-        Tecla["keyCode"]=keyCode
-        Tecla["Char"] = "m"
+        keychar["keyCode"]=keyCode
+        keychar["Char"] = "m"
       }
       break;
       
     case 103:
-      if (Tecla["keyCode"]==keyCode){
-        switch (Tecla["Char"]){
+      if (keychar["keyCode"]==keyCode){
+        switch (keychar["Char"]){
           case "p":
-            Tecla["Char"] = "q"
+            keychar["Char"] = "q"
             break;
           case "q":
-            Tecla["Char"] = "r"
+            keychar["Char"] = "r"
             break;
           case "r":
-            Tecla["Char"] = "s"
+            keychar["Char"] = "s"
             break;
           case "s":
-            Tecla["Char"] = "7"
+            keychar["Char"] = "7"
             break;
           case "7":
-            Tecla["Char"] = "p"
+            keychar["Char"] = "p"
             break;
         }
       }else{
-        Tecla["keyCode"]=keyCode
-        Tecla["Char"] = "p"
+        keychar["keyCode"]=keyCode
+        keychar["Char"] = "p"
       }
       break;
       
     case 104:
-      if (Tecla["keyCode"]==keyCode){
-        switch (Tecla["Char"]){
+      if (keychar["keyCode"]==keyCode){
+        switch (keychar["Char"]){
           case "t":
-            Tecla["Char"] = "u"
+            keychar["Char"] = "u"
             break;
           case "u":
-            Tecla["Char"] = "u"
+            keychar["Char"] = "u"
             break;
           case "v":
-            Tecla["Char"] = "8"
+            keychar["Char"] = "8"
             break;
           case "8":
-            Tecla["Char"] = "t"
+            keychar["Char"] = "t"
             break;
         }
       }else{
-        Tecla["keyCode"]=keyCode
-        Tecla["Char"] = "t"
+        keychar["keyCode"]=keyCode
+        keychar["Char"] = "t"
       }
       break;
       
     case 105:
-      if (Tecla["keyCode"]==keyCode){
-        switch (Tecla["Char"]){
+      if (keychar["keyCode"]==keyCode){
+        switch (keychar["Char"]){
           case "x":
-            Tecla["Char"] = "y"
+            keychar["Char"] = "y"
             break;
           case "y":
-            Tecla["Char"] = "z"
+            keychar["Char"] = "z"
             break;
           case "z":
-            Tecla["Char"] = "w"
+            keychar["Char"] = "w"
             break;
           case "w":
-            Tecla["Char"] = "9"
+            keychar["Char"] = "9"
             break;
           case "9":
-            Tecla["Char"] = "x"
+            keychar["Char"] = "x"
             break;
         }
       }else{
-        Tecla["keyCode"]=keyCode
-        Tecla["Char"] = "x"
+        keychar["keyCode"]=keyCode
+        keychar["Char"] = "x"
       }
       break;
 
   }
   for (x = 2; x < document.getElementById("itemlist").children.length; x++) {
-  if ( document.getElementById("itemlist").children[x].children[0].children[1].innerHTML.toLowerCase().indexOf(Tecla["Char"])===0){
+  if ( document.getElementById("itemlist").children[x].children[0].children[1].innerHTML.toLowerCase().indexOf(keychar["Char"])===0){
   document.getElementById("itemlist").children[x].children[0].focus()
   break;
   }

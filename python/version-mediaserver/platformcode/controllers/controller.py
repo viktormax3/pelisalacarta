@@ -33,6 +33,7 @@ class Controller(object):
     pattern = ""
     name = None
     def __init__(self, handler = None, ID = None):
+        
         self.handler = handler
         self.id = ID
         
@@ -49,14 +50,14 @@ class Controller(object):
         super(Controller, self).__setattr__(name, value)
         
         if name == "platformtools":
-          platformtools.controllers[self.id] =  self.platformtools
+          platformtools.controllers[self.id] = self.platformtools
         
         
     def __del__(self):
         from platformcode import platformtools
         import threading
-        if threading.current_thread().name in platformtools.controllers:
-          del platformtools.controllers[threading.current_thread().name]
+        if self.id in platformtools.controllers:
+          del platformtools.controllers[self.id]
           
      
             
