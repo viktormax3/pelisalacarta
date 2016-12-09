@@ -17,6 +17,7 @@ import threading
 import random
 from platformcode import launcher
 from core.tmdb import Tmdb
+import time
 
 class html(Controller):
     pattern = re.compile("##")
@@ -44,11 +45,10 @@ class html(Controller):
 
 
     def get_data(self, id):
-        if "id" in self.data and self.data["id"] == id:
-            data = self.data["result"]
-        else:
-            data = None
-            
+        while not "id" in self.data or not self.data["id"] == id:
+          time.sleep(0.1)
+        data = self.data["result"]
+        self.data = {}
         return data
 
 
@@ -178,8 +178,8 @@ class platform(Platformtools):
 
 
         ID = self.send_message(JsonData)
-        while self.get_data(ID) == None:
-          continue
+        self.get_data(ID)
+
 
       
     def set_context_commands(self, item, parent_item):
@@ -291,8 +291,8 @@ class platform(Platformtools):
         JsonData["data"]["title"]=heading
         JsonData["data"]["text"]=unicode(text ,"utf8","ignore").encode("utf8")
         ID = self.send_message(JsonData)
-        while  self.get_data(ID) == None:
-          continue
+        self.get_data(ID)
+
       
     def dialog_notification(self, heading, message, icon=0, time=5000, sound=True):
         #No disponible por ahora, muestra un dialog_ok
@@ -308,10 +308,8 @@ class platform(Platformtools):
         JsonData["data"]["title"]=heading
         JsonData["data"]["text"]=text
         ID = self.send_message(JsonData)
-        while self.get_data(ID) == None:
-          continue
-
-        return self.get_data(ID)
+        response = self.get_data(ID)
+        return response
       
     def dialog_select(self, heading, list): 
         JsonData = {}
@@ -322,9 +320,9 @@ class platform(Platformtools):
         for Elemento in list:
           JsonData["data"]["list"].append(Elemento)
         ID = self.send_message(JsonData)
-        while self.get_data(ID) == None:
-          continue
-        return self.get_data(ID)
+        response = self.get_data(ID)
+
+        return response
       
     def dialog_progress(self, heading, line1, line2="", line3=""):
         class Dialog(object):
@@ -344,19 +342,16 @@ class platform(Platformtools):
                 JsonData["data"]["percent"]=0
                 
                 ID = self.platformtools.send_message(JsonData)
-                while self.platformtools.get_data(ID) == None:
-                  continue
-
+                self.platformtools.get_data(ID)
 
             def iscanceled(self):
                 JsonData = {}
                 JsonData["action"]="ProgressIsCanceled" 
                 JsonData["data"]={}
                 ID = self.platformtools.send_message(JsonData)
-                while self.platformtools.get_data(ID) == None:
-                  continue
+                response = self.platformtools.get_data(ID)
                   
-                return self.platformtools.get_data(ID)
+                return response
 
             def update(self, percent, line1, line2="", line3=""):
                 text = line1
@@ -375,8 +370,7 @@ class platform(Platformtools):
                 JsonData["action"]="ProgressClose" 
                 JsonData["data"]={}
                 ID = self.platformtools.send_message(JsonData)
-                while self.platformtools.get_data(ID) == None:
-                  continue
+                self.platformtools.get_data(ID)
                 self.closed = True
 
         return Dialog(heading, line1, line2, line3, self)
@@ -396,8 +390,8 @@ class platform(Platformtools):
                 JsonData["data"]["percent"]=0
                 
                 ID = self.platformtools.send_message(JsonData)
-                while self.platformtools.get_data(ID) == None:
-                  continue
+                self.platformtools.get_data(ID)
+
 
             def isFinished(self):
                 return not self.closed
@@ -416,8 +410,7 @@ class platform(Platformtools):
                 JsonData["action"]="ProgressBGClose" 
                 JsonData["data"]={}
                 ID = self.platformtools.send_message(JsonData)
-                while self.platformtools.get_data(ID) == None:
-                  continue
+                self.platformtools.get_data(ID)
                 self.closed = True
                 
         return Dialog(heading, message, self)
@@ -430,9 +423,9 @@ class platform(Platformtools):
         JsonData["data"]["text"]=default
         JsonData["data"]["password"]=hidden
         ID = self.send_message(JsonData)
-        while self.get_data(ID) == None:
-          continue
-        return self.get_data(ID)
+        response = self.get_data(ID)
+
+        return response
 
     def dialog_numeric(self, type, heading, default=""):
         return self.dialog_input("", heading, False) 
@@ -442,8 +435,7 @@ class platform(Platformtools):
         JsonData["action"]="Refresh" 
         JsonData["data"]={}
         ID = self.send_message(JsonData)
-        while self.get_data(ID) == None:
-          continue
+        self.get_data(ID)
 
     def itemlist_update(self, item):
         JsonData = {}
@@ -452,17 +444,15 @@ class platform(Platformtools):
         JsonData["data"]["url"]=item.tourl()
         ID = self.send_message(JsonData)
 
-        while self.get_data(ID) == None:
-          continue
+        self.get_data(ID)
 
     def is_playing(self):
       JsonData = {}
       JsonData["action"]="isPlaying" 
       JsonData["data"]={}
       ID = self.send_message(JsonData)
-      while self.get_data(ID)== None:
-        continue
-      return self.get_data(ID)
+      response = self.get_data(ID)
+      return response
 
     def play_video(self, item):
         if item.contentTitle:
@@ -490,8 +480,7 @@ class platform(Platformtools):
           JsonData["data"]["url"] =  item.url
           JsonData["data"]["host"] =  self.controller.host
           ID = self.send_message(JsonData)
-          while self.get_data(ID) == None:
-            continue
+          self.get_data(ID)
             
     def play_torrent(self,item):
         import time
@@ -587,12 +576,11 @@ class platform(Platformtools):
         JsonData["data"]["items"].append(item)
       ID = self.send_message(JsonData)
 
-      while self.get_data(ID) == None:
-        pass
+      response = self.get_data(ID)
         
-      if self.get_data(ID):
+      if response:
         from core import config
-        config.set_settings(self.get_data(ID))
+        config.set_settings(response)
         JsonData = {}
       JsonData["action"]="HideLoading"
       JsonData["data"] = {}
@@ -688,12 +676,9 @@ class platform(Platformtools):
         
       ID = self.send_message(JsonData)
       close = False
+      
       while True:
-        while self.get_data(ID) == None:
-          pass
         data = self.get_data(ID)
-        self.controller.data = {}
-
         if type(data) == dict:
           JsonData["action"]="HideLoading"
           JsonData["data"] = {}
@@ -707,6 +692,8 @@ class platform(Platformtools):
           if not callback:
             for v in data:
               config.set_setting(v,data[v],channelname)
+            return None
+            
           else:
             exec "from channels import " + channelname + " as cb_channel"
             exec "return_value = cb_channel." + callback + "(item, data)"
@@ -717,6 +704,7 @@ class platform(Platformtools):
               cb_channel = __import__('channels.%s' % channelname, None, None, ["channels.%s" % channelname])
           except ImportError:
               logger.error('Imposible importar %s' % channelname)
+              
           else:
             return_value = getattr(cb_channel, custom_button['function'])(item)
             if custom_button["close"] == True:
