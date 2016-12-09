@@ -635,3 +635,21 @@ function Buscar(keyCode) {
   
   
 }
+
+
+
+document.onkeypress = function(e) {
+    if ((e || window.event).keyCode === 32) {
+        if(media.paused) media.play(); else media.pause();
+    }
+};
+
+document.ondblclick = function(){
+    if (media.requestFullscreen) {
+        media.requestFullscreen();
+    }else if(media.mozRequestFullScreen) {
+        media.mozRequestFullScreen();
+    }else if (media.webkitRequestFullscreen) {
+        media.webkitRequestFullscreen();
+  }
+};

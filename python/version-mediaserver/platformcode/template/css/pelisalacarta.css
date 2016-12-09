@@ -636,7 +636,7 @@ div.Lista > div.ListaContenido > ul.Lista > li.Lista {
     border-color: transparent;
     border-style: solid;
     border-width: 5px;
-    display: run-in;
+    display: inline-flex;
     border-top-width: 0px;
 }
 div.Lista > div.ListaContenido > ul.Lista > li.Lista > a.Lista > h3 {
