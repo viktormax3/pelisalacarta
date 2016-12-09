@@ -29,6 +29,7 @@ dialog.closeall = function() {
   document.getElementById("Lista-popup").style.display="none";
   document.getElementById("Config-popup").style.display="none";
   document.getElementById("Player-popup").style.display="none";
+  document.getElementById("Player").innerHTML=''
   document.getElementById("Alert-popup").style.display="none";
   document.getElementById("AlertYesNo-popup").style.display="none";
   document.getElementById("Keyboard-popup").style.display="none";
