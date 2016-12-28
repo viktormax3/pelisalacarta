@@ -105,7 +105,7 @@ def run(item):
       if item.action =="mainlist":
         itemlist = channelselector.getmainlist("bannermenu")
         
-        if config.get_setting("updatecheck2") == "true":
+        if config.get_setting("check_for_plugin_updates") == "true":
           logger.info("channelselector.mainlist Verificar actualizaciones activado")
           from core import updater
           try:

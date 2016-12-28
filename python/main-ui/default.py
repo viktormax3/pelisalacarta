@@ -41,7 +41,7 @@ plugintools.log("pelisalacarta.default")
 config.verify_directories_created()
 
 # Check for new updates
-if config.get_setting("updatecheck2") == "true":
+if config.get_setting("check_for_plugin_updates") == "true":
 
     logger.info("pelisalacarta.default Verificar actualizaciones activado")
   

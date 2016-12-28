@@ -12,10 +12,6 @@
         <setting label="Canales para adultos" type="lsep"/>
         <setting id="adult_mode" type="bool" label="30002" default="false"/>
         <setting id="adult_pin" type="text" label="PIN para abrir canal de adultos" option="hidden" default=""/>
-        <setting type="sep"/>
-        <setting label="Actualizaciones" type="lsep"/>
-        <setting id="updatecheck2" type="bool" label="30001" default="true"/>
-        <setting id="updatechannels" type="bool" label="30004" default="true"/>
 
         <setting type="sep"/>
         <setting id="hidepremium" type="bool" label="Ocultar servidores de pago sin cuenta" default="false"/>
