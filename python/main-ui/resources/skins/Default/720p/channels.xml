@@ -60,7 +60,7 @@
       <font>font10_title</font>
       <textcolor>FFCCCCCC</textcolor>
       <align>right</align>
-      <label>pelisalacarta 4.1.2</label>
+      <label>pelisalacarta 4.2.0-beta1</label>
     </control>
 
     <control type="label">
@@ -69,7 +69,7 @@
       <font>font10_title</font>
       <textcolor>FFCCCCCC</textcolor>
       <align>right</align>
-      <label>2/Agosto/2016</label>
+      <label>29/Diciembre/2016</label>
     </control>
 
     <!-- ---------------------------- -->

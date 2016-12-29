@@ -50,13 +50,13 @@ def get_next_items( item ):
 
         elif item.channel=="channelselector":
 
-            if item.action=="channeltypes":
+            if item.action=="getchanneltypes":
                 plugintools.log("navigation.get_next_items Channel types menu")
                 itemlist = channelselector.getchanneltypes("bannermenu")
 
-            elif item.action=="listchannels":
-                plugintools.log("navigation.get_next_items Channel list menu")
-                itemlist = channelselector.filterchannels(item.category,"bannermenu")
+            elif item.action=="filterchannels":
+                plugintools.log("navigation.get_next_items Channel list menu, channel_type="+item.channel_type)
+                itemlist = channelselector.filterchannels( item.channel_type ,"bannermenu")
 
         else:
 
@@ -153,24 +153,27 @@ def get_next_items( item ):
         plugintools.log("navigation.get_next_items "+traceback.format_exc())
         itemlist = [ Item(title="Se ha producido un error", thumbnail="http://media.tvalacarta.info/pelisalacarta/thumb_error.png") ]
 
-
+    plugintools.log("navigation.get_next_items "+str(len(itemlist))+" channels")
     return itemlist
 
 def get_window_for_item( item ):
     plugintools.log("navigation.get_window_for_item item.channel="+item.channel+", item.action=="+item.action)
 
     # El menú principal va con banners + titulo
-    if item.channel=="navigation" or (item.channel=="novedades" and item.action=="mainlist") or (item.channel=="buscador" and item.action=="mainlist") or (item.channel=="channelselector" and item.action=="channeltypes"):
+    if item.channel=="navigation" or (item.channel=="novedades" and item.action=="mainlist") or (item.channel=="buscador" and item.action=="mainlist") or (item.channel=="channelselector" and item.action=="getchanneltypes"):
+        plugintools.log("navigation.get_window_for_item -> banner")
         import window_channels
         window = window_channels.ChannelWindow("banner.xml",plugintools.get_runtime_path())
 
     # El listado de canales va con banners sin título
-    elif item.channel=="channelselector" and item.action=="listchannels":
+    elif item.channel=="channelselector" and item.action=="filterchannels":
+        plugintools.log("navigation.get_window_for_item -> channels")
         import window_channels
         window = window_channels.ChannelWindow("channels.xml",plugintools.get_runtime_path())
 
     # El resto va con el aspecto normal
     else:
+        plugintools.log("navigation.get_window_for_item -> content")
         import window_menu
         window = window_menu.MenuWindow("content.xml",plugintools.get_runtime_path())
 
