@@ -26,11 +26,11 @@
 <project name="pelisalacarta" default="package">
     <description>pelisalacarta</description>
 
-    <property name="version" value="4.2.0-beta1"/>
-    <property name="versionboxee" value="10.25"/>
-    <property name="versiondate" value="29/Diciembre/2016"/>
-    <property name="channels_version" value="20161229"/>
-    <property name="servers_version" value="20161229"/>
+    <property name="version" value="4.2.0-beta2"/>
+    <property name="versionboxee" value="10.26"/>
+    <property name="versiondate" value="01/Enero/2017"/>
+    <property name="channels_version" value="20170101"/>
+    <property name="servers_version" value="20170101"/>
 
     <property name="target_base_folder" value="../../target/python"/>
 
@@ -102,7 +102,7 @@
         <echo message="Package channels"/>
 
         <!-- Copy channel files -->
-        <copy todir="${target_base_folder}/channels/plugin.video.pelisalacarta">
+        <copy todir="${target_base_folder}/channels/plugin.video.pelisalacarta/channels">
             <fileset dir="main-classic/channels">
                 <exclude name="**/.*"/>
                 <exclude name="**/.*/**"/>
@@ -118,7 +118,7 @@
         <echo message="Package servers"/>
 
         <!-- Copy channel files -->
-        <copy todir="${target_base_folder}/servers/plugin.video.pelisalacarta">
+        <copy todir="${target_base_folder}/servers/plugin.video.pelisalacarta/servers">
             <fileset dir="main-classic/servers">
                 <exclude name="**/.*"/>
                 <exclude name="**/.*/**"/>
@@ -683,6 +683,7 @@
     <target name="upload" description="Upload zip files to the web server">
 
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-kodi-jarvis-${version}.zip"/><arg value="${ruta_remota_descargas}/pelisalacarta-kodi-jarvis-${version}.zip"/></exec>
+        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-ui-kodi-jarvis-${version}.zip"/><arg value="${ruta_remota_descargas}/pelisalacarta-ui-kodi-jarvis-${version}.zip"/></exec>
         <echo message="Test ready"/>
 
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-kodi-krypton-${version}.zip"/><arg value="${ruta_remota_descargas}/pelisalacarta-kodi-krypton-${version}.zip"/></exec>
@@ -694,7 +695,6 @@
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-xbmc-dharma-${version}.zip"/><arg value="${ruta_remota_descargas}/pelisalacarta-xbmc-dharma-${version}.zip"/></exec>
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-xbmc-plugin-${version}.zip"/><arg value="${ruta_remota_descargas}/pelisalacarta-xbmc-plugin-${version}.zip"/></exec>
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-ui-kodi-krypton-${version}.zip"/><arg value="${ruta_remota_descargas}/pelisalacarta-ui-kodi-krypton-${version}.zip"/></exec>
-        <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-ui-kodi-jarvis-${version}.zip"/><arg value="${ruta_remota_descargas}/pelisalacarta-ui-kodi-jarvis-${version}.zip"/></exec>
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-ui-kodi-isengard-${version}.zip"/><arg value="${ruta_remota_descargas}/pelisalacarta-ui-kodi-isengard-${version}.zip"/></exec>
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-ui-kodi-helix-${version}.zip"/><arg value="${ruta_remota_descargas}/pelisalacarta-ui-kodi-helix-${version}.zip"/></exec>
         <exec executable="scp"><arg value="${target_base_folder}/pelisalacarta-ui-xbmc-gotham-${version}.zip"/><arg value="${ruta_remota_descargas}/pelisalacarta-ui-xbmc-gotham-${version}.zip"/></exec>
