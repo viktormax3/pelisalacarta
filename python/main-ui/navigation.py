@@ -137,6 +137,9 @@ def get_next_items( item ):
                 else:
                     exec "itemlist = channel."+item.action+"(item)"
 
+                if itemlist is None:
+                    itemlist = []
+
                 for loaded_item in itemlist:
 
                     if loaded_item.thumbnail=="":
