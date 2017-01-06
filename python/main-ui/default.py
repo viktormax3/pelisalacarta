@@ -28,19 +28,43 @@ import plugintools
 import navigation
 from core import updater
 from core import config
+from core import logger
 from core.item import Item
 
 plugintools.application_log_enabled = (plugintools.get_setting("debug")=="true")
 plugintools.module_log_enabled = (plugintools.get_setting("debug")=="true")
 plugintools.http_debug_log_enabled = (plugintools.get_setting("debug")=="true")
 
-plugintools.log("pelisalacarta 4 ui begin")
+plugintools.log("pelisalacarta.default")
 
 # Check if paths are on a default value, and if directories are created
 config.verify_directories_created()
 
 # Check for new updates
-updater.checkforupdates(plugin_mode=False)
+if config.get_setting("check_for_plugin_updates") == "true":
+
+    logger.info("pelisalacarta.default Verificar actualizaciones activado")
+  
+    from core import updater
+  
+    try:
+        version = updater.checkforupdates()
+        
+        if version:
+            import xbmcgui
+            yes_pressed = xbmcgui.Dialog().yesno( "Versión "+version+" disponible" , "¿Quieres instalarla?" )
+      
+            if yes_pressed:
+                item = Item(version=version)
+                updater.update(item)
+    except:
+        import xbmcgui
+        advertencia = xbmcgui.Dialog()
+        advertencia.ok("No se puede conectar","No ha sido posible comprobar","si hay actualizaciones")
+        logger.info("pelisalacarta.default Fallo al verificar la actualización")
+
+else:
+    logger.info("pelisalacarta.default Verificar actualizaciones desactivado")
 
 # Get items for main menu
 item = Item( channel="navigation", action="mainlist" )

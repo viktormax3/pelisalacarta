@@ -1,0 +1,10 @@
+<li class="ListItemChannels">
+  <a onblur="unload_info(this)" oncontextmenu="dialog.menu('Menu','%menu_items');return false" onfocus="focused_item=this;load_info(this, 'channel')" onmouseover="this.focus()" class="ListItem %item_class" href="javascript:void(0)" onclick="send_request('%item_url')">
+    <h3 class="ListItem">%item_title</h3>
+    <p class="ListItem"></p>
+    <div class="ListItem">
+      <img class="ListItem" onerror="image_error(this)" alt="%item_host" src="%item_thumbnail">
+    </div>
+  </a>
+  %item_menu
+</li>
