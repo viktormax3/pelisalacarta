@@ -131,8 +131,11 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
             
             itemlist = getattr(channelmodule, action)(caller_item)
 
-            if action=="play" and len(itemlist)>0:
+            if action=="play" and len(itemlist)>0 and isinstance(itemlist[0], Item):
                 itemlist=play_video(itemlist[0])
+            if action=="play" and len(itemlist)>0 and isinstance(itemlist[0], list):
+                item.video_urls = itemlist
+                itemlist=play_video(item)
 
         else:
             Log.Info("El módulo "+caller_item.channel+" *NO* tiene una funcion "+action)
@@ -198,7 +201,11 @@ def resuelve(url):
     return Redirect(url)
 
 def play_video(item):
-    video_urls = servertools.get_video_urls(item.server,item.url)
+    if item.video_urls:
+      video_urls = item.video_urls
+    else:
+      video_urls = servertools.get_video_urls(item.server,item.url)
+      
     itemlist = []
     for video_url in video_urls:
         itemlist.append( Item(channel=item.channel, action="play" , title="Ver el video "+video_url[0] , url=video_url[1], thumbnail=item.thumbnail, plot=item.plot, server=""))
