@@ -300,9 +300,6 @@ function custom_button(data) {
                         }
                         Objetos[x].checked = value
                         break;
-                    case "select-one":
-                        Objetos[x].selectedIndex = default_settings[Objetos[x].id]
-                        break;
                 }
             }
             Objetos = document.getElementById("Config-popup").getElementsByTagName("select")
@@ -317,6 +314,7 @@ function custom_button(data) {
                         break;
                 }
             }
+          evaluate_controls()
         } else{
         
         send_data({"id":document.getElementById("Config-popup").RequestID, "result":"custom_button" });
