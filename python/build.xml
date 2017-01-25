@@ -500,6 +500,8 @@
               <exclude name="fanart.jpg"/>
               <exclude name="addon.xml"/>
               <exclude name="platformcode/**"/>
+              <exclude name="resources/advancedsettings.xml"/>
+              <exclude name="resources/skins/**"/>
               <exclude name="resources/images/bannermenu/**"/>
               <exclude name="resources/images/banners/**"/>
               <exclude name="resources/images/fanart/**"/>

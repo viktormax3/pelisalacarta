@@ -197,25 +197,43 @@ function ConfigKeyDown(e){
       
     case 38: //UP
       e.preventDefault(); 
-      if (e.target.parentNode.id=="Config-secciones"){document.activeElement.parentNode.parentNode.children[0].focus()};
-      if (e.target.parentNode.id=="Config-botones"){
-        for (x = 0; x < document.getElementById('Config-popup').children[3].children.length; x++) {
-          if (document.getElementById('Config-popup').children[3].children[x].style.display !="none"){break;}
-        }
-        document.getElementById('Config-popup').children[3].children[x].children[document.getElementById('Config-popup').children[3].children[x].children.length-1].children[0].children[1].children[0].children[0].focus()
+      if (e.target.parentNode.id=="Config-secciones"){
+        document.getElementById('Config-popup').children[0].focus()
+        return
+        
+      } else if (e.target.parentNode.id=="Config-botones"){
+        index = null
+        group = null
+        
+      }else if (e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Config") {
+        index = Array.prototype.indexOf.call(document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children, document.activeElement.parentNode.parentNode.parentNode.parentNode) -1;
+        group = Array.prototype.indexOf.call(document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.children, document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode);
       }
-
-      if (e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Config"){
-        index = Array.prototype.indexOf.call(document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children, document.activeElement.parentNode.parentNode.parentNode.parentNode);
-        if (index >0){
-          while (document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children[index-1].children[0].className =="Separador" || document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children[index-1].children[0].className =="LabelSeparador"){
-            index --
-          }
-          document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children[index-1].children[0].children[1].children[0].children[0].focus()
-        }else{
-          document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.children[2].children[0].focus()
+      if (group == null){
+        for (group = 0; group < document.getElementById('Config-popup').children[3].children.length; group++) {
+            if (document.getElementById('Config-popup').children[3].children[group].style.display !="none"){break;}
+        }  
+      }
+      if (index == null){
+        index = document.getElementById('Config').children[group].children.length -1
+      }
+      while (index >  0 &&
+             (document.getElementById('Config').children[group].children[index].children[0].className =="Separador" || 
+              document.getElementById('Config').children[group].children[index].children[0].className =="LabelSeparador" ||
+              document.getElementById('Config').children[group].children[index].children[0].children[1].children[0].children[0].disabled ||
+              document.getElementById('Config').children[group].children[index].style.display == "none")){
+              
+        index --
+      }
+      if (index >= 0){
+        document.getElementById('Config').children[group].children[index].children[0].children[1].children[0].children[0].focus()
+      }else{
+        if (document.getElementById('Config-secciones').style.display == "none"){
+          document.getElementById('Config-popup').children[0].focus()
+        } else {
+         document.getElementById('Config-secciones').children[0].focus()
         }
-      }    
+      }
       break;
       
     case 37: //Left
@@ -240,23 +258,41 @@ function ConfigKeyDown(e){
     
     case 40: //DOWN
       e.preventDefault(); 
-      if (e.target.parentNode.id=="Config-popup"){document.activeElement.parentNode.children[2].children[0].focus()}
-      if (e.target.parentNode.id=="Config-secciones"){
-        for (x = 0; x < document.getElementById('Config-popup').children[3].children.length; x++) {
-          if (document.getElementById('Config-popup').children[3].children[x].style.display !="none"){break;}
+      if (e.target.parentNode.id=="Config-popup"){
+        if (document.getElementById('Config-secciones').style.display == "none"){
+          index = 0
+          group = null
+        } else {
+         document.getElementById('Config-secciones').children[0].focus()
+         return
         }
-        document.activeElement.parentNode.parentNode.children[3].children[x].children[0].children[0].children[1].children[0].children[0].focus()
+      }else if (e.target.parentNode.id=="Config-secciones"){
+        index = 0
+        group = null
+      }else if (e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Config") {
+        index = Array.prototype.indexOf.call(document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children, document.activeElement.parentNode.parentNode.parentNode.parentNode) +1;
+        group = Array.prototype.indexOf.call(document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.children, document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode);
       }
-      if (e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Config"){
-        index = Array.prototype.indexOf.call(document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children, document.activeElement.parentNode.parentNode.parentNode.parentNode);
-        if (index+1 < document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children.length){
-          while (document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children[index+1].children[0].className =="Separador" || document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children[index+1].children[0].className =="LabelSeparador"){
-            index ++
-          }
-          document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children[index+1].children[0].children[1].children[0].children[0].focus()
-        }else{
-          document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.children[4].children[0].focus()
-        }
+      
+
+      
+      if (group == null){
+        for (group = 0; group < document.getElementById('Config-popup').children[3].children.length; group++) {
+            if (document.getElementById('Config-popup').children[3].children[group].style.display !="none"){break;}
+        }  
+      }
+      while (index <  document.getElementById('Config').children[group].children.length &&
+             (document.getElementById('Config').children[group].children[index].children[0].className =="Separador" || 
+              document.getElementById('Config').children[group].children[index].children[0].className =="LabelSeparador" ||
+              document.getElementById('Config').children[group].children[index].children[0].children[1].children[0].children[0].disabled ||
+              document.getElementById('Config').children[group].children[index].style.display == "none")){
+              
+        index ++
+      }
+      if (index < document.getElementById('Config').children[group].children.length){
+        document.getElementById('Config').children[group].children[index].children[0].children[1].children[0].children[0].focus()
+      }else{
+        document.getElementById('Config-botones').children[0].focus()
       }
       break;
   }

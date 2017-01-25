@@ -73,7 +73,9 @@ function load_info(item, viewmode) {
     document.getElementById("Info-Title").innerHTML   = title.innerHTML
     
     if (viewmode == "list"){
-      document.getElementById("Info-Img").style.display="block"
+      if (thumbnail.style.display != "none"){
+        document.getElementById("Info-Img").style.display="block"
+      }
       document.getElementById("Info-Plot").style.display="none"
       document.getElementById("Info-Title").style.display="none"
       document.getElementById("InfoVersion").style.display="none"
