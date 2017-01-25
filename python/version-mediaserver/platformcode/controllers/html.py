@@ -141,6 +141,7 @@ class platform(Platformtools):
                 item.fanart = parent_item.fanart
             
             title = item.title.replace(" ", "&nbsp;")
+            title = title.replace("[COLOR&nbsp;", "[COLOR ")
             # Formatear titulo
             if item.text_color:
                 title = '[COLOR %s]%s[/COLOR]' % (item.text_color, title)

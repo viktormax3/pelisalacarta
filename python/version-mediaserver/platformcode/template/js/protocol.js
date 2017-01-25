@@ -1,4 +1,5 @@
 var default_settings = {}
+var controls = []
 function get_response(data) {
     response = JSON.parse(data)
     data = response.data;
@@ -162,14 +163,18 @@ function get_response(data) {
             loading.close()
             itemlist = {};
             default_settings = {}
+            controls = []
             
             for (var x in data.items) {
                 
                 if (!itemlist[data.items[x].category]) {
                     itemlist[data.items[x].category] = [];
                 }
-
-                default_settings[data.items[x].id] = data.items[x].default
+                if (data.items[x].id){
+                  default_settings[data.items[x].id] = data.items[x]["default"]
+                }
+                
+                controls.push(data.items[x])
                 
                 switch (data.items[x].type) {
                     case "sep":
@@ -181,6 +186,7 @@ function get_response(data) {
                         itemlist[data.items[x].category].push(replace_list(html.config.label,{"item_color": data.items[x].color, "item_label": data.items[x].label}))
                         break;
                         
+                    case "number":
                     case "text":
                         if (data.items[x].hidden){
                           type = "password"
@@ -265,6 +271,7 @@ function get_response(data) {
 
             }
             dialog.config(response.id,data, categories.join(""), category_list.join(""))
+            evaluate_controls()
             break;
 
         default:
@@ -293,9 +300,6 @@ function custom_button(data) {
                         }
                         Objetos[x].checked = value
                         break;
-                    case "select-one":
-                        Objetos[x].selectedIndex = default_settings[Objetos[x].id]
-                        break;
                 }
             }
             Objetos = document.getElementById("Config-popup").getElementsByTagName("select")
@@ -310,6 +314,7 @@ function custom_button(data) {
                         break;
                 }
             }
+          evaluate_controls()
         } else{
         
         send_data({"id":document.getElementById("Config-popup").RequestID, "result":"custom_button" });
@@ -338,9 +343,6 @@ function GuardarConfig(Guardar) {
                 case "checkbox":
                     JsonAjustes[Objetos[x].id] = Objetos[x].checked.toString();
                     break;
-                case "select-one":
-                    JsonAjustes[Objetos[x].id] = Objetos[x].selectedIndex.toString();
-                    break;
             }
         }
         Objetos = document.getElementById("Config-popup").getElementsByTagName("select")
@@ -361,4 +363,143 @@ function GuardarConfig(Guardar) {
     }
     
     loading.show()
+}
+
+
+
+function evaluate_controls(control_changed) {
+  if (typeof control_changed != "undefined"){
+    for (var x in controls){
+      if (controls[x].id == control_changed.id) {
+        switch (control_changed.type) {
+          case "text":
+              controls[x].value = control_changed.value;
+              break;
+          case "password":
+              controls[x].value = control_changed.value;
+              break;
+          case "checkbox":
+              controls[x].value = control_changed.checked
+              break;
+          case "select-one":
+              if (control_changed.name == "enum"){
+                controls[x].value = control_changed.selectedIndex
+              } else if (control_changed.name == "labelenum"){
+                controls[x].value = control_changed.value;
+              }
+              break;
+        }
+        break;
+      }
+    }
+  }
+  
+  for (var index in controls){
+    control = get_control_group(index)
+    set_visible(document.getElementById("Config").children[control[0]].children[control[1]], evaluate(index, controls[index].visible))
+    set_enabled(document.getElementById("Config").children[control[0]].children[control[1]], evaluate(index, controls[index].enabled))
+  }
+}
+
+function set_visible(element, visible){
+    if (visible){
+      element.style.display = "block"    
+    } else {
+      element.style.display = "none"    
+    }
+}
+
+function set_enabled(element, enabled){
+  if (["Separador", "LabelSeparador"].indexOf(element.children[0].className) == -1){
+    element.children[0].children[1].children[0].children[0].disabled = !enabled
+  }
+}
+
+
+function get_control_group(index){
+  var group = 0;
+  var pos = 0;
+  var children = document.getElementById("Config").children;
+  for(child in children){
+    if (pos + children[child].children.length <= index){
+    group ++
+    pos += children[child].children.length
+    } else {
+      break;
+    }
+
+  }
+  return [group, index - pos]
+}
+
+
+function evaluate(index, condition){
+  index = parseInt(index)
+  
+  if (typeof condition == "undefined"){return true}
+  if (typeof condition == "boolean"){return condition}
+
+  if (condition.toLocaleLowerCase() == "true") { return true}
+  else if (condition.toLocaleLowerCase() == "false") {return false}   
+
+  const regex = /(!?eq|!?gt|!?lt)?\(([^,]+),[\"|']?([^)|'|\"]*)['|\"]?\)[ ]*([+||])?/g;
+
+  while ((m = regex.exec(condition)) !== null) {
+    // This is necessary to avoid infinite loops with zero-width matches
+    if (m.index === regex.lastIndex) {
+      regex.lastIndex++;
+    }
+    
+    var operator = m[1]
+    var id = parseInt(m[2])
+    var value = m[3]
+    var next = m[4]
+
+    if (isNaN(id)){return false}
+
+    if (index + id < 0 || index + id >= controls.length){
+      return false
+    }else{
+      if (controls[index + id].type == "list" || controls[index + id].type == "enum"){
+        control_value = controls[index + id].lvalues[controls[index + id].value]
+      }else{
+        control_value = controls[index + id].value
+      }
+    } 
+
+    if (["lt", "!lt", "gt", "!gt"].indexOf(operator) > -1){
+      value = parseInt(value) 
+      if (isNaN(value)){return false}
+    }
+    
+    if (["eq", "!eq"].indexOf(operator) > -1){
+
+      if (!isNaN(parseInt(value))){value = parseInt(value)}
+      if (value.toLocaleLowerCase() == "true") { value = true}
+      else if (value.toLocaleLowerCase() == "false") {value = false}  
+    }
+    
+    if (operator == "eq") {
+      ok = (control_value == value)
+    }
+    if (operator == "!eq") {
+      ok = !(control_value == value)
+    }
+    if (operator == "gt") {
+      ok = (control_value > value)
+    }
+    if (operator == "!gt") {
+      ok = !(control_value > value)
+    }
+    if (operator == "lt") {
+      ok = (control_value < value)
+    }
+    if (operator == "!lt") {
+      ok = !(control_value < value)
+    }
+
+    if (next == "|" && ok == true) {break}
+    if (next == "+" && ok == false) {break}
+  }
+  return ok
 }

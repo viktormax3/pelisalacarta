@@ -44,12 +44,10 @@ def get_local_ip():
   return myip
 
 def get_plugin_version():
-    data = open(os.path.join(get_runtime_path(),"version.xml"),"r").read()
-    return data.split("<tag>")[1].split("</tag>")[0]
+    return "4.2.0-beta2"
 
 def get_plugin_date():
-    data = open(os.path.join(get_runtime_path(),"version.xml"),"r").read()
-    return data.split("<date>")[1].split("</date>")[0]
+    return "01/Enero/2017"
 
 def open_settings():
     Opciones =[]
