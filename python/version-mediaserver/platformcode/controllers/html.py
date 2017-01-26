@@ -18,6 +18,7 @@ import random
 from platformcode import launcher
 from core.tmdb import Tmdb
 import time
+import channelselector
 
 class html(Controller):
     pattern = re.compile("##")
@@ -117,15 +118,15 @@ class platform(Platformtools):
         # Recorremos el itemlist
         for item in itemlist:
                 
-            if not item.thumbnail and item.action == "search": item.thumbnail = config.get_thumbnail_path() + "thumb_buscar.png"
+            if not item.thumbnail and item.action == "search": item.thumbnail = channelselector.get_thumbnail_path() + "thumb_buscar.png"
             if not item.thumbnail and item.folder == True: item.thumbnail = "http://media.tvalacarta.info/pelisalacarta/thumb_folder.png"
             if not item.thumbnail and item.folder == False: item.thumbnail = "http://media.tvalacarta.info/pelisalacarta/thumb_nofolder.png"
             if "http://media.tvalacarta.info/" in item.thumbnail and not item.thumbnail.startswith("http://media.tvalacarta.info/pelisalacarta/thumb_"):
             
               if parent_item.viewmode in ["banner", "channel"]: 
-                item.thumbnail = config.get_thumbnail_path("bannermenu") + os.path.basename(item.thumbnail)
+                item.thumbnail = channelselector.get_thumbnail_path("bannermenu") + os.path.basename(item.thumbnail)
               else:
-                item.thumbnail = config.get_thumbnail_path() + os.path.basename(item.thumbnail)
+                item.thumbnail = channelselector.get_thumbnail_path() + os.path.basename(item.thumbnail)
             
             #Estas imagenes no estan en bannermenu, asi que si queremos bannermenu, para que no se vean mal las quitamos    
             elif parent_item.viewmode in ["banner", "channel"] and item.thumbnail.startswith("http://media.tvalacarta.info/pelisalacarta/thumb_"):

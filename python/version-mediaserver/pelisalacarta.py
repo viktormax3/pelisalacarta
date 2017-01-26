@@ -46,7 +46,7 @@ def MostrarInfo():
     print ("Download Path     : " + config.get_setting("downloadpath"))
     print ("DownloadList Path : " + config.get_setting("downloadlistpath"))
     print ("Bookmark Path     : " + config.get_setting("bookmarkpath"))
-    print ("Library Path      : " + config.get_setting("library_path"))
+    print ("Library Path      : " + config.get_setting("librarypath"))
     print ("--------------------------------------------------------------------")
     conexiones = []
     controllers = platformtools.controllers
