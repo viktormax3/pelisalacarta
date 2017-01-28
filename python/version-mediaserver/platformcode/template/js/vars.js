@@ -7,6 +7,7 @@ var session_id ="";
 var loading = {};
 var dialog = {};
 var html = {"dialog": {"select": {}}, "config": {}, "itemlist": {}};
+var domain = window.location.href.split("/").slice(0,3).join("/")
 var nav_history = {
   "newRequest"     : function (url) {   
                                           if (this.confirmed){
@@ -91,7 +92,7 @@ var nav_history = {
   "confirmed": false,
   "states": [],
   "builtin": false, //Activa la posibilidad de usar el historial del navegador
-  "cache": 0000 //Tiempo para determinar si se cargar· la cache o se volvera a solicitar el item (el tiempo es el que tarda en responder el servidor)
+  "cache": 0000 //Tiempo para determinar si se cargar√° la cache o se volvera a solicitar el item (el tiempo es el que tarda en responder el servidor)
 }
 
 function download_file(url){

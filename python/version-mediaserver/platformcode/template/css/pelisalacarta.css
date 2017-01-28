@@ -82,7 +82,8 @@ div.Contenido {
     overflow: hidden;
     padding: 0;
     width: 100%;
-    height: 100%
+    height: 100%;
+    background-size: 100% 100%;
 }
 div.Fila {
     height: 100%;
@@ -163,6 +164,7 @@ div.Info > .InfoDiv {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
+    background-size: 100% 100%;
 }
 div.Info > .InfoDivVersion {
     color: #ffffff;
@@ -1153,6 +1155,12 @@ ul.ListItem > li.ListItem > a.ListItem > p.ListItem {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+ul.ListItem > li.ListItem_list > a.ListItem > div.ListItem > img.Fanart,
+ul.ListItem > li.ListItemBanner > a.ListItem > div.ListItem > img.Fanart,
+ul.ListItem > li.ListItemChannels > a.ListItem > div.ListItem > img.Fanart,
+ul.ListItem > li.ListItem > a.ListItem > div.ListItem > img.Fanart {
+    display: none;
+}
 ul.ListItem > li.ListItemBanner > a.ListItem > div.ListItem > img.Default,
 ul.ListItem > li.ListItemChannels > a.ListItem > div.ListItem > img.Default,
 ul.ListItem > li.ListItem > a.ListItem > div.ListItem > img.Default {
@@ -1160,9 +1168,9 @@ ul.ListItem > li.ListItem > a.ListItem > div.ListItem > img.Default {
     border-style: none;
     display: inline-block;
     vertical-align: middle;
-    max-height: 57px;
-    max-width: 57px;
-    display: none;
+    height: 70px;
+    width: 100%;
+    visibility: hidden;
 }
 ul.ListItem > li.ListItemBanner > a.ListItem > p.ListItemAtras:after,
 ul.ListItem > li.ListItemChannels > a.ListItem > p.ListItemAtras:after,

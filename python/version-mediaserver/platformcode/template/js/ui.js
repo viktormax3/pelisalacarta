@@ -42,13 +42,14 @@ function set_category(category){
 }
 
 function image_error(thumbnail){
-  if (thumbnail.src.indexOf("http") == 0){
-    if (thumbnail.src.indexOf(thumbnail.alt) !== 0){
-      thumbnail.src=thumbnail.alt+"/proxy/"+encodeURIComponent(btoa(thumbnail.src))
-    }else{
-      thumbnail.style.display="none";
+  if (thumbnail.src.indexOf("http") == 0 && thumbnail.src.indexOf(domain) == -1){
+    thumbnail.src=domain + "/proxy/" + encodeURIComponent(btoa(thumbnail.src))
+    
+  } else if (thumbnail.src.indexOf(domain) == 0){
+    thumbnail.style.visibility = "hidden";
+    if (thumbnail.className == "ListItem"){
       try{ 
-        thumbnail.parentNode.children[1].style.display="inline-block"
+        thumbnail.parentNode.children[2].style.visibility = "visible"
       }catch(e){}
     }
   }else {
@@ -57,14 +58,22 @@ function image_error(thumbnail){
 }
 
 function image_local(thumbnail){
-  if (thumbnail.src.indexOf(thumbnail.alt) !== 0){
-    thumbnail.src=thumbnail.alt+"/local/"+encodeURIComponent(btoa(thumbnail.src))
-  }else{thumbnail.style.display="none"}
+  if (thumbnail.src.indexOf(domain + "/local/") !== 0){
+    thumbnail.src=domain + "/local/" + encodeURIComponent(btoa(thumbnail.src))
+  }else{
+    thumbnail.style.visibility="hidden"
+    if (thumbnail.className == "ListItem"){
+      try{ 
+        thumbnail.parentNode.children[2].style.visibility = "visible"
+      }catch(e){}
+    }
+  }
 }
 
 function load_info(item, viewmode) {
 
     thumbnail = item.getElementsByTagName("img")[0]
+    fanart = item.getElementsByTagName("img")[1]
     title = item.getElementsByTagName("h3")[0]
     plot = item.getElementsByTagName("p")[0]
     
@@ -72,8 +81,17 @@ function load_info(item, viewmode) {
     document.getElementById("Info-Plot").innerHTML = plot.innerHTML.replace(/\n/g,"<br>")
     document.getElementById("Info-Title").innerHTML   = title.innerHTML
     
+    if (fanart.style.visibility != "hidden" && fanart.src != domain + "/"){
+      console.log(fanart.src)
+      document.getElementById("Contenido").style.backgroundImage = "linear-gradient(rgba(255,255,255,0.5),rgba(255,255,255,0.5)), url(" + fanart.src +")"
+      document.getElementById("Contenido").children[0].style.opacity = ".9"
+    } else { 
+      document.getElementById("Contenido").style.backgroundImage = ""
+      document.getElementById("Contenido").children[0].style.opacity = ""
+    }
+
     if (viewmode == "list"){
-      if (thumbnail.style.display != "none"){
+      if (thumbnail.style.visibility != "hidden"){
         document.getElementById("Info-Img").style.display="block"
       }
       document.getElementById("Info-Plot").style.display="none"
@@ -87,7 +105,9 @@ function load_info(item, viewmode) {
       document.getElementById("InfoVersion").style.display="block"
       
     }else {
-      document.getElementById("Info-Img").style.display="block"
+      if (thumbnail.style.visibility != "hidden"){
+        document.getElementById("Info-Img").style.display="block"
+      }
       document.getElementById("Info-Plot").style.display="block"
       document.getElementById("Info-Title").style.display="block"
       document.getElementById("InfoVersion").style.display="none"
@@ -104,6 +124,8 @@ function unload_info(obj) {
     document.getElementById("Info-Title").style.display="none"
     document.getElementById("Info-Plot").innerHTML = ""
     document.getElementById("Info-Title").innerHTML = ""
+    document.getElementById("Contenido").style.backgroundImage = ""
+    document.getElementById("Contenido").children[0].style.opacity = ""
 }
 
 function change_category(category) {

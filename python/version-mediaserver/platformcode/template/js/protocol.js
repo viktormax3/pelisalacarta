@@ -35,8 +35,8 @@ function get_response(data) {
               
               replace_dict = {"item_class": menu_class, 
                               "item_url": item.url, 
-                              "item_host": data.host, 
                               "item_thumbnail":item.thumbnail, 
+                              "item_fanart":item.fanart, 
                               "item_title": item.title, 
                               "item_plot": item.plot,
                               "item_menu": menu_button,
