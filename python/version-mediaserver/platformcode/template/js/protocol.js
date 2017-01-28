@@ -143,7 +143,13 @@ function get_response(data) {
             lista = []
             lista.push(replace_list(html.dialog.select.item, {"item_title": "Abrir Enlace", "item_action":"play('"+data.video_url+"','"+btoa(data.title)+"')"}))
             lista.push(replace_list(html.dialog.select.item, {"item_title": "Plugin VLC", "item_action":"vlc_play('"+data.video_url+"','"+btoa(data.title)+"')"}))
+            
+            lista.push(replace_list(html.dialog.select.item, {"item_title": "Reroductor flash", "item_action":"flash_play('"+data.video_url+"','"+btoa(data.title)+"')"}))           
+            lista.push(replace_list(html.dialog.select.item, {"item_title": "Reroductor Flash (Indirecto)", "item_action":"flash_play('"+ProxyUrl+"','"+btoa(data.title)+"')"}))
+            
             lista.push(replace_list(html.dialog.select.item, {"item_title": "Video HTML", "item_action":"html_play('"+data.video_url+"','"+btoa(data.title)+"')"}))
+            lista.push(replace_list(html.dialog.select.item, {"item_title": "Video HTML (Indirecto)", "item_action":"html_play('"+ProxyUrl+"','"+btoa(data.title)+"')"}))
+            
             dialog.menu("Elige el Reproductor", btoa(lista.join("")))
 
             break;

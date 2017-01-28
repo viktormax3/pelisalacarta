@@ -107,6 +107,7 @@ function download_file(url){
 
 html.vlc_player = download_file("/media/html/player_vlc.html")
 html.html_player = download_file("/media/html/player_html.html")
+html.flash_player = download_file("/media/html/player_flash.html")
 
 html.itemlist.banner = download_file("/media/html/itemlist_banner.html")
 html.itemlist.channel = download_file("/media/html/itemlist_channel.html")

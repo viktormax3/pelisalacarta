@@ -26,6 +26,11 @@ function vlc_play(url,title){
   dialog.player(title,html_code)
 }
 
+function flash_play(url,title){
+  html_code = replace_list(html.flash_player, {"video_url": url})
+  dialog.player(title,html_code)
+}
+
 function html_play(url,title){
   html_code = replace_list(html.html_player, {"video_url": url})
   dialog.player(title,html_code)
