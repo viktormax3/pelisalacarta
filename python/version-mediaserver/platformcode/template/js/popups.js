@@ -28,6 +28,7 @@ dialog.closeall = function() {
   document.getElementById("Loading").style.display="none";
   document.getElementById("Lista-popup").style.display="none";
   document.getElementById("Config-popup").style.display="none";
+  document.getElementById("Settings-popup").style.display="none";
   document.getElementById("Player-popup").style.display="none";
   document.getElementById("Player").innerHTML=''
   document.getElementById("Alert-popup").style.display="none";
@@ -190,6 +191,36 @@ dialog.config = function(id, data, Secciones,Lista){
     document.getElementById("Config-undefined").scrollTop = 0;
   }
   document.getElementById("Config-popup").style.top = document.getElementById("Pagina").offsetHeight / 2 - document.getElementById("Config-popup").offsetHeight / 2 + "px"
+}
+
+dialog.settings = function(){
+  
+  document.getElementById("Settings-Titulo").innerHTML = "Ajustes";
+  controls = []
+  
+  controls.push(replace_list(html.config.label,{"item_color": "#FFFFFF", "item_label": "Visualización:"}))
+  if (settings.show_fanart){
+    value = "checked=checked"
+  }else {
+    value = ""
+  }
+  controls.push(replace_list(html.config.bool,{"item_color": "#FFFFFF", "item_label": "Mostrar Fanarts", "item_id": "show_fanart", "item_value": value}))
+  
+  
+  controls.push(replace_list(html.config.label,{"item_color": "#FFFFFF", "item_label": "Reproducción:"}))
+  
+  options = ["<option>Preguntar</option>", "<option>Indirecto</option>", "<option>Directo</option>"]
+  options[settings.play_mode] = options[settings.play_mode].replace("<option>","<option selected=selected>")
+  controls.push(replace_list(html.config.list,{"item_type": "enum","item_color": "#FFFFFF", "item_label": "Método de reproduccion:", "item_id": "play_mode", "item_values": options.join("")}))
+  options = ["<option>Preguntar</option>", "<option>Abrir enlace</option>", "<option>VLC</option>", "<option>FlashPlayer</option>", "<option>HTML</option>"]
+  options[settings.player_mode] = options[settings.player_mode].replace("<option>","<option selected=selected>")
+  controls.push(replace_list(html.config.list,{"item_type": "enum","item_color": "#FFFFFF", "item_label": "Reproductor:", "item_id": "player_mode", "item_values": options.join("")}))
+
+  document.getElementById("Settings").innerHTML = replace_list(html.config.container,{"item_id": "Settings-controls", "item_value": controls.join("").replace(/evaluate_controls\(this\)/g, '')});
+  document.getElementById("Settings-controls").style.display="block";
+  document.getElementById("Overlay").style.display="block";
+  document.getElementById("Settings-popup").style.display="block";
+  document.getElementById("Settings-popup").style.top = document.getElementById("Pagina").offsetHeight / 2 - document.getElementById("Settings-popup").offsetHeight / 2 + "px"
 }
 
 dialog.info = function(id, data){

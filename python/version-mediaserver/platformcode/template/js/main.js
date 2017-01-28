@@ -17,3 +17,5 @@ window.onpopstate = function(e){
 window.onresize = function() {
     dispose();
 };
+
+load_settings()

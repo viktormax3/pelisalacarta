@@ -139,18 +139,28 @@ function get_response(data) {
             else if(new RegExp("^(?:http\://.*?\.vkcache\.com)").test(data.video_url)){
              data.video_url = data.host + "/netutv-" + encodeURIComponent(btoa(Utf8.encode(data.video_url))) + ".mp4"} 
             
-            ProxyUrl = data.host + "/proxy/" + encodeURIComponent(btoa(Utf8.encode(data.video_url))) + "/video.mp4"
-            lista = []
-            lista.push(replace_list(html.dialog.select.item, {"item_title": "Abrir Enlace", "item_action":"play('"+data.video_url+"','"+btoa(data.title)+"')"}))
-            lista.push(replace_list(html.dialog.select.item, {"item_title": "Plugin VLC", "item_action":"vlc_play('"+data.video_url+"','"+btoa(data.title)+"')"}))
+            if (settings.player_mode == 0){
+              lista = []
+              lista.push(replace_list(html.dialog.select.item, {"item_title": "Abrir Enlace", "item_action":"play_mode('"+data.video_url+"','"+btoa(data.title)+"', 'play')"}))
+              lista.push(replace_list(html.dialog.select.item, {"item_title": "Plugin VLC", "item_action":"play_mode('"+data.video_url+"','"+btoa(data.title)+"', 'vlc_play')"}))
+              lista.push(replace_list(html.dialog.select.item, {"item_title": "Reroductor flash", "item_action":"play_mode('"+data.video_url+"','"+btoa(data.title)+"', 'flash_play')"}))           
+              lista.push(replace_list(html.dialog.select.item, {"item_title": "Video HTML", "item_action":"play_mode('"+data.video_url+"','"+btoa(data.title)+"', 'html_play')"}))
+              
+              dialog.menu("Elige el Reproductor", btoa(lista.join("")))
             
-            lista.push(replace_list(html.dialog.select.item, {"item_title": "Reroductor flash", "item_action":"flash_play('"+data.video_url+"','"+btoa(data.title)+"')"}))           
-            lista.push(replace_list(html.dialog.select.item, {"item_title": "Reroductor Flash (Indirecto)", "item_action":"flash_play('"+ProxyUrl+"','"+btoa(data.title)+"')"}))
+            }else if (settings.player_mode == 1){
+              play_mode(data.video_url,btoa(data.title),'play')
             
-            lista.push(replace_list(html.dialog.select.item, {"item_title": "Video HTML", "item_action":"html_play('"+data.video_url+"','"+btoa(data.title)+"')"}))
-            lista.push(replace_list(html.dialog.select.item, {"item_title": "Video HTML (Indirecto)", "item_action":"html_play('"+ProxyUrl+"','"+btoa(data.title)+"')"}))
+            }else if (settings.player_mode == 2){
+              play_mode(data.video_url,btoa(data.title),'vlc_play')
             
-            dialog.menu("Elige el Reproductor", btoa(lista.join("")))
+            }else if (settings.player_mode == 3){
+              play_mode(data.video_url,btoa(data.title),'flash_play')
+            
+            }else if (settings.player_mode == 4){
+              play_mode(data.video_url,btoa(data.title),'html_play')
+            
+            }
 
             break;
         case "Update":

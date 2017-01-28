@@ -108,6 +108,20 @@
         <input type="checkbox" style="display:none" id="ProgressBar-Cancelled">
       </div>
     </div> 
+    <!--/Settings -->	
+    <div id="Settings-popup" class="Settings">
+      <a href="javascript:void(0)" onmouseover="this.focus()" onclick="dialog.closeall();" class="BotonCerrar"></a>
+      <div class="Titulo" id="Settings-Titulo">
+      </div>
+      <div id="Settings" class="Settings-Opciones">
+        <ul id="Settings">
+        </ul>
+      </div>
+      <div id="Settings-botones" class="Botones">
+        <a href="javascript:void(0)" class="Boton BotonIcon BotonOK" onmouseover="this.focus()" onclick="save_settings();dialog.closeall()" >Guardar</a>
+        <a href="javascript:void(0)" class="Boton BotonIcon BotonClose" onmouseover="this.focus()" onclick="dialog.closeall()" >Cerrar</a>
+      </div>
+    </div > 
     <!--/Config -->	
     <div id="Config-popup" class="Config">
       <a href="javascript:void(0)" onmouseover="this.focus()" onclick="GuardarConfig({'id':this.parentNode.RequestID, 'result':false });dialog.closeall();" class="BotonCerrar"></a>
@@ -158,6 +172,7 @@
       <div class="Cabeza" id="Header">
         <img src="/media/css/images/logo.png">
         <h1 id="titulo" class="Title">pelisalacarta</h1>
+        <a class="Configuracion" href="javascript:void(0)" onclick="dialog.settings()"></a>
       </div>
 
       <div class="Contenido" id="Contenido" >      

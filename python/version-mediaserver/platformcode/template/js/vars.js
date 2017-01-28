@@ -1,3 +1,16 @@
+window.getCookie = function(name) {
+  match = document.cookie.match(new RegExp(name + '=([^;]+)'));
+  if (match) return match[1];
+}
+
+function download_file(url){
+  var xhttp = new XMLHttpRequest();
+  xhttp.open("GET", url, false);
+  xhttp.send();
+  result = xhttp.responseText
+  return result
+}
+
 //Vars
 var Opciones = {};
 var focused_item = null;
@@ -8,6 +21,40 @@ var loading = {};
 var dialog = {};
 var html = {"dialog": {"select": {}}, "config": {}, "itemlist": {}};
 var domain = window.location.href.split("/").slice(0,3).join("/")
+var settings = {}
+
+function load_settings(){
+
+    settings["play_mode"] =(window.getCookie("play_mode") ? parseInt(window.getCookie("play_mode")) : 0);
+    settings["player_mode"] =(window.getCookie("player_mode") ? parseInt(window.getCookie("player_mode")) : 0);
+    settings["show_fanart"] =(window.getCookie("show_fanart") == "false" ? false : true);
+}
+
+
+function save_settings() {
+    Objetos = document.getElementById("Settings-popup").getElementsByTagName("input")
+    
+    for(x=0;x<Objetos.length;x++){
+      switch (Objetos[x].type) {
+            case "text":
+            case "password":
+                document.cookie =Objetos[x].id + "=" + Objetos[x].value + '; expires=Fri, 31 Dec 9999 23:59:59 GMT'
+            case "checkbox":
+                document.cookie =Objetos[x].id + "=" + Objetos[x].checked + '; expires=Fri, 31 Dec 9999 23:59:59 GMT'
+                break;
+        }
+    }
+    Objetos = document.getElementById("Settings-popup").getElementsByTagName("select")
+    for(x=0;x<Objetos.length;x++){
+      switch (Objetos[x].type) {
+            case "select-one":
+                document.cookie =Objetos[x].id + "=" + Objetos[x].selectedIndex + '; expires=Fri, 31 Dec 9999 23:59:59 GMT'
+                break;
+        }
+    }
+    load_settings();
+}
+
 var nav_history = {
   "newRequest"     : function (url) {   
                                           if (this.confirmed){
@@ -94,15 +141,6 @@ var nav_history = {
   "builtin": false, //Activa la posibilidad de usar el historial del navegador
   "cache": 0000 //Tiempo para determinar si se cargará la cache o se volvera a solicitar el item (el tiempo es el que tarda en responder el servidor)
 }
-
-function download_file(url){
-  var xhttp = new XMLHttpRequest();
-  xhttp.open("GET", url, false);
-  xhttp.send();
-  result = xhttp.responseText
-  return result
-}
-
 
 
 html.vlc_player = download_file("/media/html/player_vlc.html")

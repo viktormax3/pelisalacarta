@@ -16,10 +16,25 @@ function replace_list(data, list){
   return data
 }
 
+function play_mode(url, title, player){
+  indirect_url = domain + "/proxy/" + encodeURIComponent(btoa(Utf8.encode(url))) + "/video.mp4"
+  if (settings.play_mode == 0 ){
+    lista = []
+    lista.push(replace_list(html.dialog.select.item, {"item_title": "Indirecto", "item_action": player+"('"+indirect_url+"','"+title+"')"}))
+    lista.push(replace_list(html.dialog.select.item, {"item_title": "Directo", "item_action": player+"('"+url+"','"+title+"')"}))
+    dialog.menu("Metodo de reproducción", btoa(lista.join("")))
+    
+  } else if (settings.play_mode == 1){
+   eval(player)(indirect_url, title);
+   
+  } else {
+    eval(player)(url, title);
+  }
+}
+
 function play(url,title){
   window.open(url);
 }
-
 
 function vlc_play(url,title){
   html_code = replace_list(html.vlc_player, {"video_url": url})
@@ -86,7 +101,7 @@ function load_info(item, viewmode) {
     document.getElementById("Info-Plot").innerHTML = plot.innerHTML.replace(/\n/g,"<br>")
     document.getElementById("Info-Title").innerHTML   = title.innerHTML
     
-    if (fanart.style.visibility != "hidden" && fanart.src != domain + "/"){
+    if (fanart.style.visibility != "hidden" && fanart.src != domain + "/" && settings.show_fanart){
       console.log(fanart.src)
       document.getElementById("Contenido").style.backgroundImage = "linear-gradient(rgba(255,255,255,0.5),rgba(255,255,255,0.5)), url(" + fanart.src +")"
       document.getElementById("Contenido").children[0].style.opacity = ".9"
