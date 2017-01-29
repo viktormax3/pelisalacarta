@@ -8,7 +8,6 @@ window.onkeydown =  function(e){
     if(e.target.parentNode.id=="Alert-popup"){AlertKeyDown(e)}  
     if(e.target.parentNode.id=="Keyboard-popup"){KeyboardKeyDown(e)}  
     if(e.target.parentNode.id=="AlertYesNo-popup"){AlertYesNoKeyDown(e)} 
-    if(e.target.parentNode.id=="Servidor-popup"){ServidorKeyDown(e)} 
     if(e.target.parentNode.id=="ProgressBar-popup"){ProgressKeyDown(e)} 
     if(e.target.parentNode.id=="Config-popup"){ConfigKeyDown(e)}
     if(e.target.parentNode.id=="Settings-popup"){SettingsKeyDown(e)}
@@ -16,7 +15,6 @@ window.onkeydown =  function(e){
     
     if(e.target.parentNode.parentNode.id=="Alert-popup"){AlertKeyDown(e)}
     if(e.target.parentNode.parentNode.id=="AlertYesNo-popup"){AlertYesNoKeyDown(e)}
-    if(e.target.parentNode.parentNode.id=="Servidor-popup"){ServidorKeyDown(e)}
     if(e.target.parentNode.parentNode.id=="Keyboard-popup"){KeyboardKeyDown(e)}
     if(e.target.parentNode.parentNode.id=="ProgressBar-popup"){ProgressKeyDown(e)}
     if(e.target.parentNode.parentNode.id=="Config-popup"){ConfigKeyDown(e)}
@@ -32,7 +30,6 @@ window.onkeydown =  function(e){
     
     if(e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Pie"){BodyKeyDown(e)}
     
-    if(e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Servidor-popup"){ServidorKeyDown(e)}
     if(e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Config-popup"){ConfigKeyDown(e)}
     if(e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Settings-popup"){SettingsKeyDown(e)}
   
@@ -453,62 +450,6 @@ function AlertYesNoKeyDown(e){
     case 40: //DOWN
       e.preventDefault(); 
       if (e.target.parentNode.id=="AlertYesNo-popup"){document.activeElement.parentNode.children[3].children[0].focus()}
-      break;
-  }
-}
-
-function ServidorKeyDown(e){
-  switch (e.keyCode) {
-    case 8: //Atras
-      if (e.target.tagName != "INPUT"){
-        e.preventDefault(); 
-        dialog.closeall()
-      }
-      break;
-      
-    case 38: //UP
-      e.preventDefault(); 
-      if (e.target.parentNode.parentNode.id=="Servidor-popup"){
-        document.getElementById('Servidor-popup').children[2].children[0].children[1].children[0].children[1].children[0].children[0].focus()
-      }
-      if (e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Servidor-popup"){
-        index = Array.prototype.indexOf.call(document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children, document.activeElement.parentNode.parentNode.parentNode.parentNode);
-        if (index > 0){
-          document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children[index-1].children[0].children[1].children[0].children[0].focus()
-        }else{
-          document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.children[0].focus()
-        }
-      }
-      break;
-      
-    case 37: //Left
-      e.preventDefault(); 
-      if (e.target.parentNode.parentNode.id=="Servidor-popup"){
-        index = Array.prototype.indexOf.call(document.activeElement.parentNode.children, document.activeElement);
-        document.activeElement.parentNode.children[index-1].focus();
-      }
-      break;
-      
-    case 39: //RIGHT
-      e.preventDefault(); 
-      if (e.target.parentNode.parentNode.id=="Servidor-popup"){
-        index = Array.prototype.indexOf.call(document.activeElement.parentNode.children, document.activeElement);
-        document.activeElement.parentNode.children[index+1].focus();
-      }
-
-      break;
-    
-    case 40: //DOWN
-      e.preventDefault(); 
-      if (e.target.parentNode.id=="Servidor-popup"){document.activeElement.parentNode.children[2].children[0].children[0].children[0].children[1].children[0].children[0].focus()}
-      if (e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Servidor-popup"){
-        index = Array.prototype.indexOf.call(document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children, document.activeElement.parentNode.parentNode.parentNode.parentNode);
-        if (index+1 < document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children.length){
-          document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children[index+1].children[0].children[1].children[0].children[0].focus()
-        }else{
-          document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.children[3].children[0].focus()
-        }
-      }
       break;
   }
 }
