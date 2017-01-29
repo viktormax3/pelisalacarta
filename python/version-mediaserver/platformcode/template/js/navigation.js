@@ -11,6 +11,7 @@ window.onkeydown =  function(e){
     if(e.target.parentNode.id=="Servidor-popup"){ServidorKeyDown(e)} 
     if(e.target.parentNode.id=="ProgressBar-popup"){ProgressKeyDown(e)} 
     if(e.target.parentNode.id=="Config-popup"){ConfigKeyDown(e)}
+    if(e.target.parentNode.id=="Settings-popup"){SettingsKeyDown(e)}
     if(e.target.parentNode.id=="Info-popup"){InfoKeyDown(e)}
     
     if(e.target.parentNode.parentNode.id=="Alert-popup"){AlertKeyDown(e)}
@@ -19,6 +20,7 @@ window.onkeydown =  function(e){
     if(e.target.parentNode.parentNode.id=="Keyboard-popup"){KeyboardKeyDown(e)}
     if(e.target.parentNode.parentNode.id=="ProgressBar-popup"){ProgressKeyDown(e)}
     if(e.target.parentNode.parentNode.id=="Config-popup"){ConfigKeyDown(e)}
+    if(e.target.parentNode.parentNode.id=="Settings-popup"){SettingsKeyDown(e)}
     if(e.target.parentNode.parentNode.id=="Info-popup"){InfoKeyDown(e)}
     
     if(e.target.parentNode.parentNode.parentNode.id=="Contenedor"){ListItemKeyDown(e)}
@@ -26,11 +28,13 @@ window.onkeydown =  function(e){
     
     if(e.target.parentNode.parentNode.parentNode.parentNode.id=="Lista-popup"){ListaKeyDown(e)}
     if(e.target.parentNode.parentNode.parentNode.parentNode.id=="Config-popup"){ConfigKeyDown(e)}
+    if(e.target.parentNode.parentNode.parentNode.parentNode.id=="Settings-popup"){SettingsKeyDown(e)}
     
     if(e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Pie"){BodyKeyDown(e)}
     
     if(e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Servidor-popup"){ServidorKeyDown(e)}
     if(e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Config-popup"){ConfigKeyDown(e)}
+    if(e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Settings-popup"){SettingsKeyDown(e)}
   
   }catch(err) {} 
 }
@@ -217,7 +221,7 @@ function ConfigKeyDown(e){
       if (index == null){
         index = document.getElementById('Config').children[group].children.length -1
       }
-      while (index >  0 &&
+      while (index >=  0 &&
              (document.getElementById('Config').children[group].children[index].children[0].className =="Separador" || 
               document.getElementById('Config').children[group].children[index].children[0].className =="LabelSeparador" ||
               document.getElementById('Config').children[group].children[index].children[0].children[1].children[0].children[0].disabled ||
@@ -293,6 +297,89 @@ function ConfigKeyDown(e){
         document.getElementById('Config').children[group].children[index].children[0].children[1].children[0].children[0].focus()
       }else{
         document.getElementById('Config-botones').children[0].focus()
+      }
+      break;
+  }
+}
+
+function SettingsKeyDown(e){
+  switch (e.keyCode) {
+    case 8: //Atras
+      if ((e.target.tagName != "INPUT" || (e.target.type != "text" && e.target.type != "password")) && e.target.tagName != "SELECT"){
+        e.preventDefault(); 
+        dialog.closeall()
+      }
+      break;
+      
+    case 38: //UP
+      e.preventDefault(); 
+      if (e.target.parentNode.id=="Settings-botones"){
+        index = null
+        
+      }else if (e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Settings") {
+        index = Array.prototype.indexOf.call(document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children, document.activeElement.parentNode.parentNode.parentNode.parentNode) -1;
+      }
+      if (index == null){
+        index = document.getElementById('Settings').children[0].children.length -1
+      }
+      while (index >=  0 &&
+             (document.getElementById('Settings').children[0].children[index].children[0].className =="Separador" || 
+              document.getElementById('Settings').children[0].children[index].children[0].className =="LabelSeparador" ||
+              document.getElementById('Settings').children[0].children[index].children[0].children[1].children[0].children[0].disabled ||
+              document.getElementById('Settings').children[0].children[index].style.display == "none")){
+              
+        index --
+      }
+
+      if (index >= 0){
+        document.getElementById('Settings').children[0].children[index].children[0].children[1].children[0].children[0].focus()
+      }else{
+        document.getElementById('Settings-popup').children[0].focus()
+      }
+      break;
+      
+    case 37: //Left
+      if ((e.target.tagName != "INPUT" || (e.target.type != "text" && e.target.type != "password")) && e.target.tagName != "SELECT"){
+        e.preventDefault(); 
+        if (e.target.parentNode.parentNode.id=="Settings-popup"){
+          index = Array.prototype.indexOf.call(document.activeElement.parentNode.children, document.activeElement);
+          document.activeElement.parentNode.children[index-1].focus();
+        }
+      }      
+      break;
+      
+    case 39: //RIGHT
+      if ((e.target.tagName != "INPUT" || (e.target.type != "text" && e.target.type != "password")) && e.target.tagName != "SELECT"){
+        e.preventDefault(); 
+        if (e.target.parentNode.parentNode.id=="Settings-popup"){
+        index = Array.prototype.indexOf.call(document.activeElement.parentNode.children, document.activeElement);
+        document.activeElement.parentNode.children[index+1].focus();
+        }
+      }   
+      break;
+    
+    case 40: //DOWN
+      e.preventDefault(); 
+      if (e.target.parentNode.id=="Settings-popup"){
+        index = 0
+      }else if (e.target.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.id=="Settings") {
+        index = Array.prototype.indexOf.call(document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.children, document.activeElement.parentNode.parentNode.parentNode.parentNode) +1;
+        group = Array.prototype.indexOf.call(document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.children, document.activeElement.parentNode.parentNode.parentNode.parentNode.parentNode);
+      }
+      
+      while (index <  document.getElementById('Settings').children[0].children.length &&
+             (document.getElementById('Settings').children[0].children[index].children[0].className =="Separador" || 
+              document.getElementById('Settings').children[0].children[index].children[0].className =="LabelSeparador" ||
+              document.getElementById('Settings').children[0].children[index].children[0].children[1].children[0].children[0].disabled ||
+              document.getElementById('Settings').children[0].children[index].style.display == "none")){
+              
+        index ++
+      }
+      
+      if (index < document.getElementById('Settings').children[0].children.length){
+        document.getElementById('Settings').children[0].children[index].children[0].children[1].children[0].children[0].focus()
+      }else{
+        document.getElementById('Settings-botones').children[0].focus()
       }
       break;
   }

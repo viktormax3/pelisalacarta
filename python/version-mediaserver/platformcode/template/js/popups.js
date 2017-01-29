@@ -220,6 +220,7 @@ dialog.settings = function(){
   document.getElementById("Settings-controls").style.display="block";
   document.getElementById("Overlay").style.display="block";
   document.getElementById("Settings-popup").style.display="block";
+  document.getElementById("Settings-popup").children[0].focus()
   document.getElementById("Settings-popup").style.top = document.getElementById("Pagina").offsetHeight / 2 - document.getElementById("Settings-popup").offsetHeight / 2 + "px"
 }
 
