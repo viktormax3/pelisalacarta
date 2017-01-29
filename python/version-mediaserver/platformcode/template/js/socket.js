@@ -22,12 +22,13 @@ function websocket_connect() {
     };
 }
 
-function WebSocketSend(data) {
-    if (websocket.readyState != 1) {
+function WebSocketSend(data, retry) {
+    if (!retry){connection_retry = true}
+    if (websocket.readyState != 1 && connection_retry) {
         websocket_connect()
-        setTimeout(WebSocketSend, 500, data);
+        setTimeout(WebSocketSend, 500, data, true);
         return;
-    } else {
+    } else if (websocket.readyState == 1){
       data["id"] = ID
       websocket.send(JSON.stringify(data));
     }

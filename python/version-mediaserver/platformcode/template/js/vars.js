@@ -22,6 +22,13 @@ var dialog = {};
 var html = {"dialog": {"select": {}}, "config": {}, "itemlist": {}};
 var domain = window.location.href.split("/").slice(0,3).join("/")
 var settings = {}
+var connection_retry = true
+var players = {
+    "play": "Abrir enlace",
+    "vlc_play": "Plugin VLC",
+    "flash_play": "Reproductor Flash",
+    "html_play": "Video HTML"
+}
 
 function load_settings(){
 
@@ -39,6 +46,7 @@ function save_settings() {
             case "text":
             case "password":
                 document.cookie =Objetos[x].id + "=" + Objetos[x].value + '; expires=Fri, 31 Dec 9999 23:59:59 GMT'
+                break;
             case "checkbox":
                 document.cookie =Objetos[x].id + "=" + Objetos[x].checked + '; expires=Fri, 31 Dec 9999 23:59:59 GMT'
                 break;

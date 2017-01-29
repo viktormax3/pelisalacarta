@@ -102,7 +102,6 @@ function load_info(item, viewmode) {
     document.getElementById("Info-Title").innerHTML   = title.innerHTML
     
     if (fanart.style.visibility != "hidden" && fanart.src != domain + "/" && settings.show_fanart){
-      console.log(fanart.src)
       document.getElementById("Contenido").style.backgroundImage = "linear-gradient(rgba(255,255,255,0.5),rgba(255,255,255,0.5)), url(" + fanart.src +")"
       document.getElementById("Contenido").children[0].style.opacity = ".9"
     } else { 

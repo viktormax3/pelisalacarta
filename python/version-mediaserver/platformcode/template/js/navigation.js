@@ -94,6 +94,7 @@ function LoadingKeyDown(e){
   switch (e.keyCode) {
     case 8: //Atras
       loading.close()
+      connection_retry = false;
       e.preventDefault();
       break;
   }

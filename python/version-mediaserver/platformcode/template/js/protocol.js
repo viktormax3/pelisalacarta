@@ -141,25 +141,13 @@ function get_response(data) {
             
             if (settings.player_mode == 0){
               lista = []
-              lista.push(replace_list(html.dialog.select.item, {"item_title": "Abrir Enlace", "item_action":"play_mode('"+data.video_url+"','"+btoa(data.title)+"', 'play')"}))
-              lista.push(replace_list(html.dialog.select.item, {"item_title": "Plugin VLC", "item_action":"play_mode('"+data.video_url+"','"+btoa(data.title)+"', 'vlc_play')"}))
-              lista.push(replace_list(html.dialog.select.item, {"item_title": "Reroductor flash", "item_action":"play_mode('"+data.video_url+"','"+btoa(data.title)+"', 'flash_play')"}))           
-              lista.push(replace_list(html.dialog.select.item, {"item_title": "Video HTML", "item_action":"play_mode('"+data.video_url+"','"+btoa(data.title)+"', 'html_play')"}))
-              
+              for (var player in players){
+                lista.push(replace_list(html.dialog.select.item, {"item_title": players[player], "item_action": "play_mode('"+data.video_url+"','"+btoa(data.title)+"','" + player + "')"}))
+              }              
               dialog.menu("Elige el Reproductor", btoa(lista.join("")))
             
-            }else if (settings.player_mode == 1){
-              play_mode(data.video_url,btoa(data.title),'play')
-            
-            }else if (settings.player_mode == 2){
-              play_mode(data.video_url,btoa(data.title),'vlc_play')
-            
-            }else if (settings.player_mode == 3){
-              play_mode(data.video_url,btoa(data.title),'flash_play')
-            
-            }else if (settings.player_mode == 4){
-              play_mode(data.video_url,btoa(data.title),'html_play')
-            
+            }else{
+              play_mode(data.video_url,btoa(data.title), Object.keys(players)[settings.player_mode - 1])
             }
 
             break;

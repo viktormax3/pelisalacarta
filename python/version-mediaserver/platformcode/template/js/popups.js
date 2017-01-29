@@ -206,13 +206,16 @@ dialog.settings = function(){
   }
   controls.push(replace_list(html.config.bool,{"item_color": "#FFFFFF", "item_label": "Mostrar Fanarts", "item_id": "show_fanart", "item_value": value}))
   
-  
   controls.push(replace_list(html.config.label,{"item_color": "#FFFFFF", "item_label": "Reproducción:"}))
   
   options = ["<option>Preguntar</option>", "<option>Indirecto</option>", "<option>Directo</option>"]
   options[settings.play_mode] = options[settings.play_mode].replace("<option>","<option selected=selected>")
   controls.push(replace_list(html.config.list,{"item_type": "enum","item_color": "#FFFFFF", "item_label": "Método de reproduccion:", "item_id": "play_mode", "item_values": options.join("")}))
-  options = ["<option>Preguntar</option>", "<option>Abrir enlace</option>", "<option>VLC</option>", "<option>FlashPlayer</option>", "<option>HTML</option>"]
+
+  options = ["<option>Preguntar</option>"]
+  for (var player in players){
+    options.push("<option>" + players[player] + "</option>")
+  }
   options[settings.player_mode] = options[settings.player_mode].replace("<option>","<option selected=selected>")
   controls.push(replace_list(html.config.list,{"item_type": "enum","item_color": "#FFFFFF", "item_label": "Reproductor:", "item_id": "player_mode", "item_values": options.join("")}))
 
