@@ -52,7 +52,7 @@ dialog.menu = function(title,list) {
     document.getElementById("Lista-titulo").innerHTML = title;
     document.getElementById("Lista").innerHTML =atob(list);
     document.getElementById("Lista-popup").style.display="block";
-    document.getElementById("Lista").children[0].children[0].children[0].focus()
+    document.getElementById("Lista").children[0].children[0].focus()
     document.getElementById("Lista-popup").style.top = document.getElementById("Pagina").offsetHeight / 2 - document.getElementById("Lista-popup").offsetHeight / 2 + "px"  
   }
 }
@@ -67,7 +67,7 @@ dialog.select = function(id,data) {
   }
   document.getElementById("Lista").innerHTML =Lista.join("");
   document.getElementById("Lista-popup").style.display="block";
-  document.getElementById("Lista").children[0].children[0].children[0].focus()
+  document.getElementById("Lista").children[0].children[0].focus()
   document.getElementById("Lista-popup").style.top = document.getElementById("Pagina").offsetHeight / 2 - document.getElementById("Lista-popup").offsetHeight / 2 + "px"  
 }
 

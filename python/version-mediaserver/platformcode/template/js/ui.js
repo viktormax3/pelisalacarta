@@ -62,7 +62,7 @@ function set_category(category){
 }
 
 function image_error(thumbnail){
-  if (thumbnail.src.indexOf("http") == 0 && thumbnail.src.indexOf(domain) == -1){
+  if (thumbnail.src.indexOf("http") == 0 && thumbnail.src.indexOf(domain) == -1 && thumbnail.src != window.location.href){
     thumbnail.src=domain + "/proxy/" + encodeURIComponent(btoa(thumbnail.src))
     
   } else if (thumbnail.src.indexOf(domain) == 0){
@@ -101,7 +101,7 @@ function load_info(item, viewmode) {
     document.getElementById("Info-Plot").innerHTML = plot.innerHTML.replace(/\n/g,"<br>")
     document.getElementById("Info-Title").innerHTML   = title.innerHTML
     
-    if (fanart.style.visibility != "hidden" && fanart.src != domain + "/" && settings.show_fanart){
+    if (fanart.style.visibility != "hidden" && fanart.src != domain + "/" && fanart.src != window.location.href && settings.show_fanart){
       document.getElementById("Contenido").style.backgroundImage = "linear-gradient(rgba(255,255,255,0.5),rgba(255,255,255,0.5)), url(" + fanart.src +")"
       document.getElementById("Contenido").children[0].style.opacity = ".9"
     } else { 
