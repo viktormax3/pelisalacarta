@@ -1,4 +1,5 @@
 function websocket_connect() {
+    if (!websocket_host){return}
     if (websocket){websocket.close()}
     document.getElementById("Conexion").innerHTML = "Conectando...";
     

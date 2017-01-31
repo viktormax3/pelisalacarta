@@ -164,6 +164,11 @@ class platform(Platformtools):
             for match in matches:
               title=title.replace(match[0],"<span style='color:"+match[1]+"'>").replace(match[2],"</span>")
               
+            #Añade headers a las imagenes si estan en un servidor con cloudflare    
+            from core import httptools
+            item.thumbnail = httptools.get_url_headers(item.thumbnail)
+            item.fanart = httptools.get_url_headers(item.fanart)
+          
             JsonItem = {}
             JsonItem["title"]=title
             JsonItem["thumbnail"]= item.thumbnail

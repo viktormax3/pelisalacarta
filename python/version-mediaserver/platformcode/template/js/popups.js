@@ -107,7 +107,7 @@ dialog.yesno = function(id,data){
 
 
 dialog.keyboard = function(id,data) {
-  if (data.title === "") {data.title = "keychardo";}
+  if (data.title === "") {data.title = "Teclado";}
   if (data.password == true) {document.getElementById("Keyboard-Text").type = "password"}
   else {document.getElementById("Keyboard-Text").type = "text"}
   document.getElementById("Keyboard-popup").RequestID = id

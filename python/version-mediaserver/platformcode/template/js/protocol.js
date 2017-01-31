@@ -19,6 +19,8 @@ function get_response(data) {
               context_items = [];
               item = data.itemlist[item]
               if (item.thumbnail.indexOf("http") != 0){item.thumbnail = data.host +"/local/"+encodeURIComponent(btoa(item.thumbnail))}
+              if (item.thumbnail.indexOf("|") != -1){item.thumbnail = data.host +"/proxy/"+encodeURIComponent(btoa(item.thumbnail))}
+              if (item.fanart.indexOf("|") != -1){item.thumbnail = data.host +"/proxy/"+encodeURIComponent(btoa(item.fanart))}
               if (item.action == "go_back"){item.url = "go_back"}
               
               if (item.context.length){
