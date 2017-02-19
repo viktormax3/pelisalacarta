@@ -98,7 +98,8 @@ class platform(Platformtools):
           parent_item.viewmode = "banner"
         elif parent_item.channel == "channelselector" and  parent_item.action == "filterchannels":
           parent_item.viewmode = "channel"
-
+        if not parent_item.viewmode:
+          parent_item.viewmode = "list"
         
         #Item Atrás
         if not (parent_item.channel=="channelselector" and parent_item.action=="mainlist") and not itemlist[0].action=="go_back":
@@ -141,8 +142,8 @@ class platform(Platformtools):
             if item.fanart == "":
                 item.fanart = parent_item.fanart
             
-            title = item.title.replace(" ", "&nbsp;")
-            title = title.replace("[COLOR&nbsp;", "[COLOR ")
+            title = item.title.replace(item.title.lstrip(), ""). replace(" ", "&nbsp;") + item.title.lstrip()
+            
             # Formatear titulo
             if item.text_color:
                 title = '[COLOR %s]%s[/COLOR]' % (item.text_color, title)
@@ -151,19 +152,8 @@ class platform(Platformtools):
             if item.text_italic:
                 title = '[I]%s[/I]' % title
             
+            title = self.kodi_labels_to_html(title)
             
-            matches = re.compile("(\[I\])(?:.*?)(\[\/I\])").findall(title)
-            for match in matches:
-              title=title.replace(match[0], "<i>").replace(match[1],"</i>")
-              
-            matches = re.compile("(\[B\])(?:.*?)(\[\/B\])").findall(title)
-            for match in matches:
-              title=title.replace(match[0], "<b>").replace(match[1],"</b>")
-              
-            matches = re.compile("(\[COLOR ([^\]]+)\])(?:.*?)(\[\/COLOR\])").findall(title)
-            for match in matches:
-              title=title.replace(match[0],"<span style='color:"+match[1]+"'>").replace(match[2],"</span>")
-              
             #Añade headers a las imagenes si estan en un servidor con cloudflare    
             from core import httptools
             item.thumbnail = httptools.get_url_headers(item.thumbnail)
@@ -678,7 +668,9 @@ class platform(Platformtools):
                   else:
                       lvalues.append(li)
               c['lvalues'] = lvalues
-
+              
+          c["label"] = self.kodi_labels_to_html(c["label"])
+          
           JsonData["data"]["items"].append(c)
         
       ID = self.send_message(JsonData)
@@ -723,3 +715,11 @@ class platform(Platformtools):
     def show_video_info(self,data, caption="", item=None, scraper=Tmdb):
         from platformcode import html_info_window
         return html_info_window.InfoWindow().Start(self, data, caption, item, scraper)
+    
+    def kodi_labels_to_html(self, text):
+      text = re.sub(r"(?:\[I\])(.*?)(?:\[/I\])", r"<i>\1</i>", text)
+      text = re.sub(r"(?:\[B\])(.*?)(?:\[/B\])", r"<b>\1</b>", text)
+      text = re.sub(r"(?:\[COLOR (?:0x)?([0-F]{2})([0-F]{2})([0-F]{2})([0-F]{2})\])(.*?)(?:\[/COLOR\])", lambda m: "<span style='color: rgba(%s,%s,%s,%s)'>%s</span>" %(int(m.group(2),16), int(m.group(3),16), int(m.group(4),16), int(m.group(1),16) / 255.0, m.group(5)), text)
+      text = re.sub(r"(?:\[COLOR (?:0x)?([0-F]{2})([0-F]{2})([0-F]{2})\])(.*?)(?:\[/COLOR\])", r"<span style='color: #\1\2\3'>\4</span>", text)
+      text = re.sub(r"(?:\[COLOR (?:0x)?([a-z|A-Z]+)\])(.*?)(?:\[/COLOR\])", r"<span style='color: \1'>\2</span>", text)
+      return text

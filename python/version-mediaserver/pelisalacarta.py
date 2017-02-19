@@ -33,6 +33,9 @@ def ThreadNameWrap(func):
 
 threading.Thread.__init__ = ThreadNameWrap(threading.Thread.__init__)
 
+if sys.version_info < (2,7,11):
+  import ssl
+  ssl._create_default_https_context = ssl._create_unverified_context
 
 def MostrarInfo():
     os.system('cls' if os.name == 'nt' else 'clear')
