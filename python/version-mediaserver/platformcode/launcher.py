@@ -37,13 +37,12 @@ from core import servertools
 from core import library
 
 def start():
-    ''' Primera funcion que se ejecuta al entrar en el plugin.
+    """ Primera funcion que se ejecuta al entrar en el plugin.
     Dentro de esta funcion deberian ir todas las llamadas a las
     funciones que deseamos que se ejecuten nada mas abrir el plugin.
-    
-    '''
+    """
     logger.info("pelisalacarta.platformcode.launcher start")
-    
+
     # Test if all the required directories are created
     config.verify_directories_created()
     import library_service
