@@ -342,6 +342,9 @@
                 <exclude name="**/.*/**"/>
             </fileset>
         </copy>
+        <replaceregexp match="&lt;category.*?&gt;" replace="" file="${target_base_folder}/xbmc-09-plugin/plugin.video.pelisalacarta/resources/settings.xml" flags="sg"/>
+        <replaceregexp match="&lt;/category.*?&gt;" replace="" file="${target_base_folder}/xbmc-09-plugin/plugin.video.pelisalacarta/resources/settings.xml" flags="sg"/>
+        <replaceregexp match='type="number"' replace='type="text"' file="${target_base_folder}/xbmc-09-plugin/plugin.video.pelisalacarta/resources/settings.xml" flags="sg"/>
 
         <zip destfile="${target_base_folder}/pelisalacarta-xbmc-plugin-${version}.zip" basedir="${target_base_folder}/xbmc-09-plugin"/>
     </target>
