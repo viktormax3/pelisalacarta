@@ -32,6 +32,7 @@ from core import logger
 from core import scrapertools
 from core.item import InfoLabels
 
+
 # -----------------------------------------------------------------------------------------------------------
 # Conjunto de funciones relacionadas con las infoLabels.
 #   version 1.0:
@@ -348,6 +349,86 @@ def set_infoLabels_item(item, seekTmdb=True, idioma_busqueda='es', lock=None):
     return -1 * len(item.infoLabels)
 
 
+def find_and_set_infoLabels(item):
+    logger.info()
+
+    global otmdb_global
+    tmdb_result = None
+
+
+    if item.contentType == "movie":
+        tipo_busqueda = "movie"
+        tipo_contenido = "pelicula"
+        title = item.contentTitle
+    else:
+        tipo_busqueda = "tv"
+        tipo_contenido = "serie"
+        title = item.contentSerieName
+
+    # Si el titulo incluye el (año) se lo quitamos
+    year = scrapertools.find_single_match(title, "^.+?\s*(\(\d{4}\))$")
+    if year:
+        title = title.replace(year, "").strip()
+        item.infoLabels['year'] = year[1:-1]
+
+
+    if not item.infoLabels.get("tmdb_id"):
+        if not item.infoLabels.get("imdb_id"):
+            otmdb_global = Tmdb(texto_buscado=title, tipo=tipo_busqueda, year=item.infoLabels['year'])
+        else:
+            otmdb_global = Tmdb(external_id=item.infoLabels.get("imdb_id"), external_source="imdb_id",
+                                tipo=tipo_busqueda)
+    elif not otmdb_global or otmdb_global.result.get("id") != item.infoLabels['tmdb_id']:
+        otmdb_global = Tmdb(id_Tmdb=item.infoLabels['tmdb_id'], tipo=tipo_busqueda, idioma_busqueda="es")
+
+    results = otmdb_global.get_list_resultados()
+
+    if len(results) > 1:
+        from platformcode import platformtools
+        tmdb_result = platformtools.show_video_info(results, item=item,
+                                                    caption="[%s]: Selecciona la %s correcta" % (title, tipo_contenido))
+    elif len(results) > 0:
+        tmdb_result = results[0]
+
+
+    if isinstance(item.infoLabels, InfoLabels):
+        infoLabels = item.infoLabels
+    else:
+        infoLabels = InfoLabels()
+
+    if tmdb_result:
+        infoLabels['tmdb_id'] = tmdb_result['id']
+        # todo mirar si se puede eliminar y obtener solo desde get_nfo()
+        infoLabels['url_scraper'] = "https://www.themoviedb.org/%s/%s" % (tipo_busqueda, infoLabels['tmdb_id'])
+        item.infoLabels = infoLabels
+        set_infoLabels_item(item)
+
+        return True
+
+    else:
+        item.infoLabels = infoLabels
+        return False
+
+
+def get_nfo(item):
+    """
+    Devuelve la información necesaria para que se scrapee el resultado en la biblioteca de kodi,
+    para tmdb funciona solo pasandole la url
+    @param item: elemento que contiene los datos necesarios para generar la info
+    @type item: Item
+    @rtype: str
+    @return:
+    """
+    if "season" in item.infoLabels and "episode" in item.infoLabels:
+        info_nfo = "https://www.themoviedb.org/tv/%s/season/%s/episode/%s\n" % \
+                   (item.infoLabels['tmdb_id'], item.contentSeason, item.contentEpisodeNumber)
+    else:
+        info_nfo = item.infoLabels['url_scraper']
+
+    return info_nfo
+
+
+
 # Clase auxiliar
 class ResultDictDefault(dict):
     #Python 2.4
@@ -603,61 +684,6 @@ class Tmdb(object):
 
         else:
             logger.debug("Creado objeto vacio")
-
-    def __call__(self, **kwargs):
-        self.page = kwargs.get('page', 1)
-        self.index_results = 0
-        self.results = []
-        self.result = ResultDictDefault()
-        self.total_pages = 0
-        self.total_results = 0
-
-        self.temporada = {}
-        self.texto_buscado = kwargs.get('texto_buscado', '')
-
-        self.busqueda_id = kwargs.get('id_Tmdb', '')
-        self.busqueda_texto = re.sub('\[\\\?(B|I|COLOR)\s?[^\]]*\]', '', self.texto_buscado)
-        self.busqueda_tipo = kwargs.get('tipo', '')
-        self.busqueda_idioma = kwargs.get('idioma_busqueda', 'es')
-        self.busqueda_include_adult = kwargs.get('include_adult', False)
-        self.busqueda_year = kwargs.get('year', '')
-        self.busqueda_filtro = kwargs.get('filtro', {})
-        self.discover = kwargs.get('discover', {})
-
-        # Reellenar diccionario de generos si es necesario
-        if (self.busqueda_tipo == 'movie' or self.busqueda_tipo == "tv") and \
-            (self.busqueda_idioma not in Tmdb.dic_generos or
-             self.busqueda_tipo not in Tmdb.dic_generos[self.busqueda_idioma]):
-                self.rellenar_dic_generos(self.busqueda_tipo, self.busqueda_idioma)
-
-        if not self.busqueda_tipo:
-            self.busqueda_tipo = 'movie'
-
-        if self.busqueda_id:
-            # Busqueda por identificador tmdb
-            self.__by_id()
-
-        elif self.busqueda_texto:
-            # Busqueda por texto
-            self.__search(page=self.page)
-
-        elif 'external_source' in kwargs and 'external_id' in kwargs:
-            # Busqueda por identificador externo segun el tipo.
-            # TV Series: imdb_id, freebase_mid, freebase_id, tvdb_id, tvrage_id
-            # Movies: imdb_id
-            if (self.busqueda_tipo == 'movie' and kwargs.get('external_source') == "imdb_id") or \
-                    (self.busqueda_tipo == 'tv' and kwargs.get('external_source') in (
-                            "imdb_id", "freebase_mid", "freebase_id", "tvdb_id", "tvrage_id")):
-                self.busqueda_id = kwargs.get('external_id')
-                self.__by_id(source=kwargs.get('external_source'))
-
-        elif self.discover:
-            self.__discover()
-
-        else:
-            logger.debug("Creado objeto vacio")
-
-        return self
 
     @classmethod
     def rellenar_dic_generos(cls, tipo='movie', idioma='es'):
@@ -1304,12 +1330,16 @@ class Tmdb(object):
 
             items.extend(self.get_episodio(ret_infoLabels['season'], episodio).items())
 
+        logger.info("ret_infoLabels" % ret_infoLabels)
 
         for k, v in items:
             if not v:
                 continue
             elif type(v) == str:
                 v = re.sub(r"\n|\r|\t", "", v)
+                # fix
+                if v == "None":
+                    continue
 
             if k == 'overview':
                 if origen:
@@ -1421,3 +1451,5 @@ class Tmdb(object):
 
 
         return ret_infoLabels
+
+
