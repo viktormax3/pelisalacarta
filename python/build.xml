@@ -188,10 +188,6 @@
             </fileset>
         </copy>
 
-        <!-- Replace kodi-krypton platform name with current platform name  -->
-        <copy file="main-classic/core/config.py" tofile="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/core/config.py" overwrite="true"/>
-        <replaceregexp file="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/core/config.py" match="kodi-krypton" replace="${target_platform_name}"/>
-
         <!-- Builds zip file -->
         <zip destfile="${target_base_folder}/pelisalacarta-${target_platform_name}-${version}.zip" basedir="${target_base_folder}/${target_platform_folder}"/>
 
