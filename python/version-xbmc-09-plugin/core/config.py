@@ -177,7 +177,7 @@ def get_runtime_path():
 
 
 def get_data_path():
-    dev = xbmc.translatePath("special://profile/userdata/plugin_data/video/pelisalacarta")
+    dev = xbmc.translatePath("special://profile/plugin_data/video/pelisalacarta")
 
     #Crea el directorio si no existe
     if not os.path.exists(dev):
@@ -210,7 +210,7 @@ def verify_directories_created():
     for path, default in config_paths:
         saved_path = get_setting(path)
         if not saved_path:
-            saved_path = "special://profile/userdata/plugin_data/video/pelisalacarta/" + default
+            saved_path = "special://profile/plugin_data/video/pelisalacarta/" + default
             set_setting(path, saved_path)
 
         saved_path = xbmc.translatePath(saved_path)
