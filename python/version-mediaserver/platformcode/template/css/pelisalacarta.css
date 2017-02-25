@@ -89,8 +89,20 @@ div.content {
     padding-left:10px;
     padding-right: 0;
 }
+ div.panel_items_vertical {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    float: left;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    padding: 20px;
+    padding-left:20px;
+    padding-right: 0;
+}
  div.panel_info {
-     padding: 20px;
+    padding: 20px;
     height: 100%;
     width: 40%;
     float: left;
@@ -98,6 +110,17 @@ div.content {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     padding-right: 10px;
+}
+ div.panel_info_vertical {
+    padding: 20px;
+    height: 100%;
+    width: 40%;
+    float: left;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    padding-right: 10px;
+	display: none;
 }
 /*------------------------header------------------------*/
 
