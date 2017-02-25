@@ -88,6 +88,7 @@ function get_response(data) {
         break;
 
     case "Refresh":
+        nav_history.current -= 1
         send_request(nav_history.states[nav_history.current].url);
         send_data({
             "id": response.id,

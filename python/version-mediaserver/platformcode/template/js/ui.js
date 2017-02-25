@@ -4,6 +4,14 @@ function dispose() {
     var footer = document.getElementById("footer").offsetHeight;
     var panelheight = height - header - footer;
     document.getElementById('content').style.height = panelheight + "px";
+	if (document.getElementById("window").offsetWidth < 800) {
+		document.getElementById('panel_items').className = "panel_items_vertical";
+		document.getElementById('panel_info').className = "panel_info_vertical";
+	}
+	else {
+		document.getElementById('panel_items').className = "panel_items";
+		document.getElementById('panel_info').className = "panel_info";
+	}
 };
 
 function replace_list(data, list) {
