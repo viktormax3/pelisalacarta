@@ -35,8 +35,8 @@
 
     <!-- loader -->    
     <control type="image" id="400">
-      <posx>1846</posx><posy>42</posy>
-      <width>32</width><height>32</height>
+      <posx>1830</posx><posy>26</posy>
+      <width>64</width><height>64</height>
       <texture>loader.gif</texture>
     </control>
 

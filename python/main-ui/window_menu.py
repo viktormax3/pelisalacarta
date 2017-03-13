@@ -41,8 +41,8 @@ class MenuWindow(xbmcgui.WindowXML):
     def __init__(self, xml_name, fallback_path):
         plugintools.log("MenuWindow.__init__ xml_name="+xml_name+" fallback_path="+fallback_path)
 
-        #if self.getResolution()>1:
-        #    self.setCoordinateResolution(1)
+        if self.getResolution()>0:
+            self.setCoordinateResolution(0)
 
         self.first_time = False
         self.itemlist = None

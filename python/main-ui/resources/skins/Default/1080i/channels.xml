@@ -35,8 +35,8 @@
 
     <!-- loader -->    
     <control type="image" id="400">
-      <posx>1846</posx><posy>42</posy>
-      <width>32</width><height>32</height>
+      <posx>1830</posx><posy>26</posy>
+      <width>64</width><height>64</height>
       <texture>loader.gif</texture>
     </control>
 
@@ -53,22 +53,12 @@
     </control>
 
     <!-- app version -->
-    <control type="label">
-      <posx>473</posx><posy>950</posy>
-      <width>428</width><height>50</height>
+    <control type="textbox" id="401">
+      <posx>45</posx><posy>970</posy>
+      <width>428</width><height>60</height>
       <font>font10</font>
       <textcolor>FFCCCCCC</textcolor>
       <align>right</align>
-      <label>pelisalacarta 4.2.0-beta3</label>
-    </control>
-
-    <control type="label">
-      <posx>473</posx><posy>990</posy>
-      <width>428</width><height>50</height>
-      <font>font10</font>
-      <textcolor>FFCCCCCC</textcolor>
-      <align>right</align>
-      <label>11/Marzo/2017</label>
     </control>
 
     <!-- ---------------------------- -->

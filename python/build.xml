@@ -267,44 +267,34 @@
         <replaceregexp file="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/core/config.py" match="PLUGIN_NAME....pelisalacarta." replace="PLUGIN_NAME = &quot;pelisalacarta-ui&quot;"/>
 
         <!-- Duplicate skin files in other resolutions -->
-        <mkdir dir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/1080i"/>
+        <mkdir dir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/720p"/>
         <mkdir dir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/NTSC16x9"/>
         <mkdir dir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/NTSC"/>
         <mkdir dir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/PAL16x9"/>
         <mkdir dir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/PAL"/>
 
-        <copy todir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/1080i">
-            <fileset dir="main-ui/resources/skins/Default/720p">
-            </fileset>
-            <fileset dir="main-classic/resources/skins/Default/720p">
+        <copy todir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/720p">
+            <fileset dir="main-ui/resources/skins/Default/1080i">
             </fileset>
         </copy>
 
         <copy todir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/NTSC16x9">
-            <fileset dir="main-ui/resources/skins/Default/720p">
-            </fileset>
-            <fileset dir="main-classic/resources/skins/Default/720p">
+            <fileset dir="main-ui/resources/skins/Default/1080i">
             </fileset>
         </copy>
 
         <copy todir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/NTSC">
-            <fileset dir="main-ui/resources/skins/Default/720p">
-            </fileset>
-            <fileset dir="main-classic/resources/skins/Default/720p">
+            <fileset dir="main-ui/resources/skins/Default/1080i">
             </fileset>
         </copy>
 
         <copy todir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/PAL16x9">
-            <fileset dir="main-ui/resources/skins/Default/720p">
-            </fileset>
-            <fileset dir="main-classic/resources/skins/Default/720p">
+            <fileset dir="main-ui/resources/skins/Default/1080i">
             </fileset>
         </copy>
 
         <copy todir="${target_base_folder}/${target_platform_folder}-ui/plugin.video.pelisalacarta-ui/resources/skins/Default/PAL">
-            <fileset dir="main-ui/resources/skins/Default/720p">
-            </fileset>
-            <fileset dir="main-classic/resources/skins/Default/720p">
+            <fileset dir="main-ui/resources/skins/Default/1080i">
             </fileset>
         </copy>
 

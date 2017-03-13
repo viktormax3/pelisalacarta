@@ -35,14 +35,15 @@ from windowtools import *
 import plugintools
 import navigation
 from core.item import Item
+from core import versiontools
 
 class ChannelWindow(xbmcgui.WindowXML):
 
     def __init__(self, xml_name, fallback_path):
-        plugintools.log("ChannelWindow.__init__ xml_name="+xml_name+" fallback_path="+fallback_path)
+        plugintools.log("ChannelWindow.__init__ xml_name="+xml_name+" fallback_path="+fallback_path+" resolution="+repr(self.getResolution()))
 
-        #if self.getResolution()>1:
-        #    self.setCoordinateResolution(1)
+        if self.getResolution()>0:
+            self.setCoordinateResolution(0)
 
         plugintools.log("MenuWindow.__init__ fonts="+repr(get_fonts()))
 
@@ -91,6 +92,8 @@ class ChannelWindow(xbmcgui.WindowXML):
 
         self.loader = self.getControl(400)
         self.loader.setVisible(False)
+
+        self.getControl(401).setText( "pelisalacarta "+versiontools.get_current_plugin_version_tag()+"\n"+versiontools.get_current_plugin_date() )
 
     def onAction(self, action):
         plugintools.log("ChannelWindow.onAction action.id="+repr(action.getId())+" action.buttonCode="+repr(action.getButtonCode()))
