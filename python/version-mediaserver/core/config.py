@@ -267,14 +267,6 @@ def get_local_ip():
   return myip
 
 
-def get_plugin_version():
-    return "4.2.0-beta2"
-
-
-def get_plugin_date():
-    return "01/Enero/2017"
-
-
 def load_settings():
     global settings_dic
     defaults = {}

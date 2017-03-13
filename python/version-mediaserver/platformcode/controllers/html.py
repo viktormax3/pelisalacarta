@@ -7,6 +7,7 @@
 import sys, os
 from core import config
 from core import logger
+from core import versiontools
 from controller import Controller
 from controller import Platformtools
 from platformcode import platformtools
@@ -30,7 +31,7 @@ class html(Controller):
         self.data = {}
         if self.handler:
             self.client_ip = handler.client.getpeername()[0]
-            self.send_message({"action": "connect", "data":{"version": "pelisalacarta %s" % config.get_plugin_version(), "date":config.get_plugin_date()}})
+            self.send_message({"action": "connect", "data":{"version": "pelisalacarta %s" % versiontools.get_current_plugin_version_tag(), "date":versiontools.get_current_plugin_version_date()}})
             t = threading.Thread(target=launcher.start, name=ID)
             t.setDaemon(True)
             t.start()
