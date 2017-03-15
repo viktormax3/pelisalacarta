@@ -41,7 +41,7 @@ def start():
     Dentro de esta funcion deberian ir todas las llamadas a las
     funciones que deseamos que se ejecuten nada mas abrir el plugin.
     """
-    logger.info("pelisalacarta.platformcode.launcher start")
+    logger.info()
 
     # Test if all the required directories are created
     config.verify_directories_created()
@@ -68,15 +68,15 @@ def run(item):
     
     # If item has no action, stops here
     if item.action == "":
-        logger.info("pelisalacarta.platformcode.launcher Item sin accion")
+        logger.info("Item sin accion")
         itemlist = None
         
     #Action Play, para mostrar el menú con las opciones de reproduccion.
     elif item.action=="play":
-      logger.info("pelisalacarta.platformcode.launcher play")
+      logger.info("play")
       # Si el canal tiene una acción "play" tiene prioridad
       if hasattr(channelmodule, 'play'):
-          logger.info("pelisalacarta.platformcode.launcher executing channel 'play' method")
+          logger.info("executing channel 'play' method")
           itemlist = channelmodule.play(item)
           b_favourite = item.isFavourite
           if len(itemlist)>0 and isinstance(itemlist[0], Item):
@@ -90,7 +90,7 @@ def run(item):
           else:
               platformtools.dialog_ok("plugin", "No hay nada para reproducir")
       else:
-          logger.info("pelisalacarta.platformcode.launcher no channel 'play' method, executing core method")
+          logger.info("no channel 'play' method, executing core method")
           play_menu(item)
           
       itemlist = None
@@ -98,7 +98,7 @@ def run(item):
       
     #Action Search, para mostrar el teclado y lanzar la busqueda con el texto indicado. 
     elif item.action=="search":
-      logger.info("pelisalacarta.platformcode.launcher search")
+      logger.info("search")
       tecleado = platformtools.dialog_input()
       if not tecleado is None:
           itemlist = channelmodule.search(item,tecleado)
@@ -112,7 +112,7 @@ def run(item):
         itemlist = channelselector.getmainlist("bannermenu")
         
         if config.get_setting("check_for_plugin_updates") == "true":
-          logger.info("channelselector.mainlist Verificar actualizaciones activado")
+          logger.info("Verificar actualizaciones activado")
           from core import updater
           try:
             version = updater.checkforupdates()
@@ -122,10 +122,10 @@ def run(item):
               itemlist.insert(0,Item(title="Actualizadr pelisalacarta a la versión "+version, version=version, channel="updater", action="update", thumbnail=os.path.join(config.get_runtime_path(),"resources","images","bannermenu","thumb_update.png")))
           except:
             platformtools.dialog_ok("No se puede conectar","No ha sido posible comprobar","si hay actualizaciones")
-            logger.info("channelselector.mainlist Fallo al verificar la actualización")
+            logger.info("Fallo al verificar la actualización")
 
         else:
-          logger.info("channelselector.mainlist Verificar actualizaciones desactivado")
+          logger.info("Verificar actualizaciones desactivado")
 
       if item.action =="getchanneltypes":
         itemlist = channelselector.getchanneltypes("bannermenu")
@@ -207,7 +207,7 @@ def PrintItems(itemlist):
 
   
 def findvideos(item):
-    logger.info("pelisalacarta.platformcode.launcher findvideos")
+    logger.info()
     itemlist = servertools.find_video_items(item)        
     return itemlist
 
@@ -220,7 +220,7 @@ def add_serie_to_library(item):
   library.add_serie_to_library(item, channel)
 
 def download_all_episodes(item,first_episode="",preferred_server="vidspot",filter_language=""):
-    logger.info("pelisalacarta.platformcode.launcher download_all_episodes, show="+item.show)
+    logger.info("show="+item.show)
     channel = ImportarCanal(item)
     show_title = item.show
 
@@ -251,12 +251,12 @@ def download_all_episodes(item,first_episode="",preferred_server="vidspot",filte
 
     for episode_item in episode_itemlist:
         try:
-            logger.info("pelisalacarta.platformcode.launcher download_all_episodes, episode="+episode_item.title)
+            logger.info("episode="+episode_item.title)
             episode_title = scrapertools.get_match(episode_item.title,"(\d+x\d+)")
-            logger.info("pelisalacarta.platformcode.launcher download_all_episodes, episode="+episode_title)
+            logger.info("episode="+episode_title)
         except:
             import traceback
-            logger.info(traceback.format_exc())
+            logger.error(traceback.format_exc())
             continue
 
         if first_episode!="" and episode_title==first_episode:
@@ -311,7 +311,7 @@ def download_all_episodes(item,first_episode="",preferred_server="vidspot",filte
         mirrors_itemlist = new_mirror_itemlist_1 + new_mirror_itemlist_2 + new_mirror_itemlist_3 + new_mirror_itemlist_4 + new_mirror_itemlist_5 + new_mirror_itemlist_6
 
         for mirror_item in mirrors_itemlist:
-            logger.info("pelisalacarta.platformcode.launcher download_all_episodes, mirror="+mirror_item.title)
+            logger.info("mirror="+mirror_item.title)
 
             if "(Español)" in mirror_item.title:
                 idioma="(Español)"
@@ -329,11 +329,11 @@ def download_all_episodes(item,first_episode="",preferred_server="vidspot",filte
                 idioma="(Desconocido)"
                 codigo_idioma="desconocido"
 
-            logger.info("pelisalacarta.platformcode.launcher filter_language=#"+filter_language+"#, codigo_idioma=#"+codigo_idioma+"#")
+            logger.info("filter_language=#"+filter_language+"#, codigo_idioma=#"+codigo_idioma+"#")
             if filter_language=="" or (filter_language!="" and filter_language==codigo_idioma):
-                logger.info("pelisalacarta.platformcode.launcher download_all_episodes, downloading mirror")
+                logger.info("downloading mirror")
             else:
-                logger.info("pelisalacarta.platformcode.launcher language "+codigo_idioma+" filtered, skipping")
+                logger.info("language "+codigo_idioma+" filtered, skipping")
                 continue
 
             if hasattr(channel, 'play'):
@@ -349,13 +349,13 @@ def download_all_episodes(item,first_episode="",preferred_server="vidspot",filte
 
                 # Lo añade a la lista de descargas
                 if puedes:
-                    logger.info("pelisalacarta.platformcode.launcher download_all_episodes, downloading mirror started...")
+                    logger.info("downloading mirror started...")
                     # El vídeo de más calidad es el último
                     mediaurl = video_urls[len(video_urls)-1][1]
                     devuelve = downloadtools.downloadbest(video_urls,show_title+" "+episode_title+" "+idioma+" ["+video_item.server+"]",continuar=False)
 
                     if devuelve==0:
-                        logger.info("pelisalacarta.platformcode.launcher download_all_episodes, download ok")
+                        logger.info("download ok")
                         descargado = True
                         break
                     elif devuelve==-1:
@@ -366,20 +366,20 @@ def download_all_episodes(item,first_episode="",preferred_server="vidspot",filte
                             pass
                         return
                     else:
-                        logger.info("pelisalacarta.platformcode.launcher download_all_episodes, download error, try another mirror")
+                        logger.info("download error, try another mirror")
                         continue
 
                 else:
-                    logger.info("pelisalacarta.platformcode.launcher download_all_episodes, downloading mirror not available... trying next")
+                    logger.info("downloading mirror not available... trying next")
 
         if not descargado:
-            logger.info("pelisalacarta.platformcode.launcher download_all_episodes, EPISODIO NO DESCARGADO "+episode_title)
+            logger.info("EPISODIO NO DESCARGADO "+episode_title)
 
 
 
 
 def set_server_list():
-    logger.info("pelisalacarta.platformcode.launcher.set_server_list start")
+    logger.info("start")
     server_white_list = []
     server_black_list = []
 
@@ -393,12 +393,12 @@ def set_server_list():
 
     logger.info("set_server_list whiteList %s" % server_white_list)
     logger.info("set_server_list blackList %s" % server_black_list)
-    logger.info("pelisalacarta.platformcode.launcher.set_server_list end")
+    logger.info("end")
 
     return server_white_list, server_black_list
 
 def filtered_servers(itemlist, server_white_list, server_black_list):
-    logger.info("pelisalacarta.platformcode.launcher.filtered_servers start")
+    logger.info("start")
     new_list = []
     white_counter = 0
     black_counter = 0
@@ -435,7 +435,7 @@ def filtered_servers(itemlist, server_white_list, server_black_list):
 
     if len(new_list) == 0:
         new_list = itemlist
-    logger.info("pelisalacarta.platformcode.launcher.filtered_servers end")
+    logger.info("end")
 
     return new_list
 
