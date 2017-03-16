@@ -67,6 +67,7 @@ def menupeliculas(item):
 
     if account:
         itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Favoritos[/B][/COLOR]"), url=host+"/a/my?target=movies&action=favorite&start=-28&limit=28", folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Pendientes[/B][/COLOR]"), url=host+"/a/my?target=movies&action=pending&start=-28&limit=28", folder=True ) )
 
     itemlist.append( Item( channel=item.channel, action="fichas", title="ABC", url=host+"/peliculas/abc", folder=True ) )
     itemlist.append( Item( channel=item.channel, action="fichas", title="Últimas películas" , url=host+"/peliculas", folder=True ) )
@@ -74,6 +75,8 @@ def menupeliculas(item):
     itemlist.append( Item( channel=item.channel, action="fichas", title="Películas Actualizadas", url=host+"/peliculas-actualizadas", folder=True ) )
     itemlist.append( Item( channel=item.channel, action="fichas", title="Rating IMDB", url=host+"/peliculas/imdb_rating", folder=True ) )
     itemlist.append( Item( channel=item.channel, action="generos", title="Películas por Género", url=host, folder=True))
+    if account:
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Vistas[/B][/COLOR]"), url=host+"/a/my?target=movies&action=seen&start=-28&limit=28", folder=True ) )
 
     return itemlist
 
@@ -95,6 +98,10 @@ def menuseries(item):
     itemlist.append( Item(channel=item.channel, action="fichas", title="Rating IMDB", url=host+"/series/imdb_rating", folder=True ) )
     itemlist.append( Item(channel=item.channel, action="generos_series", title="Series por Género", url=host, folder=True ) )
     itemlist.append( Item( channel=item.channel, action="listado_series", title="Listado de todas las series", url=host+"/series/list", folder=True ) )
+    if account:
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Favoritas[/B][/COLOR]"), url=host+"/a/my?target=shows&action=favorite&start=-28&limit=28", folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Pendientes[/B][/COLOR]"), url=host+"/a/my?target=shows&action=pending&start=-28&limit=28", folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Vistas[/B][/COLOR]"), url=host+"/a/my?target=shows&action=seen&start=-28&limit=28", folder=True ) )
 
     return itemlist
 
@@ -545,6 +552,7 @@ def findvideos(item):
             decode_aa += aadecode(match)
     
         data_js = re.sub(r':(function.*?\})', r':"\g<1>"', decode_aa)
+        data_js = re.sub(r':(var[^,]+),', r':"\g<1>",', data_js)
 
     data = agrupa_datos( httptools.downloadpage(item.url).data )
     data_obf = scrapertools.find_single_match(data, "var ad\s*=\s*'([^']+)'")
@@ -554,13 +562,20 @@ def findvideos(item):
     year = scrapertools.find_single_match(data, '<span>A&ntilde;o:\s*</span>.*?(\d{4})')
     infolabels["year"] = year
 
+    var0 = scrapertools.find_single_match(data_js, 'var_0=\[(.*?)\]').split(",")
     matches = []
     for match in data_decrypt:
         prov = eval(scrapertools.find_single_match(data_js, 'p\[%s\]\s*=\s*(\{.*?\}[\'"]\})' % match["provider"]))
-        function = prov["l"].replace("code", match["code"]).replace("var_1", match["code"])
-        url = scrapertools.find_single_match(function, "return ['\"](.*?)[;]*\}")
+        function = prov["l"].replace("code", match["code"]).replace("var_2", match["code"])
+        index = scrapertools.find_single_match(function, 'var_1\[(\d+)\]')
+        function = function.replace("var_1[%s]" % index, var0[int(index)])
+
+        url = scrapertools.find_single_match(function, "return\s*(.*?)[;]*\}")
         url = re.sub(r'\'|"|\s|\+', '', url)
-        matches.append([match["lang"], match["quality"], url, prov["e"]])
+        index = scrapertools.find_single_match(prov["e"], 'var_1\[(\d+)\]')
+        embed = prov["e"].replace("var_1[%s]" % index, var0[int(index)])
+
+        matches.append([match["lang"], match["quality"], url, embed])
 
     enlaces = []
     for idioma, calidad, url, embed in matches:
@@ -573,7 +588,7 @@ def findvideos(item):
             mostrar_server = servertools.is_server_enabled(servername)
         if mostrar_server:
             option = "Ver"
-            if re.search(r'return [\'"]{2,}', embed):
+            if re.search(r'return ([\'"]{2,}|\})', embed):
                 option = "Descargar"
             calidad = unicode(calidad, "utf8").upper().encode("utf8")
             servername_c = unicode(servername, "utf8").capitalize().encode("utf8")
@@ -781,6 +796,7 @@ def jhexdecode(t):
         if v == "": r = r.replace('var_0[%s]' % i, '""')
 
     r = re.sub(r':(function.*?\})', r":'\g<1>'", r)
+    r = re.sub(r':(var[^,]+),', r":'\g<1>',", r)
 
     return r
 

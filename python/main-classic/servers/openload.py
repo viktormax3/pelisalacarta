@@ -13,7 +13,7 @@ from core import logger
 from core import scrapertools
 
 
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0'}
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:51.0) Gecko/20100101 Firefox/51.0'}
 
 
 def test_video_exists(page_url):
@@ -24,9 +24,10 @@ def test_video_exists(page_url):
         page_url, referer = page_url.split("|", 1)
         header = {'Referer': referer}
     data = httptools.downloadpage(page_url, headers=header, cookies=False).data
-
     if 'We’re Sorry!' in data:
-        return False, "[Openload] El archivo no existe o ha sido borrado" 
+        data = httptools.downloadpage(page_url.replace("/embed/", "/f/"), headers=header, cookies=False).data
+        if 'We’re Sorry!' in data:
+            return False, "[Openload] El archivo no existe o ha sido borrado" 
 
     return True, ""
 
@@ -56,27 +57,28 @@ def get_video_url(page_url, premium=False, user="", password="", video_password=
             text_decode += aadecode(t)
 
         var_r = scrapertools.find_single_match(text_decode, "window.r\s*=\s*['\"]([^'\"]+)['\"]")
-        var_encodes = scrapertools.find_multiple_matches(data, 'id="' + var_r + '[^"]*">([^<]+)<')
+        var_encodes = scrapertools.find_multiple_matches(data, 'id="%s[^"]*">([^<]+)<' % var_r)
 
         videourl = ""
         for encode in var_encodes:
-            text_decode = {}
+            text_decode = []
             try:
-                v1 = int(encode[0:2])
-                index = 2
-                while index < len(encode):
-                    key = int(encode[index+3:index+3+2])
-                    text_decode[key] = chr(int(encode[index:index+3]) - v1)
-                    index += 5
+                idx1 = max(2, ord(encode[0]) - 50)
+                idx2 = min(idx1, len(encode) - 18)
+                idx3 = encode[idx2:idx2+20]
+                decode1 = []
+                for i in range(0, len(idx3), 2):
+                    decode1.append(int(idx3[i:i+2], 16))
+                idx4 = encode[0:idx2] + encode[idx2+20:]
+                for i in range(0, len(idx4), 2):
+                    value = int(idx4[i:i+2], 16) ^ 137 ^ decode1[(i/2) % 10]
+                    text_decode.append(chr(value))
+
+                text_decode = "".join(text_decode)
             except:
                 continue
 
-            sorted(text_decode, key=lambda key: text_decode[key])
-            suffix = ""
-            for key, value in text_decode.items():
-                suffix += value
-
-            videourl = "https://openload.co/stream/%s?mime=true" % suffix
+            videourl = "https://openload.co/stream/%s?mime=true" % text_decode
             resp_headers = httptools.downloadpage(videourl, follow_redirects=False, only_headers=True)
             videourl = resp_headers.headers["location"].replace("https", "http").replace("?mime=true", "")
             extension = resp_headers.headers["content-type"]
@@ -100,7 +102,7 @@ def get_video_url(page_url, premium=False, user="", password="", video_password=
             pass
 
     if config.get_platform() != "plex":
-        video_urls.append([extension + " [Openload] ", videourl + header_down + extension, 0, subtitle])
+        video_urls.append([extension + " [Openload] ", videourl + header_down, 0, subtitle])
     else:
         video_urls.append([extension + " [Openload] ", videourl, 0, subtitle])
 
@@ -122,7 +124,6 @@ def find_videos(text):
     logger.info("#" + patronvideos + "#")
 
     matches = re.compile(patronvideos, re.DOTALL).findall(text)
-
     for media_id in matches:
         titulo = "[Openload]"
         url = 'https://openload.co/embed/%s/%s' % (media_id, referer)

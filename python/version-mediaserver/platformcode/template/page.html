@@ -4,7 +4,22 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" href="/media/favicon.ico" />
+
+        <!-- Web as app support -->
+        <link rel="manifest" href="/media/manifest.json">
+        <meta name="mobile-web-app-capable" content="yes">
+
+        <!-- Navigation bar color -->
+        <!-- Chrome, Firefox OS and Opera -->
+        <meta name="theme-color" content="#01455c">
+        <!-- Windows Phone -->
+        <meta name="msapplication-navbutton-color" content="#01455c">
+        <!-- iOS Safari -->
+        <meta name="apple-mobile-web-app-status-bar-style" content="#01455c">
+
         <title>pelisalacarta</title>
+
         <link rel="stylesheet" href="/media/css/pelisalacarta.css" />
         <script type="text/javascript" src="/media/js/main.js"></script>
         <script type="text/javascript" src="/media/js/vars.js"></script>
@@ -148,7 +163,7 @@
                 <a class="settings" href="javascript:void(0)" onclick="dialog.settings()"></a>
             </div>
             <div class="content" id="content">
-                <div class="panel_info">
+                <div class="panel_info" id="panel_info">
                     <div class="media_info" id="media_info">
                         <img id="media_poster" src="" />
                         <h3 id="media_title"></h3>

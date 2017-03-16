@@ -2,43 +2,42 @@
 <window>
   <defaultcontrol>100</defaultcontrol>
   <allowoverlays>false</allowoverlays>
+  <backgroundcolor>ff00779e</backgroundcolor>
   <controls>
 
     <!-- ---------------------------- -->
-    <!-- main                         -->
+    <!-- background                   -->
     <!-- ---------------------------- -->
 
-    <!-- background -->
-    <control type="image">
-      <posx>0</posx><posy>0</posy>
-      <width>1280</width><height>720</height>
-      <fadetime>500</fadetime>
-      <texture>main-background.jpg</texture>
-    </control>
-    
     <!-- header -->
     <control type="image">
       <posx>0</posx><posy>0</posy>
-      <width>1280</width><height>78</height>
-      <fadetime>500</fadetime>
-      <texture>main-header.jpg</texture>
+      <width>1920</width><height>117</height>
+      <texture>header.png</texture>
     </control>
     
-    <!-- logo image -->
+    <!-- logo -->
     <control type="image">
-      <posx>10</posx><posy>11</posy>
-      <width>82</width><height>56</height>
-      <texture>main-logo.png</texture>
+      <posx>15</posx><posy>17</posy>
+      <width>112</width><height>83</height>
+      <texture>logo.png</texture>
     </control>
 
-    <!-- app name -->
+    <!-- title -->
     <control type="label" id="300">
-      <posx>117</posx><posy>20</posy>
-      <width>600</width><height>34</height>
+      <posx>175</posx><posy>30</posy>
+      <width>1701</width><height>52</height>
       <font>font14</font>
       <textcolor>FFCCCCCC</textcolor>
       <align>left</align>
-      <label></label>
+      <label>pelisalacarta</label>
+    </control>
+
+    <!-- loader -->    
+    <control type="image" id="400">
+      <posx>1830</posx><posy>26</posy>
+      <width>64</width><height>64</height>
+      <texture>loader.gif</texture>
     </control>
 
     <!-- ---------------------------- -->
@@ -47,24 +46,24 @@
 
     <!-- background -->
     <control type="image">
-      <posx>20</posx><posy>98</posy>
-      <width>312</width><height>602</height>
+      <posx>4</posx><posy>121</posy>
+      <width>535</width><height>959</height>
       <fadetime>500</fadetime>
-      <texture>info-background.jpg</texture>
+      <texture>info.png</texture>
     </control>
-         
+
     <!-- poster -->
     <control type="image" id="301">
-      <posx>30</posx><posy>108</posy>
-      <width>292</width><height>424</height>
+      <posx>46</posx><posy>162</posy>
+      <width>438</width><height>636</height>
       <fadetime>500</fadetime>
       <scale>keep</scale>
     </control>
 
     <!-- title -->
     <control type="textbox" id="302">
-      <posx>30</posx><posy>540</posy>
-      <width>295</width><height>30</height>
+      <posx>45</posx><posy>810</posy>
+      <width>442</width><height>92</height>
       <font>font14</font>
       <textcolor>FFDDDDDD</textcolor>
       <aligny>bottom</aligny>
@@ -74,8 +73,8 @@
 
     <!-- plot -->
     <control type="textbox" id="303">
-      <posx>30</posx><posy>571</posy>
-      <width>292</width><height>123</height>
+      <posx>45</posx><posy>896</posy>
+      <width>438</width><height>144</height>
       <font>font12</font>
       <textcolor>FF91E4FF</textcolor>
       <aligny>top</aligny>
@@ -88,83 +87,86 @@
     <!-- list                         -->
     <!-- ---------------------------- -->
 
-    <control type="list" id="100">
-      <posx>385</posx><posy>78</posy>
-      <width>895</width><height>648</height>
+    <control type="panel" id="100">
+      <posx>587</posx><posy>127</posy>
+      <width>1322</width><height>945</height>
       <orientation>vertical</orientation>
       <focusposition>1</focusposition>
       <pagecontrol>200</pagecontrol>
       <onleft>200</onleft>
       <onright>200</onright>
-
+      
       <animation effect="fade" time="200" start="0">WindowOpen</animation>
       <animation effect="fade" time="200">WindowClose</animation>
       
       <!-- item -->
-      <itemlayout width="895" height="87">
+      <itemlayout width="1322" height="136">
 
         <control type="image">
-          <posx>20</posx><posy>20</posy>
-          <width>855</width><height>81</height>
-          <texture>menu-nofocus.png</texture>
+          <posx>0</posx><posy>0</posy>
+          <width>1322</width><height>161</height>
+          <texture>item.png</texture>
         </control>
 
         <control type="image">
           <posx>20</posx><posy>20</posy>
-          <width>130</width><height>81</height>
+          <width>194</width><height>121</height>
           <info>ListItem.Icon</info>
-          <aspectratio>scale</aspectratio>
+          <aspectratio align="left" aligny="center">scale</aspectratio>
         </control>
 
         <control type="label">
-          <posx>160</posx><posy>45</posy>
-          <width>680</width><height>34</height>
-          <font>font14</font>
+          <posx>229</posx><posy>20</posy>
+          <width>1052</width><height>121</height>
+          <font>font8</font>
           <textcolor>FFFFFFFF</textcolor>
           <align>left</align>
+          <aligny>center</aligny>
           <info>ListItem.Label</info>
         </control>
 
       </itemlayout>
 
       <!-- item con foco -->
-      <focusedlayout width="895" height="87">
+      <focusedlayout width="1322" height="136">
 
         <control type="image">
           <posx>0</posx><posy>0</posy>
-          <width>895</width><height>121</height>
-          <texture>menu-focus.png</texture>
+          <width>1322</width><height>161</height>
+          <texture>item-focus.png</texture>
         </control>
 
         <control type="image">
           <posx>20</posx><posy>20</posy>
-          <width>130</width><height>81</height>
+          <width>194</width><height>121</height>
           <info>ListItem.Icon</info>
-          <aspectratio>scale</aspectratio>
+          <aspectratio align="left" aligny="center">scale</aspectratio>
         </control>
 
         <control type="label">
-          <posx>160</posx><posy>45</posy>
-          <width>680</width><height>34</height>
-          <font>font14</font>
+          <posx>229</posx><posy>20</posy>
+          <width>1052</width><height>121</height>
+          <font>font8</font>
           <textcolor>FFFFFFFF</textcolor>
           <align>left</align>
+          <aligny>center</aligny>
           <info>ListItem.Label</info>
         </control>
 
       </focusedlayout>
+
     </control>
 
     <control type="scrollbar" id="200">
         <description>Scroll bar control</description>
-        <posx>352</posx><posy>98</posy>
-        <width>34</width><height>602</height>
+        <posx>508</posx><posy>127</posy>
+        <width>90</width><height>943</height>
         <visible>true</visible>
-        <texturesliderbackground>menu-nofocus.png</texturesliderbackground>
-        <texturesliderbar>menu-nofocus.png</texturesliderbar>
-        <texturesliderbarfocus>menu-nofocus.png</texturesliderbarfocus>
-        <textureslidernib>scrollbar-nib.png</textureslidernib>
-        <textureslidernibfocus>white.png</textureslidernibfocus>
+        <texturesliderbackground border="20">scrollbar.png</texturesliderbackground>
+        <texturesliderbar border="20">scrollbar.png</texturesliderbar>
+        <texturesliderbarfocus border="20">scrollbar.png</texturesliderbarfocus>
+        <textureslidernib border="20">scrollbar-nib.png</textureslidernib>
+        <textureslidernibfocus border="20">scrollbar-nib-focus.png</textureslidernibfocus>
         <pulseonselect></pulseonselect>
         <orientation>vertical</orientation>
         <showonepage>true</showonepage>

@@ -18,11 +18,6 @@
         <setting id="plugin_updates_available" type="number" label="Number of updates available" default="0" visible="false"/>
         <setting id="check_for_plugin_updates" type="bool" label="30001" default="true"/>
         <setting id="check_for_channel_updates" type="bool" label="30004" default="true"/>
-
-        <setting id="plugin_version_number" type="number" label="Plugin version number" default="4203" visible="false"/>
-        <setting id="plugin_version_tag" type="text" label="Plugin version tag" default="4.2.0-beta3" visible="false"/>
-        <setting id="channels_version_number" type="number" label="Channels version number" default="20170126" visible="false"/>
-        <setting id="servers_version_number" type="number" label="Channels version number" default="20170126" visible="false"/>
     </category>
 
     <!-- Login -->
@@ -124,6 +119,7 @@
         <setting label="Nombre de carpetas" type="lsep"/>
         <setting id="folder_tvshows" type="text" label="Series" default="SERIES"/>
         <setting id="folder_movies" type="text" label="Peliculas" default="CINE"/>
+        <setting id="set_content" type="bool" label="Autoconfigurar la biblioteca" default="true"/>
     </category>
 
     <category label="Otros"><!--30503 -->

@@ -90,32 +90,19 @@ def mainlist(item):
                          action="", folder=False,
                          thumbnail=get_thumbnail_path("thumb_configuracion_0.png")))
 
+    # Inicio - Canales configurables
     import channelselector
     from core import channeltools
     channel_list = channelselector.filterchannels("all")
 
     for channel in channel_list:
-        try:
-            jsonchannel = channeltools.get_channel_json(channel.channel)
-        except:
-            continue
-        if jsonchannel.get("settings"):
-            setting = jsonchannel["settings"]
-            if type(setting) == list:
-                if len([s for s in setting if "id" in s and "include_in_" not in s["id"]]):
-                    active_status = None
-                    if config.get_setting("enabled", channel.channel):
-                        active_status = config.get_setting("enabled", channel.channel)
-                    else:
-                        channel_parameters = channeltools.get_channel_parameters(channel.channel)
-                        active_status = channel_parameters['active']
+        channel_parameters = channeltools.get_channel_parameters(channel.channel)
 
-                    if active_status == "true":
-                        itemlist.append(Item(channel=CHANNELNAME,
-                                             title="   Configuración del canal '%s'" % channel.title,
-                                             action="channel_config", config=channel.channel,
-                                             folder=False,
-                                             thumbnail=channel.thumbnail))
+        if channel_parameters["has_settings"]:
+            itemlist.append(Item(channel=CHANNELNAME, title="   Configuración del canal '%s'" % channel.title,
+                                 action="channel_config", config=channel.channel, folder=False,
+                                 thumbnail=channel.thumbnail))
+    # Fin - Canales configurables
 
     itemlist.append(Item(channel=CHANNELNAME, action="", title="", folder=False,
                          thumbnail=get_thumbnail_path("thumb_configuracion_0.png")))
@@ -137,6 +124,7 @@ def get_all_versions(item):
 
     # Lee la versión local
     from core import updater
+    from core import versiontools
 
     # Descarga la lista de versiones
     from core import api
@@ -150,13 +138,13 @@ def get_all_versions(item):
 
         if entry["package"]=="plugin":
             title = "pelisalacarta "+entry["tag"]+" (Publicada "+entry["date"]+")"
-            local_version_number = updater.get_current_plugin_version()
+            local_version_number = versiontools.get_current_plugin_version()
         elif entry["package"]=="channels":
             title = "Canales (Publicada "+entry["date"]+")"
-            local_version_number = updater.get_current_channels_version()
+            local_version_number = versiontools.get_current_channels_version()
         elif entry["package"]=="servers":
             title = "Servidores (Publicada "+entry["date"]+")"
-            local_version_number = updater.get_current_servers_version()
+            local_version_number = versiontools.get_current_servers_version()
         else:
             title = entry["package"]+" (Publicada "+entry["date"]+")"
             local_version_number = None
@@ -187,15 +175,16 @@ def download_and_install_package(item):
     logger.info()
 
     from core import updater
+    from core import versiontools
 
     if item.package=="plugin":
-        if int(item.version)<updater.get_current_plugin_version():
+        if int(item.version)<versiontools.get_current_plugin_version():
             if not platformtools.dialog_yesno("Instalando versión anterior","¿Seguro que quieres instalar una versión anterior?"):
                 return
-        elif int(item.version)==updater.get_current_plugin_version():
+        elif int(item.version)==versiontools.get_current_plugin_version():
             if not platformtools.dialog_yesno("Reinstalando versión actual","¿Seguro que quieres reinstalar la misma versión que ya tienes?"):
                 return
-        elif int(item.version)>updater.get_current_plugin_version():
+        elif int(item.version)>versiontools.get_current_plugin_version():
             if not platformtools.dialog_yesno("Instalando nueva versión","¿Seguro que quieres instalar esta nueva versión?"):
                 return
     else:
@@ -204,13 +193,6 @@ def download_and_install_package(item):
 
     local_file_name = os.path.join( config.get_data_path() , item.filename)
     updater.download_and_install(item.url,local_file_name)
-
-    if item.package=="channels":
-        updater.set_current_channels_version(item.version)
-    elif item.package=="servers":
-        updater.set_current_servers_version(item.version)
-    elif item.package=="plugin":
-        updater.set_current_plugin_version(item.version)
 
     if config.is_xbmc() and config.get_system_platform() != "xbox":
         import xbmc
@@ -401,12 +383,13 @@ def submenu_tools(item):
     itemlist.append(Item(channel=CHANNELNAME, title="   Comprobar archivos *_data.json",
                          action="conf_tools", folder=True, extra="lib_check_datajson",
                          thumbnail=get_thumbnail_path("thumb_canales.png")))
-    itemlist.append(Item(channel=CHANNELNAME, title="Herramientas de biblioteca", action="",
-                         folder=False, thumbnail=get_thumbnail_path("thumb_biblioteca.png")))
-    itemlist.append(Item(channel="biblioteca", action="update_biblio", folder=False,
-                         thumbnail=get_thumbnail_path("thumb_biblioteca.png"),
-                         extra="overwrite_everything",
-                         title="   Sobreescribir toda la biblioteca (strm, nfo y json)"))
+
+    if config.get_library_support():
+        itemlist.append(Item(channel=CHANNELNAME, title="Herramientas de biblioteca", action="",
+                             folder=False, thumbnail=get_thumbnail_path("thumb_biblioteca.png")))
+        itemlist.append(Item(channel=CHANNELNAME, action="overwrite_tools", folder=False,
+                             thumbnail=get_thumbnail_path("thumb_biblioteca.png"),
+                             title="   Sobreescribir toda la biblioteca (strm, nfo y json)"))
 
     return itemlist
 
@@ -431,7 +414,8 @@ def conf_tools(item):
                              'configuracion',
                              'novedades',
                              'personal',
-                             'ayuda']
+                             'ayuda',
+                             'descargas']
 
         list_controls = []
         try:
@@ -671,7 +655,7 @@ def channel_status(item, dict_values):
                     excluded_channels = ['tengourl', 'buscador',
                                          'libreria', 'configuracion',
                                          'novedades', 'personal',
-                                         'ayuda']
+                                         'ayuda', 'descargas']
                     for channel in channel_list:
                         if channel.channel not in excluded_channels:
                             channel_parameters = channeltools.get_channel_parameters(channel.channel)
@@ -716,3 +700,42 @@ def channel_status(item, dict_values):
         logger.info("Detalle del error: %s" % traceback.format_exc())
         platformtools.dialog_notification("Error",
                                           "Se ha producido un error al guardar")
+
+
+def overwrite_tools(item):
+    import library_service
+    from core import library
+
+
+    seleccion = platformtools.dialog_yesno("Sobrescribir toda la biblioteca",
+                                           "Esto puede llevar algun tiempo.",
+                                           "¿Desea continuar?")
+    if seleccion == 1:
+        heading = 'Sobrescribiendo biblioteca....'
+        p_dialog = platformtools.dialog_progress_bg('pelisalacarta', heading)
+        p_dialog.update(0, '')
+        show_list = []
+
+        for path, folders, files in filetools.walk(library.TVSHOWS_PATH):
+            show_list.extend([filetools.join(path, f) for f in files if f == "tvshow.nfo"])
+
+        if show_list:
+            t = float(100) / len(show_list)
+
+
+        for i, tvshow_file in enumerate(show_list):
+            head_nfo, serie = library.read_nfo(tvshow_file)
+            path = filetools.dirname(tvshow_file)
+
+            if not serie.active:
+                # si la serie no esta activa descartar
+                continue
+
+            # Eliminamos la carpeta con la serie ...
+            filetools.rmdirtree(path)
+
+            # ... y la volvemos a añadir
+            library_service.update(path, p_dialog, i, t, serie, 3)
+
+
+        p_dialog.close()

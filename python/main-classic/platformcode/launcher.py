@@ -81,18 +81,19 @@ def run():
 
                 try:
                     config.set_setting("plugin_updates_available","0")
-                    version = updater.checkforupdates()
+                    new_published_version_tag , number_of_updates = updater.get_available_updates()
                     itemlist = channelselector.getmainlist()
 
-                    if version:
-                        config.set_setting("plugin_updates_available","1")
+                    config.set_setting("plugin_updates_available",str(number_of_updates))
 
-                        platformtools.dialog_ok("Versión "+version+" disponible",
+                    if new_published_version_tag!="":
+
+                        platformtools.dialog_notification(new_published_version_tag+" disponible",
                                                 "Ya puedes descargar la nueva versión del plugin\n"
                                                 "desde el listado principal")
 
                         itemlist = channelselector.getmainlist()
-                        itemlist.insert(0, Item(title="Descargar version "+version, version=version, channel="updater",
+                        itemlist.insert(0, Item(title="Descargar version "+new_published_version_tag, version=new_published_version_tag, channel="updater",
                                                 action="update", thumbnail=channelselector.get_thumb("squares","thumb_actualizar.png")))
                 except:
                     import traceback
@@ -282,7 +283,7 @@ def run():
                     # TODO revisar 'personal.py' porque no tiene función search y daría problemas
                     itemlist = channel.search(item, tecleado)
                 else:
-                    itemlist = []
+                    return
 
                 platformtools.render_items(itemlist, item)
 
@@ -519,7 +520,7 @@ def play_from_library(item):
     import xbmc
     # Intentamos reproducir una imagen (esto no hace nada y ademas no da error)
     xbmcplugin.setResolvedUrl(int(sys.argv[1]), True,
-                              xbmcgui.ListItem(path=os.path.join(config.get_runtime_path(), "icon.png")))
+                              xbmcgui.ListItem(path=os.path.join(config.get_runtime_path(), "resources", "subtitle.mp4")))
 
     # Por si acaso la imagen hiciera (en futuras versiones) le damos a stop para detener la reproduccion
     xbmc.Player().stop()

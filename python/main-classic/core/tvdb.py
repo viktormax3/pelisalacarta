@@ -29,7 +29,6 @@
 # de pelisalacarta y también Kodi.
 # ------------------------------------------------------------
 
-import copy
 import re
 import urllib2
 
@@ -92,7 +91,7 @@ otvdb_global = None
 
 def find_and_set_infoLabels(item):
     logger.info()
-    logger.info("item es %s" % item)
+    # logger.info("item es %s" % item)
 
     if not item.contentSeason:
         from platformcode import platformtools
@@ -114,12 +113,12 @@ def find_and_set_infoLabels(item):
         else:
             otvdb_global = Tvdb(imdb_id=item.infoLabels.get("imdb_id"))
 
-    elif not otvdb_global or otvdb_global.result.get("id") != item.infoLabels['tvdb_id']:
+    elif not otvdb_global or otvdb_global.get_id() != item.infoLabels['tvdb_id']:
         otvdb_global = Tvdb(tvdb_id=item.infoLabels['tvdb_id'])  # , tipo=tipo_busqueda, idioma_busqueda="es")
 
     if not item.contentSeason:
         p_dialog.update(50, "Buscando información de la serie", "Obteniendo resultados...")
-    results = otvdb_global.get_list_results()
+    results, info_load = otvdb_global.get_list_results()
     logger.debug("results es %s" % results)
 
     if not item.contentSeason:
@@ -142,6 +141,14 @@ def find_and_set_infoLabels(item):
 
     if tvdb_result:
         infoLabels['tvdb_id'] = tvdb_result['id']
+        infoLabels['url_scraper'] = ["http://thetvdb.com/index.php?tab=series&id=%s" % infoLabels['tvdb_id']]
+        if not info_load:
+            if otvdb_global.get_id() != infoLabels['tvdb_id']:
+                otvdb_global = Tvdb(tvdb_id=infoLabels['tvdb_id'])
+            otvdb_global.get_images(infoLabels['tvdb_id'], image="poster")
+            otvdb_global.get_images(infoLabels['tvdb_id'], image="fanart")
+            otvdb_global.get_tvshow_cast(infoLabels['tvdb_id'])
+
         item.infoLabels = infoLabels
         set_infoLabels_item(item)
 
@@ -204,30 +211,37 @@ def set_infoLabels_item(item):
             if otvdb_global.lang:
                 lang = otvdb_global.lang
 
-            # page = 1
-            # _id = None
-            # while not _id:
-            #     if not list_episode:
-            #         list_episode = otvdb_global.get_list_episodes(otvdb_global.get_id(), page)
-            #
-            #     for e in list_episode['data']:
-            #         if e['airedSeason'] == int_season and e['airedEpisodeNumber'] == int_episode:
-            #             _id = e['id']
-            #             break
-            #
-            #     _next = list_episode['links']['next']
-            #     if type(_next) == int:
-            #         page = _next
-            #     else:
-            #         break
-            #
-            # data_episode = otvdb_global.__get_episode_by_id(_id, lang)
+            page = 1
+            _id = None
+            while not _id:
+                list_episodes = otvdb_global.list_episodes.get(page)
+                if not list_episodes:
+                    list_episodes = otvdb_global.get_list_episodes(otvdb_global.get_id(), page)
+                    import threading
+                    semaforo = threading.Semaphore(20)
+                    l_hilo = list()
 
+                    for e in list_episodes["data"]:
+                        t = threading.Thread(target=otvdb_global.get_episode_by_id, args=(e["id"], lang, semaforo))
+                        t.start()
+                        l_hilo.append(t)
 
+                    # esperar q todos los hilos terminen
+                    for x in l_hilo:
+                        x.join()
 
+                for e in list_episodes['data']:
+                    if e['airedSeason'] == int_season and e['airedEpisodeNumber'] == int_episode:
+                        _id = e['id']
+                        break
 
+                _next = list_episodes['links']['next']
+                if type(_next) == int:
+                    page = _next
+                else:
+                    break
 
-            data_episode = otvdb_global.get_info_episode(otvdb_global.get_id(), int_season, int_episode, lang)
+            data_episode = otvdb_global.get_info_episode(otvdb_global.get_id(), int_season, int_episode, lang, _id)
 
             # todo repasar valores que hay que insertar en infoLabels
             if data_episode:
@@ -253,6 +267,10 @@ def set_infoLabels_item(item):
                 l_castandrole.extend([(p, '') for p in guest_stars])
                 item.infoLabels['castandrole'] = l_castandrole
 
+                # datos para nfo
+                item.season_id = data_episode["airedSeasonID"]
+                item.episode_id = data_episode["id"]
+
                 return len(item.infoLabels)
 
         else:
@@ -261,31 +279,29 @@ def set_infoLabels_item(item):
             item.infoLabels['mediatype'] = 'season'
             data_season = otvdb_global.get_images(otvdb_global.get_id(), "season", int_season)
 
-            if data_season and 'image_season' in data_season:
-                item.thumbnail = HOST_IMAGE + data_season['image_season'][0]['fileName']
-
+            if data_season and 'image_season_%s' % int_season in data_season:
+                item.thumbnail = HOST_IMAGE + data_season['image_season_%s' % int_season][0]['fileName']
                 return len(item.infoLabels)
 
     # Buscar...
     else:
-        otvdb = copy.copy(otvdb_global)
         # Busquedas por ID...
-        if item.infoLabels['tvdb_id']:
-            otvdb = Tvdb(tvdb_id=item.infoLabels['tvdb_id'])
+        if (not otvdb_global or otvdb_global.get_id() != item.infoLabels['tvdb_id']) and item.infoLabels['tvdb_id']:
+            otvdb_global = Tvdb(tvdb_id=item.infoLabels['tvdb_id'])
 
-        elif item.infoLabels['imdb_id']:
-            otvdb = Tvdb(imdb_id=item.infoLabels['imdb_id'])
+        elif not otvdb_global and item.infoLabels['imdb_id']:
+            otvdb_global = Tvdb(imdb_id=item.infoLabels['imdb_id'])
 
-        elif item.infoLabels['zap2it_id']:
-            otvdb = Tvdb(zap2it_id=item.infoLabels['zap2it_id'])
+        elif not otvdb_global and item.infoLabels['zap2it_id']:
+            otvdb_global = Tvdb(zap2it_id=item.infoLabels['zap2it_id'])
 
         # No se ha podido buscar por ID... se hace por título
-        if otvdb is None:
-            otvdb = Tvdb(search=item.infoLabels['tvshowtitle'])
+        if otvdb_global is None:
+            otvdb_global = Tvdb(search=item.infoLabels['tvshowtitle'])
 
-        if otvdb and otvdb.get_id():
+        if otvdb_global and otvdb_global.get_id():
+            __leer_datos(otvdb_global)
             # La busqueda ha encontrado un resultado valido
-            __leer_datos(otvdb)
             return len(item.infoLabels)
 
 
@@ -298,231 +314,38 @@ def get_nfo(item):
     @rtype: str
     @return:
     """
-    info_nfo = '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'
 
     if "season" in item.infoLabels and "episode" in item.infoLabels:
-        info_nfo += '<episodedetails><title>%s</title>' % item.infoLabels['title']
-        info_nfo += '<showtitle>%s</showtitle>' % item.infoLabels['tvshowtitle']
-        info_nfo += '<ratings><rating name="default" max="10" default="true"><value>%s</value><votes>%s</votes>' \
-                    '</rating></ratings>' % (item.infoLabels['rating'], item.infoLabels['votes'])
-
-        info_nfo += '<thumb>%s</thumb>' % item.thumbnail
-
-        info_nfo += array_to_node(item.infoLabels['director'], 'director')
-        info_nfo += array_to_node(item.infoLabels['writer'], 'credits')
-
-        if item.infoLabels['aired']:
-            info_nfo += '<aired>%s</aired>' % (item.infoLabels['aired'].split("/")[2] + "-" +
-                                               item.infoLabels['aired'].split("/")[1] + "-" +
-                                               item.infoLabels['aired'].split("/")[0])
-
-        info_nfo = set_nfo_casting(info_nfo, item.infoLabels['castandrole'])
-
-        info_nfo += '<plot>%s<plot>' % item.plot.replace("\n", " ").strip()
-        info_nfo += '</episodedetails>\n'
-
-        # info_nfo += "http://thetvdb.com/?tab=episode&seriesid=%s&seasonid=%s&id=%s\n" % \
-        #            (item.infoLabels['tvdb_id'], item.season_id, item.episode_id)
-
-        # ----    <title>Capítulo 1</title>
-        # ----    <showtitle>Legión</showtitle>
-        # ---    <ratings>
-        #  ---       <rating name="default" max="10" default="true">
-        #  ---           <value>9.000000</value>
-        #  ---           <votes>5</votes>
-        #  --       </rating>
-        # ---    </ratings>
-        #     <userrating>0</userrating>
-        #     <top250>0</top250>
-        #     <season>1</season>
-        #     <episode>1</episode>
-        #     <displayseason>-1</displayseason>
-        #     <displayepisode>-1</displayepisode>
-        #     <outline></outline>
-        # ----    <plot>David comienza a considerar que las voces que escucha en su cabeza pueden ser reales.</plot>
-        #     <tagline></tagline>
-        #     <runtime>45</runtime>
-        # ----    <thumb>http://thetvdb.com/banners/episodes/320724/5869915.jpg</thumb>
-        # heredado    <mpaa></mpaa>
-        #     <playcount>0</playcount>
-        #     <lastplayed></lastplayed>
-        #     <file></file>
-        # ----    <path>special://home/userdata/addon_data/plugin.video.pelisalacarta/library/SERIES/legión [tt5114356]/</path>
-        #     <filenameandpath>special://home/userdata/addon_data/plugin.video.pelisalacarta/library/SERIES/legión [tt5114356]/1x01.strm</filenameandpath>
-        #     <basepath>special://home/userdata/addon_data/plugin.video.pelisalacarta/library/SERIES/legión [tt5114356]/1x01.strm</basepath>
-        #     <id>5869915</id>
-        #     <uniqueid type="unknown" default="true">5869915</uniqueid>
-        # heredado    <genre>Action</genre>
-        # heredado    <genre>Drama</genre>
-        #     <credits>Noah Hawley</credits>
-        #     <director>Noah Hawley</director>
-        #     <premiered>2017-02-08</premiered>
-        #     <year>2017</year>
-        # heredado    <status></status>
-        #     <code></code>
-        # ---    <aired>2017-02-08</aired>
-        # heredado    <studio>FX (US)</studio>
-        #     <trailer></trailer>
-        #  ---   <actor>
-        #   ---      <name>Dan Stevens</name>
-        #   ---      <role>David Haller</role>
-        #         <order>0</order>
-        #         <thumb>http://thetvdb.com/banners/actors/411764.jpg</thumb>
-        #  ---   </actor>
-        #  ---   <actor>
-        #  ---       <name>Rachel Keller</name>
-        #  ---       <role>Syd Barrett</role>
-        #         <order>1</order>
-        #         <thumb>http://thetvdb.com/banners/actors/411763.jpg</thumb>
-        #  ---   </actor>
-        #     <resume>
-        #         <position>0.000000</position>
-        #         <total>0.000000</total>
-        #     </resume>
-        #     <dateadded>2017-02-11 00:06:37</dateadded>
-        #     <art>
-        #         <thumb>http://thetvdb.com/banners/episodes/320724/5869915.jpg</thumb>
-        #     </art>
-
+        info_nfo = "http://thetvdb.com/?tab=episode&seriesid=%s&seasonid=%s&id=%s\n" \
+                   % (item.infoLabels['tvdb_id'], item.season_id, item.episode_id)
     else:
-        info_nfo += '<tvshow><title>%s</title>' % item.infoLabels['title']
-
-        info_nfo += '<ratings><rating name="default" max="10" default="true"><value>%s</value><votes>%s</votes>' \
-                    '</rating></ratings>' % (item.infoLabels['rating'], item.infoLabels['votes'])
-
-        info_nfo += '<thumb aspect="poster">%s</thumb>' % item.thumbnail
-        info_nfo += '<fanart><thumb>%s</thumb></fanart>' % item.fanart
-        info_nfo += '<year>%s</year>' % item.infoLabels['year']
-        info_nfo += '<mpaa>%s</mpaa>' % item.infoLabels['mpaa']
-
-        info_nfo += array_to_node(item.infoLabels['genre'], 'genre')
-        info_nfo += '<premiered>%s</premiered>' % (item.infoLabels['premiered'].split("/")[2] + "-" +
-                                                   item.infoLabels['premiered'].split("/")[1] + "-" +
-                                                   item.infoLabels['premiered'].split("/")[0])
-
-        info_nfo += '<status>%s</status>' % item.infoLabels['status']
-        info_nfo += '<studio>%s</studio>' % item.infoLabels['studio']
-
-        # logger.info("el casting es %s " % item.infoLabels['tvdb_cast'])
-        # for e in item.infoLabels['tvdb_cast']:
-        #     info_nfo += '<actor><name>%s</name><role>%s</role><order>%s</order><thumb>%s</thumb></actor>' \
-        #               % (e.get("name", ""), e.get("role", ""), e.get("sortOrder", 0), HOST_IMAGE + e.get("image", ""))
-        info_nfo = set_nfo_casting(info_nfo, item.infoLabels['castandrole'])
-
-        info_nfo += '<plot>%s<plot>' % item.plot.replace("\n", " ").strip()
-        info_nfo += '</tvshow>\n'
-
-        # <title>Legión</title> ---
-        # <showtitle>Legión</showtitle>
-        # <ratings> --------
-        #     <rating name="default" max="10" default="true">---
-        #         <value>8.200000</value>---
-        #         <votes>6</votes>----
-        #     </rating>----
-        # </ratings>---
-        # <userrating>0</userrating>
-        # <top250>0</top250>
-        # <season>1</season>
-        # <episode>1</episode>
-        # <displayseason>-1</displayseason>
-        # <displayepisode>-1</displayepisode>
-        # <outline></outline>
-        # ---- <plot>Se centra en David Haller, un hombre que desde que era adolescente ha tenido que luchar contra una enfermedad mental. Diagnóstico: esquizofrenia. Durante años ha ido entrando y saliendo de diferentes hospitales psiquiátricos para tratarse, pero después de un extraño encuentro con un paciente, se tiene que enfrentar a la posibilidad de que las voces que escucha en su cabeza y las visiones que ve, podrían ser reales. Legion es hijo de Gabrielle Haller y Charles Xavier, el fundador de los X-Men y es uno de los mutantes más poderosos, pero sus diferentes poderes están divididos entre sus múltiples personalidades.</plot>
-        # <tagline></tagline>
-        # <runtime>45</runtime>
-        # <thumb aspect="banner">http://thetvdb.com/banners/graphical/320724-g3.jpg</thumb>
-        # <thumb aspect="banner">http://thetvdb.com/banners/graphical/320724-g.jpg</thumb>
-        # <thumb aspect="banner">http://thetvdb.com/banners/graphical/320724-g2.jpg</thumb>
-        # <thumb aspect="banner">http://thetvdb.com/banners/graphical/320724-g4.jpg</thumb>
-        # <thumb aspect="banner">http://thetvdb.com/banners/text/320724.jpg</thumb>
-        # <thumb aspect="poster" type="season" season="1">http://thetvdb.com/banners/seasons/320724-1.jpg</thumb>
-        # <thumb aspect="poster">http://thetvdb.com/banners/posters/320724-1.jpg</thumb>
-        # <thumb aspect="poster">http://thetvdb.com/banners/posters/320724-4.jpg</thumb>
-        # <thumb aspect="poster">http://thetvdb.com/banners/posters/320724-2.jpg</thumb>
-        # <thumb aspect="poster">http://thetvdb.com/banners/posters/320724-3.jpg</thumb>
-        # <thumb aspect="poster" type="season" season="-1">http://thetvdb.com/banners/posters/320724-1.jpg</thumb>
-        # <thumb aspect="poster" type="season" season="-1">http://thetvdb.com/banners/posters/320724-4.jpg</thumb>
-        # <thumb aspect="poster" type="season" season="-1">http://thetvdb.com/banners/posters/320724-2.jpg</thumb>
-        # <thumb aspect="poster" type="season" season="-1">http://thetvdb.com/banners/posters/320724-3.jpg</thumb>
-        # <fanart url="http://thetvdb.com/banners/">
-        #     <thumb dim="1920x1080" colors="" preview="_cache/fanart/original/320724-3.jpg">fanart/original/320724-3.jpg</thumb>
-        #     <thumb dim="1920x1080" colors="" preview="_cache/fanart/original/320724-6.jpg">fanart/original/320724-6.jpg</thumb>
-        #     <thumb dim="1280x720" colors="" preview="_cache/fanart/original/320724-2.jpg">fanart/original/320724-2.jpg</thumb>
-        #     <thumb dim="1920x1080" colors="" preview="_cache/fanart/original/320724-7.jpg">fanart/original/320724-7.jpg</thumb>
-        #     <thumb dim="1280x720" colors="" preview="_cache/fanart/original/320724-9.jpg">fanart/original/320724-9.jpg</thumb>
-        #     <thumb dim="1920x1080" colors="" preview="_cache/fanart/original/320724-1.jpg">fanart/original/320724-1.jpg</thumb>
-        #     <thumb dim="1920x1080" colors="" preview="_cache/fanart/original/320724-5.jpg">fanart/original/320724-5.jpg</thumb>
-        #     <thumb dim="1920x1080" colors="" preview="_cache/fanart/original/320724-8.jpg">fanart/original/320724-8.jpg</thumb>
-        #     <thumb dim="1920x1080" colors="" preview="_cache/fanart/original/320724-4.jpg">fanart/original/320724-4.jpg</thumb>
-        # </fanart>
-        # ----<mpaa></mpaa>
-        # <playcount>0</playcount>
-        # <lastplayed></lastplayed>
-        # <file></file>
-        # ----<path>special://home/userdata/addon_data/plugin.video.pelisalacarta/library/SERIES/legión [tt5114356]/</path>
-        # <filenameandpath></filenameandpath>
-        # <basepath>special://home/userdata/addon_data/plugin.video.pelisalacarta/library/SERIES/legión [tt5114356]/</basepath>
-        # <episodeguide>
-        #     <url cache="320724-es.xml">http://thetvdb.com/api/1D62F2F90030C444/series/320724/all/es.zip</url>
-        # </episodeguide>
-        # <id>320724</id>
-        # <uniqueid type="unknown" default="true">320724</uniqueid>
-        # ----<genre>Action</genre>
-        # ----<genre>Drama</genre>
-        # ----<genre>Fantasy</genre>
-        # -----<premiered>2017-02-08</premiered>
-        # ----<year>2017</year>
-        # ----<status></status>
-        # <code></code>
-        # <aired></aired>
-        # ----<studio>FX (US)</studio>
-        # <trailer></trailer>
-        # ---<actor>
-        # ---    <name>Dan Stevens</name>
-        #     <role>David Haller</role>
-        #     <order>0</order>
-        #     <thumb>http://thetvdb.com/banners/actors/411764.jpg</thumb>
-        # ---</actor>
-        # ---<actor>
-        # ---    <name>Rachel Keller</name>
-        # ---    <role>Syd Barrett</role>
-        #     <order>1</order>
-        #     <thumb>http://thetvdb.com/banners/actors/411763.jpg</thumb>
-        # ---</actor>
-        # <resume>
-        #     <position>0.000000</position>
-        #     <total>0.000000</total>
-        # </resume>
-        # <dateadded>2017-02-11 00:06:37</dateadded>
-        # <art>
-        #     <banner>http://thetvdb.com/banners/graphical/320724-g3.jpg</banner>
-        #     <fanart>http://thetvdb.com/banners/fanart/original/320724-3.jpg</fanart>
-        #     <poster>http://thetvdb.com/banners/posters/320724-1.jpg</poster>
-        #     <season num="-1">
-        #         <poster>http://thetvdb.com/banners/posters/320724-1.jpg</poster>
-        #     </season>
-        #     <season num="0" />
-        #     <season num="1">
-        #         <poster>http://thetvdb.com/banners/seasons/320724-1.jpg</poster>
-        #     </season>
-        # </art>
+        info_nfo = ', '.join(item.infoLabels['url_scraper']) + "\n"
 
     return info_nfo
 
 
-def array_to_node(array, node_name):
-    list_genre = array.split(", ")
-    result = ""
-    for i in list_genre:
-        result += '<%s>%s</%s>' % (node_name, i, node_name)
-    return result
+def completar_codigos(item):
+    """
+    Si es necesario comprueba si existe el identificador de tmdb y sino existe trata de buscarlo
+    @param item: tipo item
+    @type item: Item
+    """
+    if not item.infoLabels['tmdb_id']:
+        listsources = [(item.infoLabels['tvdb_id'], "tvdb_id")]
+        if item.infoLabels['imdb_id']:
+            listsources.append((item.infoLabels['imdb_id'], "imdb_id"))
 
+        from core.tmdb import Tmdb
+        ob = Tmdb()
 
-def set_nfo_casting(info_nfo, casting):
-    for index, e in enumerate(casting):
-        info_nfo += '<actor><name>%s</name><role>%s</role><order>%s</order><thumb></thumb></actor>' % \
-                    (e[0], e[1], index)
-    return info_nfo
+        for external_id, external_source in listsources:
+            ob.search_by_id(id=external_id, source=external_source, tipo='tv')
+
+            item.infoLabels['tmdb_id'] = ob.get_id()
+            if item.infoLabels['tmdb_id']:
+                url_scraper = "https://www.themoviedb.org/tv/%s" % item.infoLabels['tmdb_id']
+                item.infoLabels['url_scraper'].append(url_scraper)
+                break
 
 
 class Tvdb:
@@ -535,6 +358,8 @@ class Tvdb:
         self.lang = ""
         self.search_name = kwargs['search'] = \
             re.sub('\[\\\?(B|I|COLOR)\s?[^\]]*\]', '', kwargs.get('search', ''))
+        self.list_episodes = {}
+        self.episodes = {}
 
         if kwargs.get('tvdb_id', ''):
             # Busqueda por identificador tvdb
@@ -597,9 +422,8 @@ class Tvdb:
             response.close()
 
         except Exception, ex:
-            template = "An exception of type {0} occured. Arguments:\n{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            logger.error("error en: {0}".format(message))
+            message = "An exception of type %s occured. Arguments:\n%s" % (type(ex).__name__, repr(ex.args))
+            logger.error("error en: %s" % message)
 
         else:
             dict_html = jsontools.load_json(html)
@@ -633,13 +457,12 @@ class Tvdb:
                 raise
 
         except Exception, ex:
-            template = "An exception of type {0} occured. Arguments:\n{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            logger.error("error en: {0}".format(message))
+            message = "An exception of type %s occured. Arguments:\n%s" % (type(ex).__name__, repr(ex.args))
+            logger.error("error en: %s" % message)
 
         else:
             dict_html = jsontools.load_json(html)
-            # logger.error("tokencito {}".format(dict_html))
+            # logger.error("tokencito %s" % dict_html)
             if "token" in dict_html:
                 token = dict_html["token"]
                 DEFAULT_HEADERS["Authorization"] = "Bearer " + token
@@ -648,8 +471,7 @@ class Tvdb:
 
         return is_success
 
-    @classmethod
-    def get_info_episode(cls, _id, season=1, episode=1, lang=DEFAULT_LANG):
+    def get_info_episode(self, _id, season=1, episode=1, lang=DEFAULT_LANG, id_episode=None):
         """
         Devuelve los datos de un episodio.
         @param _id: identificador de la serie
@@ -660,6 +482,8 @@ class Tvdb:
         @type episode: int
         @param lang: codigo de idioma para buscar
         @type lang: str
+        @param id_episode: codigo del episodio.
+        @type id_episode: int
         @rtype: dict
         @return:
         "data": {
@@ -712,13 +536,16 @@ class Tvdb:
         }
         """
         logger.info()
+        if id_episode and self.episodes.get(id_episode):
+            return self.episodes.get(id_episode)
+
         params = {"airedSeason": "%s" % season, "airedEpisode": "%s" % episode}
 
         try:
             import urllib
             params = urllib.urlencode(params)
 
-            url = HOST + "/series/{id}/episodes/query?{params}".format(id=_id, params=params)
+            url = HOST + "/series/%s/episodes/query?%s" % (_id, params)
             DEFAULT_HEADERS["Accept-Language"] = lang
             logger.debug("url: %s, \nheaders: %s" % (url, DEFAULT_HEADERS))
 
@@ -728,18 +555,17 @@ class Tvdb:
             response.close()
 
         except Exception, ex:
-            template = "An exception of type {0} occured. Arguments:\n{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            logger.error("error en: {0}".format(message))
+            message = "An exception of type %s occured. Arguments:\n%s" % (type(ex).__name__, repr(ex.args))
+            logger.error("error en: %s" % message)
 
         else:
             dict_html = jsontools.load_json(html)
 
             if "data" in dict_html and "id" in dict_html["data"][0]:
-                return cls.__get_episode_by_id(dict_html["data"][0]["id"], lang)
+                self.get_episode_by_id(dict_html["data"][0]["id"], lang)
+                return dict_html["data"]
 
-    @classmethod
-    def get_list_episodes(cls, _id, page=1):
+    def get_list_episodes(self, _id, page=1):
         """
         Devuelve el listado de episodios de una serie.
         @param _id: identificador de la serie
@@ -783,7 +609,7 @@ class Tvdb:
         logger.info()
 
         try:
-            url = HOST + "/series/{id}/episodes?page={params}".format(id=_id, page=page)
+            url = HOST + "/series/%s/episodes?page=%s" % (_id, page)
             logger.debug("url: %s, \nheaders: %s" % (url, DEFAULT_HEADERS))
 
             req = urllib2.Request(url, headers=DEFAULT_HEADERS)
@@ -792,24 +618,24 @@ class Tvdb:
             response.close()
 
         except Exception, ex:
-            template = "An exception of type {0} occured. Arguments:\n{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            logger.error("error en: {0}".format(message))
+            message = "An exception of type %s occured. Arguments:\n%s" % (type(ex).__name__, repr(ex.args))
+            logger.error("error en: %s" % message)
 
         else:
-            dict_html = jsontools.load_json(html)
+            self.list_episodes[page] = jsontools.load_json(html)
 
-            logger.info("dict_html %s" % dict_html)
+            # logger.info("dict_html %s" % self.list_episodes)
 
-            return dict_html
+            return self.list_episodes[page]
 
-    @staticmethod
-    def __get_episode_by_id(_id, lang=DEFAULT_LANG):
+    def get_episode_by_id(self, _id, lang=DEFAULT_LANG, semaforo=None):
         """
         Obtiene los datos de un episodio
         @param _id: identificador del episodio
         @type _id: str
         @param lang: código de idioma
+        @param semaforo: semaforo para multihilos
+        @type semaforo: threading.Semaphore
         @type lang: str
         @rtype: dict
         @return:
@@ -864,10 +690,11 @@ class Tvdb:
             }
         }
         """
+        if semaforo:
+            semaforo.acquire()
         logger.info()
-        dict_html = {}
 
-        url = HOST + "/episodes/{id}".format(id=_id)
+        url = HOST + "/episodes/%s" % _id
 
         try:
             DEFAULT_HEADERS["Accept-Language"] = lang
@@ -881,16 +708,18 @@ class Tvdb:
             if type(ex) == urllib2.HTTPError:
                 logger.debug("code es %s " % ex.code)
 
-            template = "An exception of type {0} occured. Arguments:\n{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            logger.error("error en: {0}".format(message))
+            message = "An exception of type %s occured. Arguments:\n%s" % (type(ex).__name__, repr(ex.args))
+            logger.error("error en: %s" % message)
 
         else:
             dict_html = jsontools.load_json(html)
             dict_html = dict_html.pop("data")
 
             logger.info("dict_html %s" % dict_html)
-        return dict_html
+            self.episodes[_id] = dict_html
+
+        if semaforo:
+            semaforo.release()
 
     def __search(self, name, imdb_id, zap2it_id, lang=DEFAULT_LANG):
         """
@@ -933,7 +762,7 @@ class Tvdb:
             params = urllib.urlencode(params)
 
             DEFAULT_HEADERS["Accept-Language"] = lang
-            url = HOST + "/search/series?{params}".format(params=params)
+            url = HOST + "/search/series?%s" % params
             logger.debug("url: %s, \nheaders: %s" % (url, DEFAULT_HEADERS))
 
             req = urllib2.Request(url, headers=DEFAULT_HEADERS)
@@ -945,9 +774,8 @@ class Tvdb:
             if type(ex) == urllib2.HTTPError:
                 logger.debug("code es %s " % ex.code)
 
-            template = "An exception of type {0} occured. Arguments:\n{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            logger.error("error en: {0}".format(message))
+            message = "An exception of type %s occured. Arguments:\n%s" % (type(ex).__name__, repr(ex.args))
+            logger.error("error en: %s" % message)
 
         else:
             dict_html = jsontools.load_json(html)
@@ -965,11 +793,11 @@ class Tvdb:
                 else:
                     index = 0
 
-                logger.debug("resultado {}".format(resultado))
+                logger.debug("resultado %s" % resultado)
                 self.list_results = resultado
                 self.result = resultado[index]
 
-    def __get_by_id(self, _id, lang=DEFAULT_LANG):
+    def __get_by_id(self, _id, lang=DEFAULT_LANG, from_get_list=False):
         """
         Obtiene los datos de una serie por identificador.
         @param _id: código de la serie
@@ -1020,7 +848,7 @@ class Tvdb:
         logger.info()
         resultado = {}
 
-        url = HOST + "/series/{id}".format(id=_id)
+        url = HOST + "/series/%s" % _id
 
         try:
             DEFAULT_HEADERS["Accept-Language"] = lang
@@ -1035,9 +863,8 @@ class Tvdb:
             if type(ex) == urllib2.HTTPError:
                 logger.debug("code es %s " % ex.code)
 
-            template = "An exception of type {0} occured. Arguments:\n{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            logger.error("error en: {0}".format(message))
+            message = "An exception of type %s occured. Arguments:\n%s" % (type(ex).__name__, repr(ex.args))
+            logger.error("error en: %s" % message)
 
         else:
             dict_html = jsontools.load_json(html)
@@ -1046,26 +873,24 @@ class Tvdb:
                 return {}
             else:
                 resultado1 = dict_html["data"]
+                if not resultado1 and from_get_list:
+                    return self.__get_by_id(_id, "en")
 
-                logger.debug("resultado1 {}".format(dict_html))
-
-                resultado2 = self.get_images(_id, image="poster")
-                resultado3 = self.get_images(_id, image="fanart")
-                resultado4 = self.__get_tvshow_cast(_id, lang)
+                logger.debug("resultado %s" % dict_html)
+                resultado2 = {"image_poster": [{'keyType': 'poster', 'fileName': 'posters/%s-1.jpg' % _id}]}
+                resultado3 = {"image_fanart": [{'keyType': 'fanart', 'fileName': 'fanart/original/%s-1.jpg' % _id}]}
 
                 resultado = resultado1.copy()
                 resultado.update(resultado2)
                 resultado.update(resultado3)
-                resultado.update(resultado4)
 
-                logger.debug("resultado {}".format(resultado))
+                logger.debug("resultado total %s" % resultado)
                 self.list_results = [resultado]
                 self.result = resultado
 
         return resultado
 
-    @staticmethod
-    def get_images(_id, image="poster", season=1, lang="en"):
+    def get_images(self, _id, image="poster", season=1, lang="en"):
         """
         Obtiene un tipo de imagen para una serie para un idioma.
         @param _id: identificador de la serie
@@ -1081,6 +906,9 @@ class Tvdb:
         """
         logger.info()
 
+        if self.result.get('image_season_%s' % season):
+            return self.result['image_season_%s' % season]
+
         params = {}
         if image == "poster":
             params["keyType"] = "poster"
@@ -1090,13 +918,14 @@ class Tvdb:
         elif image == "season":
             params["keyType"] = "season"
             params["subKey"] = "%s" % season
+            image += "_%s" % season
 
         try:
 
             import urllib
             params = urllib.urlencode(params)
             DEFAULT_HEADERS["Accept-Language"] = lang
-            url = HOST + "/series/{id}/images/query?{params}".format(id=_id, params=params)
+            url = HOST + "/series/%s/images/query?%s" % (_id, params)
             logger.debug("url: %s, \nheaders: %s" % (url, DEFAULT_HEADERS))
 
             req = urllib2.Request(url, headers=DEFAULT_HEADERS)
@@ -1105,9 +934,8 @@ class Tvdb:
             response.close()
 
         except Exception, ex:
-            template = "An exception of type {0} occured. Arguments:\n{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            logger.error("error en: {0}".format(message))
+            message = "An exception of type %s occured. Arguments:\n%s" % (type(ex).__name__, repr(ex.args))
+            logger.error("error en: %s" % message)
 
             return {}
 
@@ -1115,11 +943,11 @@ class Tvdb:
             dict_html = jsontools.load_json(html)
 
             dict_html["image_" + image] = dict_html.pop("data")
+            self.result.update(dict_html)
 
             return dict_html
 
-    @staticmethod
-    def __get_tvshow_cast(_id, lang=DEFAULT_LANG):
+    def get_tvshow_cast(self, _id, lang=DEFAULT_LANG):
         """
         obtiene el casting de una serie
         @param _id: codigo de la serie
@@ -1131,7 +959,7 @@ class Tvdb:
         """
         logger.info()
 
-        url = HOST + "/series/{id}/actors".format(id=_id)
+        url = HOST + "/series/%s/actors" % _id
         DEFAULT_HEADERS["Accept-Language"] = lang
         logger.debug("url: %s, \nheaders: %s" % (url, DEFAULT_HEADERS))
 
@@ -1143,7 +971,7 @@ class Tvdb:
         dict_html = jsontools.load_json(html)
 
         dict_html["cast"] = dict_html.pop("data")
-        return dict_html
+        self.result.update(dict_html)
 
     def get_id(self):
         """
@@ -1166,18 +994,31 @@ class Tvdb:
         # si tenemos un resultado y tiene seriesName, ya tenemos la info de la serie, no hace falta volver a buscar
         if len(self.list_results) == 1 and "seriesName" in self.result:
             list_results.append(self.result)
+            info_load = True
         else:
-            for e in self.list_results:
-                # logger.info("e es: %s" % e)
-                # logger.info("id es: %s" % e['id'])
-                dict_html = self.__get_by_id(e['id'])
-                # todo revisar si hace falta
-                if not dict_html:
-                    dict_html = self.__get_by_id(e['id'], "en")
-                # todo mirar de ordenar por el año
-                list_results.append(dict_html)
+            import threading
+            semaforo = threading.Semaphore(20)
+            l_hilo = list()
+            r_list = list()
 
-        return list_results
+            def sub_thread(_id, i):
+                semaforo.acquire()
+                ret = self.__get_by_id(_id, DEFAULT_LANG, True)
+                semaforo.release()
+                r_list.append((ret, i))
+
+            for index, e in enumerate(self.list_results):
+                t = threading.Thread(target=sub_thread, args=(e["id"], index))
+                t.start()
+                l_hilo.append(t)
+
+            for x in l_hilo:
+                x.join()
+
+            r_list.sort(key=lambda i: i[1])
+            list_results = [ii[0] for ii in r_list]
+            info_load = False
+        return list_results, info_load
 
     def get_infoLabels(self, infoLabels=None, origen=None):
         """
@@ -1203,7 +1044,7 @@ class Tvdb:
         # Iniciar listados
         l_castandrole = ret_infoLabels.get('castandrole', [])
 
-        # logger.debug("self.result {}".format(self.result))
+        # logger.debug("self.result %s" % self.result)
 
         if not origen:
             origen = self.result

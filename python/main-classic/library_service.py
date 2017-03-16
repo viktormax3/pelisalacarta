@@ -210,7 +210,11 @@ def update(path, p_dialog, i, t, serie, overwrite):
             itemlist = obj.episodios(serie)
 
             try:
-                insertados, sobreescritos, fallidos = library.save_library_episodes(path, itemlist, serie, silent=True,
+                if int(overwrite) == 3:
+                    # Sobrescribir todos los archivos (tvshow.nfo, 1x01.nfo, 1x01 [canal].json, 1x01.strm, etc...)
+                    insertados, sobreescritos, fallidos = library.save_library_tvshow(serie, itemlist)
+                else:
+                    insertados, sobreescritos, fallidos = library.save_library_episodes(path, itemlist, serie, silent=True,
                                                                                     overwrite=overwrite)
                 insertados_total += insertados
 
@@ -231,30 +235,15 @@ def update(path, p_dialog, i, t, serie, overwrite):
 
 def check_for_update(overwrite=True):
     logger.info("Actualizando series...")
-    logger.info("Overwrite? -> " + str(overwrite))
     p_dialog = None
     serie_actualizada = False
     update_when_finished = False
     library_updated = False
     hoy = datetime.date.today()
 
-    overwrite_everything = False
-
     try:
-        if overwrite == "everything":
-            overwrite = True
-            overwrite_everything = True
-
         if config.get_setting("updatelibrary", "biblioteca") != 0 or overwrite:
             config.set_setting("updatelibrary_last_check", hoy.strftime('%Y-%m-%d'), "biblioteca")
-
-            if config.get_setting("updatelibrary", "biblioteca") == 1 and not overwrite:
-                # "Actualizar al inicio" y No venimos del canal configuracion
-                updatelibrary_wait = [0, 10000, 20000, 30000, 60000]
-                wait = updatelibrary_wait[int(config.get_setting("updatelibrary_wait", "biblioteca"))]
-                if wait > 0:
-                    import xbmc
-                    xbmc.sleep(wait)
 
             heading = 'Actualizando biblioteca....'
             p_dialog = platformtools.dialog_progress_bg('pelisalacarta', heading)
@@ -280,7 +269,7 @@ def check_for_update(overwrite=True):
                     # si la serie no esta activa descartar
                     continue
 
-                # obtenemos las fecha de auctualizacion y de la proxima programada para esta serie
+                # obtenemos las fecha de actualizacion y de la proxima programada para esta serie
                 update_next = serie.update_next
                 if update_next:
                     y, m, d = update_next.split('-')
@@ -298,8 +287,6 @@ def check_for_update(overwrite=True):
                 # si la serie esta activa ...
                 if overwrite or config.get_setting("updatetvshows_interval", "biblioteca") == 0:
                     # ... forzar actualizacion independientemente del intervalo
-                    if overwrite_everything:
-                        overwrite = "everything"
                     serie_actualizada = update(path, p_dialog, i, t, serie, overwrite)
 
                 elif interval == 1 and update_next <= hoy:
@@ -335,23 +322,16 @@ def check_for_update(overwrite=True):
 
                 if serie_actualizada:
                     if config.get_setting("search_new_content", "biblioteca") == 0:
-                        # Actualizamos la biblioteca de Kodi
+                        # Actualizamos la biblioteca de Kodi: Buscar contenido en la carpeta de la serie
                         xbmc_library.update(folder=filetools.basename(path))
                         library_updated = True
                     else:
                         update_when_finished = True
 
-            if config.get_setting("search_new_content", "biblioteca") == 1:
-                if update_when_finished:
-                    # Actualizamos la biblioteca de Kodi
-                    import xbmc
-                    xbmc.executebuiltin('UpdateLibrary(video)')
+            if config.get_setting("search_new_content", "biblioteca") == 1 and update_when_finished:
+                    # Actualizamos la biblioteca de Kodi: Buscar contenido en todas las series
+                    xbmc_library.update()
                     library_updated = True
-
-            if config.get_setting("clean_after_update", "biblioteca") is True:
-                if library_updated:
-                    import xbmc
-                    xbmc.executebuiltin('CleanLibrary(video)')
 
             p_dialog.close()
 
@@ -370,6 +350,13 @@ def check_for_update(overwrite=True):
 
 if __name__ == "__main__":
     # Se ejecuta en cada inicio
+    import xbmc
+    updatelibrary_wait = [0, 10000, 20000, 30000, 60000]
+    wait = updatelibrary_wait[int(config.get_setting("updatelibrary_wait", "biblioteca"))]
+    if wait > 0:
+        xbmc.sleep(wait)
+
+    # Comprobar version de la bilbioteca y actualizar si es necesario
     if config.get_setting("library_version") != 'v4':
         platformtools.dialog_ok(config.PLUGIN_NAME.capitalize(), "Se va a actualizar la biblioteca al nuevo formato",
                                 "Seleccione el nombre correcto de cada serie o película, si no está seguro pulse 'Cancelar'.")
@@ -385,8 +372,8 @@ if __name__ == "__main__":
         if not config.get_setting("updatelibrary", "biblioteca") == 2:
             check_for_update(overwrite=False)
 
+
     # Se ejecuta ciclicamente
-    import xbmc
     if config.get_platform(True)['num_version'] >= 14:
         monitor = xbmc.Monitor()  # For Kodi >= 14
     else:
