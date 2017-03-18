@@ -125,9 +125,14 @@ class MenuWindow(xbmcgui.WindowXML):
         plugintools.log("MenuWindow.onAction action.id="+repr(action.getId())+" action.buttonCode="+repr(action.getButtonCode()))
 
         pos = self.control_list.getSelectedPosition()
-        item = self.itemlist[pos]
-        
-        self.setContentDetailsFields(item)
+
+        try:
+            item = self.itemlist[pos]
+            self.setContentDetailsFields(item)
+        except:
+            import traceback
+            plugintools.log(traceback.format_exc())
+            self.close()
 
         if action == ACTION_PARENT_DIR or action==ACTION_PREVIOUS_MENU or action==ACTION_PREVIOUS_MENU2:
             self.close()
@@ -146,14 +151,17 @@ class MenuWindow(xbmcgui.WindowXML):
             #next_items = navigation.get_next_items( item )
             self.loader.setVisible(False)
 
-            # Si no hay nada, no muestra la pantalla vacía
-            #if len(next_items)>0:
-            next_window = navigation.get_window_for_item( item )
-            #next_window.setItemlist(next_items)
-            next_window.setParentItem(item)
+            if item.action=="play":
+                navigation.play_item(item)
+            else:
+                # Si no hay nada, no muestra la pantalla vacía
+                #if len(next_items)>0:
+                next_window = navigation.get_window_for_item( item )
+                #next_window.setItemlist(next_items)
+                next_window.setParentItem(item)
 
-            next_window.doModal()
-            del next_window
+                next_window.doModal()
+                del next_window
 
     def on_playback_stopped( self ):
         plugintools.log("DetailWindow.on_playback_stopped currentTime="+str(self.custom_player.get_current_time())+", totalTime="+str(self.custom_player.get_total_time()))
