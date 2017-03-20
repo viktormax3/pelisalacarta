@@ -244,7 +244,7 @@ def resolve_video_urls_for_playing(server,url,video_password="",muestra_dialogo=
                 if muestra_dialogo:
                   progreso.update((100 / len(opciones)) * opciones.index(premium)  , "Conectando con "+premium)
                 if premium == server: #Cuenta Premium propia
-                    video_urls.extend(server_conector.get_video_url( page_url=url , premium=True , user=config.get_setting(premium+"user") , password=config.get_setting(premium+"password"), video_password=video_password ))
+                    video_urls.extend(server_connector.get_video_url( page_url=url , premium=True , user=config.get_setting(premium+"user") , password=config.get_setting(premium+"password"), video_password=video_password ))
                 elif premium == "realdebrid":
                     exec "from servers.debriders import "+premium+" as premium_conector"
                     debrid_urls = premium_conector.get_video_url( page_url=url , premium=True , video_password=video_password )
@@ -317,7 +317,10 @@ def is_server_enabled(server):
 def get_server_parameters(server):
     server=scrapertools.find_single_match(server,'([^\.]+)')
     try:
-      JSONFile =  xml2dict(os.path.join(config.get_runtime_path(),"servers", server + ".xml"))["server"]
+      if os.path.isfile(os.path.join(config.get_runtime_path(),"servers", server + ".xml")):  
+        JSONFile =  xml2dict(os.path.join(config.get_runtime_path(),"servers", server + ".xml"))["server"]
+      elif os.path.isfile(os.path.join(config.get_runtime_path(),"servers", "debriders", server + ".xml")):  
+        JSONFile =  xml2dict(os.path.join(config.get_runtime_path(),"servers", "debriders", server + ".xml"))["server"]
       if type(JSONFile["premium"]) == dict: JSONFile["premium"]=JSONFile["premium"]["value"]
       if JSONFile["premium"] == "": JSONFile["premium"]=[]
       if type(JSONFile["premium"]) == str and not JSONFile["premium"] == "": JSONFile["premium"]=[JSONFile["premium"]]
