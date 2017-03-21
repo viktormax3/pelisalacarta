@@ -194,7 +194,7 @@ dialog.config = function (id, data, Secciones, Lista) {
 			el.getElementById("custom_button").style.display = "none" 
 		}
 		else {
-			el.getElementById("custom_button").style.visibility = "inline";
+			el.getElementById("custom_button").style.display = "inline";
 			el.getElementById("custom_button").innerHTML = data.custom_button.label;
 			el.getElementById("custom_button").onclick = function () {
 				custom_button(data.custom_button);
