@@ -62,7 +62,6 @@ var nav_history = {
     "newResponse": function (data, category) {
         if (!this.confirmed) {
 			if (this.states[this.current].focus >= 0) {
-				console.log(this.states[this.current].focus)
                 document.getElementById("itemlist").children[this.states[this.current].focus].children[0].focus();
                 document.getElementById("itemlist").scrollTop = this.states[this.current].scroll;
             }
