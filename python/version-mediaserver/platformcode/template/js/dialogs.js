@@ -189,9 +189,8 @@ dialog.config = function (id, data, Secciones, Lista) {
     el.RequestID = id;
     el.getElementById("controls_container").innerHTML = Lista;
     el.getElementById("window_heading").innerHTML = data.title;
-
-    if (data["custom_button"] != null) {
-		if  (!data["visible"]) {
+    if (data.custom_button != null) {
+		if  (!data.custom_button.visible) {
 			el.getElementById("custom_button").style.display = "none" 
 		}
 		else {
