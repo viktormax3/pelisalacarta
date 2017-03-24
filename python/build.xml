@@ -29,8 +29,8 @@
     <property name="version" value="4.2.0-beta3"/>
     <property name="versionboxee" value="10.28"/>
     <property name="versiondate" value="18/Marzo/2017"/>
-    <property name="channels_version" value="20170318"/>
-    <property name="servers_version" value="20170318"/>
+    <property name="channels_version" value="20170323"/>
+    <property name="servers_version" value="20170323"/>
 
     <property name="target_base_folder" value="../../target/python"/>
 
