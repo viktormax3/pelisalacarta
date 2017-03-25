@@ -283,6 +283,7 @@ class platform(Platformtools):
         text = line1
         if line2: text += "\n" + line2
         if line3: text += "\n" + line3
+        text = self.kodi_labels_to_html(text)
         JsonData = {}
         JsonData["action"]="Alert" 
         JsonData["data"]={}
@@ -300,6 +301,8 @@ class platform(Platformtools):
         text = line1
         if line2: text += "\n" + line2
         if line3: text += "\n" + line3
+        text = self.kodi_labels_to_html(text)
+        heading = self.kodi_labels_to_html(heading)
         JsonData = {}
         JsonData["action"]="AlertYesNo" 
         JsonData["data"]={}
@@ -311,12 +314,13 @@ class platform(Platformtools):
       
     def dialog_select(self, heading, list): 
         JsonData = {}
+        heading = self.kodi_labels_to_html(heading)
         JsonData["action"]="List"
         JsonData["data"]={}
         JsonData["data"]["title"]=heading
         JsonData["data"]["list"]=[]
         for Elemento in list:
-          JsonData["data"]["list"].append(Elemento)
+          JsonData["data"]["list"].append(self.kodi_labels_to_html(Elemento))
         ID = self.send_message(JsonData)
         response = self.get_data(ID)
 
@@ -327,11 +331,11 @@ class platform(Platformtools):
             def __init__(self, heading, line1, line2, line3, platformtools):
                 self.platformtools = platformtools
                 self.closed = False
-                self.heading = heading
+                self.heading  = self.kodi_labels_to_html(heading)
                 text = line1
                 if line2: text += "\n" + line2
                 if line3: text += "\n" + line3
-                
+                text = self.kodi_labels_to_html(text)
                 JsonData = {}
                 JsonData["action"]="Progress" 
                 JsonData["data"]={}
@@ -355,6 +359,7 @@ class platform(Platformtools):
                 text = line1
                 if line2: text += "\n" + line2
                 if line3: text += "\n" + line3
+                text = self.kodi_labels_to_html(text)
                 JsonData = {}
                 JsonData["action"]="ProgressUpdate" 
                 JsonData["data"]={}
@@ -379,7 +384,8 @@ class platform(Platformtools):
             def __init__(self, heading, message, platformtools):
                 self.platformtools = platformtools
                 self.closed = False
-                self.heading = heading
+                self.heading  = self.kodi_labels_to_html(heading)
+                message = self.kodi_labels_to_html(message)
                 JsonData = {}
                 JsonData["action"]="ProgressBG" 
                 JsonData["data"]={}
@@ -396,6 +402,7 @@ class platform(Platformtools):
 
             def update(self, percent=0, heading="", message=""):
                 JsonData = {}
+                message = self.kodi_labels_to_html(message)
                 JsonData["action"]="ProgressBGUpdate" 
                 JsonData["data"]={}
                 JsonData["data"]["title"]=heading
@@ -417,7 +424,7 @@ class platform(Platformtools):
         JsonData = {}
         JsonData["action"]="Keyboard" 
         JsonData["data"]={}
-        JsonData["data"]["title"]=heading
+        JsonData["data"]["title"] = self.kodi_labels_to_html(heading)
         JsonData["data"]["text"]=default
         JsonData["data"]["password"]=hidden
         ID = self.send_message(JsonData)
@@ -637,7 +644,7 @@ class platform(Platformtools):
       JsonData = {}
       JsonData["action"]="OpenConfig"   
       JsonData["data"]={}
-      JsonData["data"]["title"]=caption
+      JsonData["data"]["title"] = self.kodi_labels_to_html(caption)
       JsonData["data"]["custom_button"]=custom_button
       JsonData["data"]["items"]=[]
       
@@ -720,7 +727,7 @@ class platform(Platformtools):
     def kodi_labels_to_html(self, text):
       text = re.sub(r"(?:\[I\])(.*?)(?:\[/I\])", r"<i>\1</i>", text)
       text = re.sub(r"(?:\[B\])(.*?)(?:\[/B\])", r"<b>\1</b>", text)
-      text = re.sub(r"(?:\[COLOR (?:0x)?([0-F]{2})([0-F]{2})([0-F]{2})([0-F]{2})\])(.*?)(?:\[/COLOR\])", lambda m: "<span style='color: rgba(%s,%s,%s,%s)'>%s</span>" %(int(m.group(2),16), int(m.group(3),16), int(m.group(4),16), int(m.group(1),16) / 255.0, m.group(5)), text)
-      text = re.sub(r"(?:\[COLOR (?:0x)?([0-F]{2})([0-F]{2})([0-F]{2})\])(.*?)(?:\[/COLOR\])", r"<span style='color: #\1\2\3'>\4</span>", text)
+      text = re.sub(r"(?:\[COLOR (?:0x)?([0-f]{2})([0-f]{2})([0-f]{2})([0-f]{2})\])(.*?)(?:\[/COLOR\])", lambda m: "<span style='color: rgba(%s,%s,%s,%s)'>%s</span>" %(int(m.group(2),16), int(m.group(3),16), int(m.group(4),16), int(m.group(1),16) / 255.0, m.group(5)), text)
+      text = re.sub(r"(?:\[COLOR (?:0x)?([0-f]{2})([0-f]{2})([0-f]{2})\])(.*?)(?:\[/COLOR\])", r"<span style='color: #\1\2\3'>\4</span>", text)
       text = re.sub(r"(?:\[COLOR (?:0x)?([a-z|A-Z]+)\])(.*?)(?:\[/COLOR\])", r"<span style='color: \1'>\2</span>", text)
       return text

@@ -189,13 +189,12 @@ dialog.config = function (id, data, Secciones, Lista) {
     el.RequestID = id;
     el.getElementById("controls_container").innerHTML = Lista;
     el.getElementById("window_heading").innerHTML = data.title;
-
-    if (data["custom_button"] != null) {
-		if  (!data["visible"]) {
+    if (data.custom_button != null) {
+		if  (!data.custom_button.visible) {
 			el.getElementById("custom_button").style.display = "none" 
 		}
 		else {
-			el.getElementById("custom_button").style.visibility = "inline";
+			el.getElementById("custom_button").style.display = "inline";
 			el.getElementById("custom_button").innerHTML = data.custom_button.label;
 			el.getElementById("custom_button").onclick = function () {
 				custom_button(data.custom_button);
