@@ -162,6 +162,12 @@ def set_setting(name, value, channel=""):
         return channeltools.set_channel_setting(name, value, channel)
     else:
         global settings_dic
+
+        if value == True:
+            value = "true"
+        elif value == False:
+            value = "false"
+
         settings_dic[name]=value
         from xml.dom import minidom
         #Crea un Nuevo XML vacio

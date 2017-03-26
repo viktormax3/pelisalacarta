@@ -512,7 +512,7 @@ def send_to_pyload(item):
   return
 
 def search_trailer(item):
-  config.set_setting("subtitulo", "false")
+  config.set_setting("subtitulo", False)
   item.channel = "trailertools"
   item.action ="buscartrailer"
   item.contextual=True
