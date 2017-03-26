@@ -31,9 +31,9 @@ from core import config
 from core import logger
 from core.item import Item
 
-plugintools.application_log_enabled = (plugintools.get_setting("debug")=="true")
-plugintools.module_log_enabled = (plugintools.get_setting("debug")=="true")
-plugintools.http_debug_log_enabled = (plugintools.get_setting("debug")=="true")
+plugintools.application_log_enabled = (plugintools.get_setting("debug")== True)
+plugintools.module_log_enabled = (plugintools.get_setting("debug")== True)
+plugintools.http_debug_log_enabled = (plugintools.get_setting("debug")== True)
 
 plugintools.log("pelisalacarta.default")
 
