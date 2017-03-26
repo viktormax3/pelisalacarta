@@ -151,7 +151,7 @@ print "get_runtime_path="+get_runtime_path()
 def verify_directories_created():
     import logger
     import os
-    logger.info("pelisalacarta.core.config.verify_directories_created")
+    logger.info()
 
     # Force download path if empty
     download_path = get_setting("downloadpath")
