@@ -533,9 +533,9 @@ def get_setting(name):
     _log("get_setting ->'"+str(dev)+"'")
 
     if dev == "true":
-        return = True
+        return True
     elif dev == "false"
-        return = False
+        return False
     else:
         return dev
 
