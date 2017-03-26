@@ -49,7 +49,7 @@ import re,urllib,urllib2,sys
 sys.path.append ("lib")
 
 from core import config
-config.set_setting("debug","true")
+config.set_setting("debug", True)
 config.set_setting("cache.mode","2")
 
 from core import scrapertools

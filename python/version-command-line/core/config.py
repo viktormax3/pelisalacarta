@@ -87,6 +87,12 @@ def get_setting(name):
         else:
             dev=configfile.get("General",name)
             #print "Config file: ",name,"=",dev
+
+            if dev == "true":
+                return True
+            elif dev == "false":
+                return False
+
         #print "get_setting",name,dev
         return dev
     except:
@@ -95,6 +101,11 @@ def get_setting(name):
     
 def set_setting(name,value):
     #print "set_setting",name,value
+    if value == True:
+        value = "true"
+    elif value == False:
+        value = "false"
+
     overrides[name]=value
 
 def get_localized_string(code):
