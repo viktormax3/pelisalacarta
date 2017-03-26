@@ -38,10 +38,9 @@ def open_settings():
   
 def get_setting(name, channel=""):
     if channel:
-      from core import channeltools
-      value = channeltools.get_channel_setting(name, channel)
-      if not value is None:
-          return value
+        from core import channeltools
+        value = channeltools.get_channel_setting(name, channel)
+        return value
 
         
     # Devolvemos el valor del parametro global 'name'        

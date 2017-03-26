@@ -83,10 +83,7 @@ def get_setting(name, channel=""):
         value = channeltools.get_channel_setting(name, channel)
         # xbmc.log("config.get_setting -> '"+repr(value)+"'")
 
-        if value is not None:
-            return value
-        else:
-            return ""
+        return value
 
     # Global setting
     else:
