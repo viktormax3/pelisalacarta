@@ -111,7 +111,7 @@ def run(item):
       if item.action =="mainlist":
         itemlist = channelselector.getmainlist("bannermenu")
         
-        if config.get_setting("check_for_plugin_updates") == "true":
+        if config.get_setting("check_for_plugin_updates") == True:
           logger.info("channelselector.mainlist Verificar actualizaciones activado")
           from core import updater
           try:
@@ -163,7 +163,7 @@ def run(item):
     
      
     #Filtrado de Servers      
-    if item.action== "findvideos" and config.get_setting('filter_servers') == 'true': 
+    if item.action== "findvideos" and config.get_setting('filter_servers') == True:
       server_white_list, server_black_list = set_server_list() 
       itemlist = filtered_servers(itemlist, server_white_list, server_black_list) 
       
@@ -543,9 +543,9 @@ def check_video_options(item, video_urls):
   if not item.strmfile and playable and item.contentType == "movie":                  
     itemlist.append(item.clone(option=config.get_localized_string(30161), action="add_to_library", item_action = item.action))
 
-  if config.get_setting("jdownloader_enabled")=="true" and playable:
+  if config.get_setting("jdownloader_enabled")== True and playable:
     itemlist.append(item.clone(option=config.get_localized_string(30158), action="send_to_jdownloader"))
-  if config.get_setting("pyload_enabled")=="true" and playable:
+  if config.get_setting("pyload_enabled")== True and playable:
     itemlist.append(item.clone(option=config.get_localized_string(30158).replace("jdownloader","pyLoad"), action="send_to_pyload")) 
     
   if not item.channel in ["Trailer","ecarteleratrailers"] and playable:

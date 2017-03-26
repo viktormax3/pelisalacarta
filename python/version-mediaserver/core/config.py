@@ -124,7 +124,13 @@ def get_setting(name, channel=""):
         value = settings_dic.get(name, "")
 
         # logger.info("config.get_setting -> '"+value+"'")
-        return value
+        # hack para devolver bool en el caso de que lo sea
+        if value == "true":
+            return True
+        elif value == "false":
+            return False
+        else:
+            return value
 
 
 def set_setting(name, value, channel=""):
