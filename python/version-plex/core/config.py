@@ -43,18 +43,18 @@ def get_setting(name, channel=""):
         return value
 
         
-    # Devolvemos el valor del parametro global 'name'        
+    # Devolvemos el valor del parametro global 'name'
     if name=="cache.dir":
         return ""
 
     if name=="debug" or name=="download.enabled":
-        return "false"
+        return False
     
     if name=="cookies.dir":
         return os.getcwd()
 
     if name=="cache.mode" or name=="thumbnail_type":
-        return "2"
+        return 2
     else:
         import bridge
         try:
@@ -62,13 +62,19 @@ def get_setting(name, channel=""):
         except:
             devuelve = ""
         
-        if type(devuelve) == BooleanType:
-            if devuelve:
-                devuelve = "true"
-            else:
-                devuelve = "false"
-        
-        return devuelve
+        # hack para devolver el tipo correspondiente
+        if devuelve == "true":
+            return True
+        elif devuelve == "false":
+            return False
+        else:
+            try:
+                devuelve = int(devuelve)
+            except ValueError:
+                pass
+
+            return devuelve
+
 
 def set_setting(name,value, channel=""):
     if channel:

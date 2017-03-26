@@ -121,12 +121,17 @@ def get_setting(name, channel=""):
         value = settings_dic.get(name, "")
 
         # logger.info("config.get_setting -> '"+value+"'")
-        # hack para devolver bool en el caso de que lo sea
+        # hack para devolver el tipo correspondiente
         if value == "true":
             return True
         elif value == "false":
             return False
         else:
+            try:
+                value = int(value)
+            except ValueError:
+                pass
+
             return value
 
 
@@ -160,10 +165,13 @@ def set_setting(name, value, channel=""):
     else:
         global settings_dic
 
-        if value == True:
-            value = "true"
-        elif value == False:
-            value = "false"
+        if isinstance(value, bool):
+            if value:
+                value = "true"
+            else:
+                value = "false"
+        elif isinstance(value, (int, long)):
+            value = str(value)
 
         settings_dic[name]=value
         from xml.dom import minidom
