@@ -92,6 +92,11 @@ def get_setting(name):
                 return True
             elif dev == "false":
                 return False
+            else:
+                try:
+                    dev = int(dev)
+                except ValueError:
+                    pass
 
         #print "get_setting",name,dev
         return dev
@@ -101,10 +106,13 @@ def get_setting(name):
     
 def set_setting(name,value):
     #print "set_setting",name,value
-    if value == True:
-        value = "true"
-    elif value == False:
-        value = "false"
+    if isinstance(value, bool):
+        if value:
+            value = "true"
+        else:
+            value = "false"
+    elif isinstance(value, (int, long)):
+        value = str(value)
 
     overrides[name]=value
 
