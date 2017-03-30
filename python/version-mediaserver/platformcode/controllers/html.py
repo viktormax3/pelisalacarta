@@ -331,11 +331,11 @@ class platform(Platformtools):
             def __init__(self, heading, line1, line2, line3, platformtools):
                 self.platformtools = platformtools
                 self.closed = False
-                self.heading  = self.kodi_labels_to_html(heading)
+                self.heading  = self.platformtools.kodi_labels_to_html(heading)
                 text = line1
                 if line2: text += "\n" + line2
                 if line3: text += "\n" + line3
-                text = self.kodi_labels_to_html(text)
+                text = self.platformtools.kodi_labels_to_html(text)
                 JsonData = {}
                 JsonData["action"]="Progress" 
                 JsonData["data"]={}
@@ -359,7 +359,7 @@ class platform(Platformtools):
                 text = line1
                 if line2: text += "\n" + line2
                 if line3: text += "\n" + line3
-                text = self.kodi_labels_to_html(text)
+                text = self.platformtools.kodi_labels_to_html(text)
                 JsonData = {}
                 JsonData["action"]="ProgressUpdate" 
                 JsonData["data"]={}
@@ -384,8 +384,8 @@ class platform(Platformtools):
             def __init__(self, heading, message, platformtools):
                 self.platformtools = platformtools
                 self.closed = False
-                self.heading  = self.kodi_labels_to_html(heading)
-                message = self.kodi_labels_to_html(message)
+                self.heading  = self.platformtools.kodi_labels_to_html(heading)
+                message = self.platformtools.kodi_labels_to_html(message)
                 JsonData = {}
                 JsonData["action"]="ProgressBG" 
                 JsonData["data"]={}
@@ -402,7 +402,7 @@ class platform(Platformtools):
 
             def update(self, percent=0, heading="", message=""):
                 JsonData = {}
-                message = self.kodi_labels_to_html(message)
+                message = self.platformtools.kodi_labels_to_html(message)
                 JsonData["action"]="ProgressBGUpdate" 
                 JsonData["data"]={}
                 JsonData["data"]["title"]=heading
@@ -695,17 +695,30 @@ class platform(Platformtools):
               if data[v] == "true": data[v] = True
               if data[v] == "false": data[v] = False
               if unicode(data[v]).isnumeric():  data[v] =  int(data[v])
-            
-          if not callback:
-            for v in data:
-              config.set_setting(v,data[v],channelname)
-            return None
-            
+              
+          if callback and '.' in callback:
+              package, callback = callback.rsplit('.', 1)
           else:
-            exec "from channels import " + channelname + " as cb_channel"
-            exec "return_value = cb_channel." + callback + "(item, data)"
-            return return_value
+              package = 'channels.%s' % channelname  
+                
+          cb_channel = None
+          try:
+              cb_channel = __import__(package, None, None, [package])
+          except ImportError:
+              logger.error('Imposible importar %s' % package)
 
+          if callback:
+              # Si existe una funcion callback la invocamos ...
+              return getattr(cb_channel, self.callback)(item, data)
+          else:
+              # si no, probamos si en el canal existe una funcion 'cb_validate_config' ...
+              try:
+                  return getattr(cb_channel, 'cb_validate_config')(item, data)
+              except AttributeError:
+                  # ... si tampoco existe 'cb_validate_config'...
+                  for v in data:
+                      config.set_setting(v,data[v],channelname)
+          
         elif data == "custom_button":
           try:
               cb_channel = __import__('channels.%s' % channelname, None, None, ["channels.%s" % channelname])
