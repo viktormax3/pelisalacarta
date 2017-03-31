@@ -29,17 +29,20 @@ def get_video_url(page_url, premium=False, user="", password="", video_password=
     data = re.sub(r'\n|\t|\s+', '', scrapertools.cache_page(page_url))
 
     video_urls = []
-    # {type:"html5",config:{file:'http://95.211.191.133:8777/3ki7frw76xuzcg3h5f6cbf7a34mbb2zr44g7sdojszegjqx5tdsaxgwr42vq/v.flv','provider':'http'}
-    media_url = scrapertools.get_match(data, """{type:"html5",config:{file:'([^']+)','provider':'http'}""")
-    video_urls.append([scrapertools.get_filename_from_url(media_url)[-4:] + " [streaminto]", media_url])
+    try:
+        media_url = scrapertools.get_match(data, """.setup\({file:"([^"]+)",image""")
+    except:
+        js_data = scrapertools.find_single_match(data, "(eval.function.p,a,c,k,e.*?)</script>")
+        js_data = unPack(js_data)
+        media_url = scrapertools.get_match(js_data, """.setup\({file:"([^"]+)",image""")
 
-    # streamer:"rtmp://95.211.191.133:1935/vod?h=3ki7frw76xuzcg3h5f6cbf7a34mbb2zr44g7sdojszegjqx5tdsaxgwr42vq"
-    rtmp_url = scrapertools.get_match(data, 'streamer:"([^"]+)"')
-    # ({file:"53/7269023927_n.flv?h=3ki7frw76xuzcg3h5f6cbf7a34mbb2zr44g7sdojszegjqx5tdsaxgwr42vq",
-    playpath = scrapertools.get_match(data, '\({file:"([^"]+)",')
-    swfUrl = "http://streamin.to/player/player.swf"
-    media_url = rtmp_url + " playpath=" + playpath + " swfUrl=" + swfUrl
-    video_urls.append(["RTMP [streaminto]", media_url])
+    if media_url.endswith("v.mp4"):
+        media_url_mp42flv = re.sub(r'/v.mp4$','/v.flv',media_url)
+        video_urls.append([scrapertools.get_filename_from_url(media_url_mp42flv)[-4:] + " [streaminto]", media_url_mp42flv])
+    if media_url.endswith("v.flv"):
+        media_url_flv2mp4 = re.sub(r'/v.flv$','/v.mp4',media_url)
+        video_urls.append([scrapertools.get_filename_from_url(media_url_flv2mp4)[-4:] + " [streaminto]", media_url_flv2mp4])        
+    video_urls.append([scrapertools.get_filename_from_url(media_url)[-4:] + " [streaminto]", media_url])
 
     for video_url in video_urls:
         logger.info("pelisalacarta.servers.streaminto %s - %s" % (video_url[0], video_url[1]))
@@ -98,7 +101,24 @@ def find_videos(data):
     return devuelve
 
 
-def test():
-    video_urls = get_video_url("http://streamin.to/embed-olnmqfuh1bml.html")
+def unPack(packed):
 
-    return len(video_urls) > 0
+    pattern = "}\('(.*)', *(\d+), *(\d+), *'(.*)'\.split\('([^']+)'\)"
+    d = [ d for d in re.search(pattern, packed, re.DOTALL).groups() ]
+
+    p = d[0]; a = int(d[1]); c = int(d[2]); k = d[3].split(d[4])
+
+    if a <= 62: toString = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    else: toString = """ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~"""
+
+    def e(c):
+        return toString[c] if c < a else toString[c // a] + toString[c % a]
+
+    while c > 0:
+        c-= 1
+        if k[c]: x = e(c)
+        else: x = k[c]
+        y = k[c]
+        p = re.sub(r"(\b%s\b)" % x, y, p)
+
+    return p

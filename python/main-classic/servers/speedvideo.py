@@ -1,4 +1,4 @@
-# -*- coding: iso-8859-1 -*-
+# -*- coding: utf-8 -*-
 #------------------------------------------------------------
 # pelisalacarta - XBMC Plugin
 # Conector para speedvideo
@@ -40,7 +40,7 @@ def get_video_url( page_url , premium = False , user="" , password="", video_pas
     
     return video_urls
 
-# Encuentra vídeos de este servidor en el texto pasado
+# Encuentra vÃ­deos de este servidor en el texto pasado
 def find_videos(text):
     encontrados = set()
     devuelve = []
@@ -102,9 +102,3 @@ def find_videos(text):
 					
     
     return devuelve
-
-def test():
-
-    video_urls = get_video_url("http://www.firedrive.com/embed/E89565C3A0C6183E")
-
-    return len(video_urls)>0

@@ -10,8 +10,6 @@ from core import config
 import threading
 import random
 import re
-from platformcode import platformtools
-from platformcode import controllers
 import time
 import traceback
 
@@ -46,7 +44,8 @@ class Handler(BaseHTTPRequestHandler):
       pass
 
     def do_GET(self):     
-
+        from platformcode import platformtools
+        from platformcode import controllers
         #Control de accesos
         Usuario = "user"
         Password = "password"
@@ -86,6 +85,7 @@ class Handler(BaseHTTPRequestHandler):
               if not "socket.py" in traceback.format_exc():
                   logger.error(traceback.format_exc())
             finally:
+              c.__del__()
               del c
         return
     

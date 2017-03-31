@@ -1,13 +1,20 @@
-import re, datetime
+import sys
+import os
+import bridge
+import channelselector
+from core import config
+from core.item import Item
+from core import channeltools
+from core import servertools
+from DumbTools import DumbKeyboard
+
+#Añadimos "lib" al path
+sys.path.append (os.path.join( config.get_runtime_path(), 'lib' ))
 
 # Passing log and config to an external library
 # Credits to https://gist.github.com/mikew/5011984
-import bridge
 bridge.init(Log,Prefs,Locale)
 
-import channelselector
-from core.item import Item
-from DumbTools import DumbKeyboard
 
 ###################################################################################################
 
@@ -86,8 +93,8 @@ def channels_list():
     itemlist = channelselector.filterchannels(category="all")
     for item in itemlist:
         Log.Info("item="+repr(item))
-        if item.type=="generic" and item.channel not in ['tengourl','goear']:
-            oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action="mainlist"), title=item.title, thumb=item.thumbnail))
+        if item.channel not in ['tengourl']:
+            oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action="mainlist", caller_item_serialized = item.tourl()), title=item.title, thumb=item.thumbnail))
 
     return oc
 
@@ -115,39 +122,32 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
         Log.Info("caller_item="+str(caller_item))
 
         Log.Info("Importando...")
-        from core import servertools
         channelmodule = servertools.get_channel_module(channel_name)
         Log.Info("Importado")
 
         Log.Info("Antes de hasattr")
         if hasattr(channelmodule, action):
-            Log.Info("El módulo "+channel_name+" tiene una funcion "+action)
+            Log.Info("El módulo "+caller_item.channel+" tiene una funcion "+action)
+            
             itemlist = getattr(channelmodule, action)(caller_item)
 
-            if action=="play" and len(itemlist)>0:
+            if action=="play" and len(itemlist)>0 and isinstance(itemlist[0], Item):
                 itemlist=play_video(itemlist[0])
+            if action=="play" and len(itemlist)>0 and isinstance(itemlist[0], list):
+                item.video_urls = itemlist
+                itemlist=play_video(item)
 
-            Log.Info("Antes de hasattr")
-            if hasattr(channelmodule, action):
-                Log.Info("El módulo "+caller_item.channel+" tiene una funcion "+action)
-                
-                itemlist = getattr(channelmodule, action)(caller_item)
+        else:
+            Log.Info("El módulo "+caller_item.channel+" *NO* tiene una funcion "+action)
 
-                if action=="play" and len(itemlist)>0:
-                    itemlist=play_video(itemlist[0])
-
-            else:
-                Log.Info("El módulo "+caller_item.channel+" *NO* tiene una funcion "+action)
-
-                if action=="findvideos":
-                    Log.Info("Llamando a la funcion findvideos comun")
-                    itemlist=findvideos(caller_item)
-                elif action=="play":
-                    itemlist=play_video(caller_item)
-                elif action=="menu_principal":
-                    return mainlist()
-                    
-                 
+            if action=="findvideos":
+                Log.Info("Llamando a la funcion findvideos comun")
+                itemlist=findvideos(caller_item)
+            elif action=="play":
+                itemlist=play_video(caller_item)
+            elif action=="menu_principal":
+                return mainlist()
+             
         Log.Info("Tengo un itemlist con %d elementos" % len(itemlist))
 
         for item in itemlist:
@@ -156,10 +156,6 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
              
             try:
                 Log.Info("item="+unicode( item.tostring(), "utf-8" , errors="replace" ))
-            except:
-                pass
-            try:
-                item.title = unicode( item.title, "utf-8" , errors="replace" )
             except:
                 pass
             
@@ -174,7 +170,7 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
                         
                     if Client.Product in DumbKeyboard.clients:
                         DumbKeyboard("/video/pelisalacarta", oc, get_input,
-                                dktitle = item.title,
+                                dktitle = unicode( item.title, "utf-8" , errors="replace" ),
                                 dkitem = item,
                                 dkplaceholder = value,
                                 dkthumb = item.thumbnail
@@ -183,15 +179,15 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
                         dkitem = item.tourl()
                         oc.add(InputDirectoryObject(
                                 key    = Callback(get_input, dkitem = dkitem),
-                                title  = item.title,
+                                title  = unicode( item.title, "utf-8" , errors="replace" ),
                                 prompt = value,
                                 thumb = item.thumbnail
                             ))
                 else:
-                    oc.add(DirectoryObject(key=Callback(canal, channel_name=channel_name, action=item.action, caller_item_serialized=item.tourl()), title=item.title, thumb=item.thumbnail))
+                    oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action=item.action, caller_item_serialized=item.tourl()), title=unicode( item.title, "utf-8" , errors="replace" ), thumb=item.thumbnail))
             else:
                 Log.Info("Llamando a la funcion play comun")
-                videoClipObject = VideoClipObject(title=item.title,thumb=item.thumbnail, url="pelisalacarta://"+item.url )
+                videoClipObject = VideoClipObject(title=unicode( item.title, "utf-8" , errors="replace" ),thumb=item.thumbnail, url="pelisalacarta://"+item.url )
                 oc.add(videoClipObject)
 
     except:
@@ -205,8 +201,11 @@ def resuelve(url):
     return Redirect(url)
 
 def play_video(item):
-    from core import servertools
-    video_urls = servertools.get_video_urls(item.server,item.url)
+    if item.video_urls:
+      video_urls = item.video_urls
+    else:
+      video_urls = servertools.get_video_urls(item.server,item.url)
+      
     itemlist = []
     for video_url in video_urls:
         itemlist.append( Item(channel=item.channel, action="play" , title="Ver el video "+video_url[0] , url=video_url[1], thumbnail=item.thumbnail, plot=item.plot, server=""))
@@ -214,7 +213,6 @@ def play_video(item):
     return itemlist
 
 def findvideos(item):
-    from core import servertools
     return servertools.find_video_items(item=item, channel=item.channel)
 
 @route('/video/pelisalacarta/get_input')
@@ -227,7 +225,6 @@ def get_input(query, dkitem):
     Log.Info("#########################################################")
     Log.Info(dkitem.tostring())
     
-    from core import channeltools
     if '.' in dkitem.channel:
         pack,modulo = dkitem.channel.split('.') #ejemplo: platformcode.platformtools
         channelmodule = channeltools.get_channel_module(modulo,pack)

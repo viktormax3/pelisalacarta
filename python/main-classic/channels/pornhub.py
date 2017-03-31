@@ -14,9 +14,6 @@ from core.item import Item
 
 DEBUG = config.get_setting("debug")
 
-def isGeneric():
-    return True
-
 
 def mainlist(item):
     logger.info("[pornhub.py] mainlist")
@@ -30,6 +27,7 @@ def mainlist(item):
 def search(item,texto):
     logger.info("[pornhub.py] search")
 
+    texto = texto.replace(" ", "+")
     item.url = item.url % texto
     try:
         return peliculas(item)
@@ -56,7 +54,12 @@ def categorias(item):
         
     matches = re.compile(patron,re.DOTALL).findall(data)
     for scrapedurl,scrapedthumbnail,scrapedtitle in matches:
-        url = urlparse.urljoin(item.url,scrapedurl + ("&o=cm" if "?" in scrapedurl else "?o=cm"))
+    
+        if "?" in scrapedurl:
+          url = urlparse.urljoin(item.url,scrapedurl + "&o=cm" )
+        else:
+          url = urlparse.urljoin(item.url,scrapedurl + "?o=cm")
+          
         itemlist.append( Item(channel=item.channel, action="peliculas", title=scrapedtitle, url=url, fanart=item.fanart, thumbnail=scrapedthumbnail))
     
     itemlist.sort(key=lambda x: x.title)
@@ -69,31 +72,33 @@ def peliculas(item):
     # Descarga la página
     data = scrapertools.downloadpage(item.url)
 
-    videodata = scrapertools.find_single_match(data,'<ul class="[^>]+search-video-thumbs">(.*?)<div class="reset"></div>')
+    #videodata = scrapertools.find_single_match(data,'<ul class="nf-videos videos search-video-thumbs">(.*?)<div class="reset"></div>')
+    videodata = scrapertools.find_single_match(data,'videos search-video-thumbs">(.*?)<div class="reset"></div>')
 
     # Extrae las peliculas
     patron = '<div class="phimage">.*?'
     patron += '<a href="([^"]+)" title="([^"]+).*?'
     patron += '<var class="duration">([^<]+)</var>(.*?)</div>.*?'
-    patron += 'data-smallthumb="([^"]+)"'
+    patron += 'data-mediumthumb="([^"]+)"'
     
     matches = re.compile(patron,re.DOTALL).findall(videodata)
     
-    for url,scrapedtitle,duration,scrapedhd,thumbnail in matches:       
+    for url,scrapedtitle,duration,scrapedhd,thumbnail in matches:
         title=scrapedtitle.replace("&amp;amp;", "&amp;") +" ("+duration+")"
         
         scrapedhd = scrapertools.find_single_match(scrapedhd,'<span class="hd-thumbnail">(.*?)</span>')
         if (scrapedhd == 'HD') : title += ' [HD]'
-        
+
         url= urlparse.urljoin(item.url,url)
         itemlist.append( Item(channel=item.channel, action="play", title=title, url=url ,fanart=item.fanart, thumbnail=thumbnail, folder = False) )
         
-    # Paginador
-    patron = '<li class="page_next"><a href="([^"]+)"'
-    matches = re.compile(patron,re.DOTALL).findall(data)
-    if matches:
-        url=urlparse.urljoin(item.url,matches[0].replace('&amp;','&'))
-        itemlist.append(Item(channel=item.channel, action="peliculas", title=">> Página siguiente" ,fanart=item.fanart, url=url))
+    if itemlist:
+        # Paginador
+        patron = '<li class="page_next"><a href="([^"]+)"'
+        matches = re.compile(patron,re.DOTALL).findall(data)
+        if matches:
+            url=urlparse.urljoin(item.url,matches[0].replace('&amp;','&'))
+            itemlist.append(Item(channel=item.channel, action="peliculas", title=">> Página siguiente" ,fanart=item.fanart, url=url))
          
     return itemlist
 

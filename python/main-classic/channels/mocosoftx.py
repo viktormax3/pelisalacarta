@@ -25,14 +25,11 @@ MAIN_HEADERS.append( ["Accept-Language","es-es,es;q=0.8,en-us;q=0.5,en;q=0.3"] )
 MAIN_HEADERS.append( ["Accept-Charset","ISO-8859-1,utf-8;q=0.7,*;q=0.7"] )
 MAIN_HEADERS.append( ["Connection","keep-alive"] )
 
+
 # Login:
 # <form action="http://mocosoftx.com/foro/login2/" method="post" accept-charset="ISO-8859-1" onsubmit="hashLoginPassword(this, '3e468fdsab5d9');" >
 # pst: user=blablabla&passwrd=&cookielength=-1&hash_passwrd=78e88DSe408508d22f
 # doForm.hash_passwrd.value = hex_sha1(hex_sha1(doForm.user.value.php_to8bit().php_strtolower() + doForm.passwrd.value.php_to8bit()) + cur_session_id);
-
-def isGeneric():
-    return True
-
 def login():
     # Averigua el id de sesión
     data = scrapertools.cache_page("http://mocosoftx.com/foro/login/")
@@ -179,5 +176,25 @@ def findvideos(item):
         partes = fichero.split("/")
         titulo = partes[ len(partes)-1 ]
         videoitem.title = titulo + " - [" + videoitem.server+"]"
+    
+    if not itemlist:
+      
+      patron = '<a href="([^"]+)" class="bbc_link" target="_blank"><span style="color: orange;" class="bbc_color">'
+      matches = re.compile(patron, re.DOTALL).findall(data)
+      if matches:
+        data = scrapertools.cache_page(matches[0])
+        logger.info(data)
+        itemlist = servertools.find_video_items(data=data)
+        for videoitem in itemlist:
+          videoitem.channel = item.channel
+          videoitem.plot = plot
+          videoitem.thumbnail = thumbnail
+          videoitem.fulltitle = item.title
 
+          parsed_url = urlparse.urlparse(videoitem.url)
+          fichero = parsed_url.path
+          partes = fichero.split("/")
+          titulo = partes[ len(partes)-1 ]
+          videoitem.title = titulo + " - [" + videoitem.server+"]"  
+    
     return itemlist

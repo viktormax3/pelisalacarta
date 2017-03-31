@@ -27,98 +27,405 @@
 
 import imp
 import math
+import re
+import datetime
 
 from core import config
+from core import filetools
 from core import jsontools
 from core import logger
 from core.item import Item
-from platformcode import library
+from core import library
+from platformcode import xbmc_library
 from platformcode import platformtools
 
 
-def main():
-    logger.info("pelisalacarta.library_service Actualizando series...")
+def convert_old_to_v4():
+    logger.info()
+    path_series_xml = filetools.join(config.get_data_path(), "series.xml")
+    path_series_json = filetools.join(config.get_data_path(), "series.json")
+    series_insertadas = 0
+    series_fallidas = 0
+    version = 'v?'
 
-    directorio = library.join_path(config.get_library_path(), "SERIES")
-    logger.info("directorio="+directorio)
+    # Renombrar carpeta Series y crear una vacia
+    import time
+    new_name = str(time.time())
+    path_series_old = filetools.join(library.LIBRARY_PATH, "SERIES_OLD_" + new_name)
+    if filetools.rename(library.TVSHOWS_PATH,  "SERIES_OLD_" + new_name):
+        if not filetools.mkdir(library.TVSHOWS_PATH):
+            logger.error("ERROR, no se ha podido crear la nueva carpeta de SERIES")
+            return False
+    else:
+        logger.error("ERROR, no se ha podido renombrar la antigua carpeta de SERIES")
+        return False
 
-    if not library.path_exists(directorio):
-        library.make_dir(directorio)
+    path_cine_old = filetools.join(library.LIBRARY_PATH, "CINE_OLD_" + new_name)
+    if filetools.rename(library.MOVIES_PATH,  "CINE_OLD_" + new_name):
+        if not filetools.mkdir(library.MOVIES_PATH):
+            logger.error("ERROR, no se ha podido crear la nueva carpeta de CINE")
+            return False
+    else:
+        logger.error("ERROR, no se ha podido renombrar la antigua carpeta de CINE")
+        return False
 
-    library.check_tvshow_xml()
-    nombre_fichero_config_canal = library.join_path(config.get_data_path(), library.TVSHOW_FILE)
+
+    # Convertir libreria de v1(xml) a v4
+    if filetools.exists(path_series_xml):
+        try:
+            data = filetools.read(path_series_xml)
+            for line in data.splitlines():
+                try:
+                    aux = line.rstrip('\n').split(",")
+                    tvshow = aux[0].strip()
+                    url = aux[1].strip()
+                    channel = aux[2].strip()
+
+                    serie = Item(contentSerieName=tvshow, url=url, channel=channel, action="episodios",
+                                 title=tvshow, active=True)
+
+                    patron = "^(.+)[\s]\((\d{4})\)$"
+                    matches = re.compile(patron, re.DOTALL).findall(serie.contentSerieName)
+
+                    if matches:
+                        serie.infoLabels['title'] = matches[0][0]
+                        serie.infoLabels['year'] = matches[0][1]
+                    else:
+                        serie.infoLabels['title'] = tvshow
+
+                    insertados, sobreescritos, fallidos = library.save_library_tvshow(serie, list())
+                    if fallidos == 0:
+                        series_insertadas += 1
+                        platformtools.dialog_notification("Serie actualizada", serie.infoLabels['title'])
+                    else:
+                        series_fallidas += 1
+                except:
+                    series_fallidas += 1
+
+            filetools.rename(path_series_xml, "series.xml.old")
+            version = 'v4'
+
+        except EnvironmentError:
+            logger.error("ERROR al leer el archivo: %s" % path_series_xml)
+            return False
+
+    # Convertir libreria de v2(json) a v4
+    if filetools.exists(path_series_json):
+        try:
+            data = jsontools.load_json(filetools.read(path_series_json))
+            for tvshow in data:
+                for channel in data[tvshow]["channels"]:
+                    try:
+                        serie = Item(contentSerieName=data[tvshow]["channels"][channel]["tvshow"],
+                                     url=data[tvshow]["channels"][channel]["url"], channel=channel, action="episodios",
+                                     title=data[tvshow]["name"], active=True)
+                        if not tvshow.startswith("t_"):
+                            serie.infoLabels["tmdb_id"] = tvshow
+
+                        insertados, sobreescritos, fallidos = library.save_library_tvshow(serie, list())
+                        if fallidos == 0:
+                            series_insertadas += 1
+                            platformtools.dialog_notification("Serie actualizada", serie.infoLabels['title'])
+                        else:
+                            series_fallidas += 1
+                    except:
+                        series_fallidas += 1
+
+            filetools.rename(path_series_json, "series.json.old")
+            version = 'v4'
+
+        except EnvironmentError:
+            logger.error("ERROR al leer el archivo: %s" % path_series_json)
+            return False
+
+    # Convertir libreria de v3 a v4
+    if version != 'v4':
+        # Obtenemos todos los tvshow.json de la biblioteca de SERIES_OLD recursivamente
+        for raiz, subcarpetas, ficheros in filetools.walk(path_series_old):
+            for f in ficheros:
+                if f == "tvshow.json":
+                    try:
+                        serie = Item().fromjson(filetools.read(filetools.join(raiz, f)))
+                        insertados, sobreescritos, fallidos = library.save_library_tvshow(serie, list())
+                        if fallidos == 0:
+                            series_insertadas += 1
+                            platformtools.dialog_notification("Serie actualizada", serie.infoLabels['title'])
+                        else:
+                            series_fallidas += 1
+                    except:
+                        series_fallidas += 1
+
+        movies_insertadas = 0
+        movies_fallidas = 0
+        for raiz, subcarpetas, ficheros in filetools.walk(path_cine_old):
+            for f in ficheros:
+                if f.endswith(".strm.json"):
+                    try:
+                        movie= Item().fromjson(filetools.read(filetools.join(raiz, f)))
+                        insertados, sobreescritos, fallidos = library.save_library_movie(movie)
+                        if fallidos == 0:
+                            movies_insertadas += 1
+                            platformtools.dialog_notification("Película actualizada", movie.infoLabels['title'])
+                        else:
+                            movies_fallidas += 1
+                    except:
+                        movies_fallidas += 1
+
+
+    config.set_setting("library_version", 'v4')
+
+    platformtools.dialog_notification("Biblioteca actualizada al nuevo formato",
+                                      "%s series convertidas y %s series descartadas.\n"
+                                      "%s peliculas convertidas y %s peliculas descartadas."
+                                      "A continuación se va a obtener la información de todos los episodios" %
+                                      (series_insertadas, series_fallidas, movies_insertadas, movies_fallidas), time=12000)
+
+    # Por ultimo limpia la libreria, por que las rutas anteriores ya no existen
+    xbmc_library.clean()
+
+    return True
+
+
+def update(path, p_dialog, i, t, serie, overwrite):
+    logger.info("Actualizando " + path)
+    insertados_total = 0
+
+    # logger.debug("%s: %s" %(serie.contentSerieName,str(list_canales) ))
+    for channel, url in serie.library_urls.items():
+        serie.channel = channel
+        serie.url = url
+
+        heading = 'Actualizando biblioteca....'
+        p_dialog.update(int(math.ceil((i + 1) * t)), heading, "%s: %s" % (serie.contentSerieName,
+                                                                          serie.channel.capitalize()))
+        try:
+            pathchannels = filetools.join(config.get_runtime_path(), "channels", serie.channel + '.py')
+            logger.info("Cargando canal: " + pathchannels + " " +
+                        serie.channel)
+
+            if serie.library_filter_show:
+                serie.show = serie.library_filter_show.get(channel, serie.contentSerieName)
+
+            obj = imp.load_source(serie.channel, pathchannels)
+            itemlist = obj.episodios(serie)
+
+            try:
+                if int(overwrite) == 3:
+                    # Sobrescribir todos los archivos (tvshow.nfo, 1x01.nfo, 1x01 [canal].json, 1x01.strm, etc...)
+                    insertados, sobreescritos, fallidos = library.save_library_tvshow(serie, itemlist)
+                else:
+                    insertados, sobreescritos, fallidos = library.save_library_episodes(path, itemlist, serie, silent=True,
+                                                                                    overwrite=overwrite)
+                insertados_total += insertados
+
+            except Exception as ex:
+                logger.error("Error al guardar los capitulos de la serie")
+                template = "An exception of type %s occured. Arguments:\n%r"
+                message = template % (type(ex).__name__, ex.args)
+                logger.error(message)
+
+        except Exception as ex:
+            logger.error("Error al obtener los episodios de: %s" % serie.show)
+            template = "An exception of type %s occured. Arguments:\n%r"
+            message = template % (type(ex).__name__, ex.args)
+            logger.error(message)
+
+    return insertados_total > 0
+
+
+def check_for_update(overwrite=True):
+    logger.info("Actualizando series...")
+    p_dialog = None
+    serie_actualizada = False
+    update_when_finished = False
+    library_updated = False
+    hoy = datetime.date.today()
 
     try:
+        if config.get_setting("updatelibrary", "biblioteca") != 0 or overwrite:
+            config.set_setting("updatelibrary_last_check", hoy.strftime('%Y-%m-%d'), "biblioteca")
 
-        if config.get_setting("updatelibrary") == "true":
-
-            data = library.read_file(nombre_fichero_config_canal)
-            dict_data = jsontools.load_json(data)
             heading = 'Actualizando biblioteca....'
             p_dialog = platformtools.dialog_progress_bg('pelisalacarta', heading)
             p_dialog.update(0, '')
-            i = 0
-            # fix float porque la division se hace mal en python 2.x
-            t = float(100) / len(dict_data.keys())
+            show_list = []
 
-            for tvshow_id in dict_data.keys():
-                logger.info("pelisalacarta.library_service serie="+dict_data[tvshow_id]["name"])
+            for path, folders, files in filetools.walk(library.TVSHOWS_PATH):
+                show_list.extend([filetools.join(path, f) for f in files if f == "tvshow.nfo"])
 
-                for channel in dict_data[tvshow_id]["channels"].keys():
-                    carpeta = "{0} [{1}]".format(library.title_to_filename(
-                        dict_data[tvshow_id]["channels"][channel]["tvshow"].lower()), channel)
-                    # carpeta = dict_serie[tvshow_id]["channels"][channel]["path"]
-                    ruta = library.join_path(config.get_library_path(), "SERIES", carpeta)
-                    logger.info("pelisalacarta.library_service ruta =#"+ruta+"#")
+            if show_list:
+                t = float(100) / len(show_list)
 
-                    i += 1
-                    if library.path_exists(ruta):
-                        logger.info("pelisalacarta.library_service Actualizando "+carpeta)
-                        logger.info("pelisalacarta.library_service url " +
-                                    dict_data[tvshow_id]["channels"][channel]["url"])
+            for i, tvshow_file in enumerate(show_list):
+                head_nfo, serie = library.read_nfo(tvshow_file)
+                path = filetools.dirname(tvshow_file)
 
-                        p_dialog.update(int(math.ceil(i * t)), heading, dict_data[tvshow_id]["name"])
+                logger.info("serie=" + serie.contentSerieName)
+                p_dialog.update(int(math.ceil((i+1) * t)), heading, serie.contentSerieName)
 
-                        item = Item(url=dict_data[tvshow_id]["channels"][channel]["url"],
-                                    show=dict_data[tvshow_id]["channels"][channel]["tvshow"], channel=channel)
+                interval = int(serie.active)  # Podria ser del tipo bool
 
-                        try:
-                            pathchannels = library.join_path(config.get_runtime_path(), 'channels', channel + '.py')
-                            logger.info("pelisalacarta.library_service Cargando canal  " + pathchannels + " " + channel)
-                            obj = imp.load_source(channel, pathchannels)
-                            itemlist = obj.episodios(item)
+                if not serie.active:
+                    # si la serie no esta activa descartar
+                    continue
 
-                            try:
-                                library.save_library_tvshow(item, itemlist)
-                            except Exception as ex:
-                                logger.info("pelisalacarta.library_service Error al guardar los capitulos de la serie")
-                                template = "An exception of type {0} occured. Arguments:\n{1!r}"
-                                message = template.format(type(ex).__name__, ex.args)
-                                logger.info(message)
+                # obtenemos las fecha de actualizacion y de la proxima programada para esta serie
+                update_next = serie.update_next
+                if update_next:
+                    y, m, d = update_next.split('-')
+                    update_next = datetime.date(int(y), int(m), int(d))
+                else:
+                    update_next = hoy
 
-                        except Exception as ex:
-                            logger.error("Error al obtener los episodios de: {0}".
-                                         format(dict_data[tvshow_id]["channels"][channel]["tvshow"]))
-                            template = "An exception of type {0} occured. Arguments:\n{1!r}"
-                            message = template.format(type(ex).__name__, ex.args)
-                            logger.info(message)
+                update_last = serie.update_last
+                if update_last:
+                    y, m, d = update_last.split('-')
+                    update_last = datetime.date(int(y), int(m), int(d))
+                else:
+                    update_last = hoy
+
+                # si la serie esta activa ...
+                if overwrite or config.get_setting("updatetvshows_interval", "biblioteca") == 0:
+                    # ... forzar actualizacion independientemente del intervalo
+                    serie_actualizada = update(path, p_dialog, i, t, serie, overwrite)
+
+                elif interval == 1 and update_next <= hoy:
+                    # ...actualizacion diaria
+                    serie_actualizada = update(path, p_dialog, i, t, serie, overwrite)
+                    if not serie_actualizada and update_last <= hoy - datetime.timedelta(days=7):
+                        # si hace una semana q no se actualiza, pasar el intervalo a semanal
+                        interval = 7
+                        update_next = hoy + datetime.timedelta(days=interval)
+
+                elif interval == 7 and update_next <= hoy:
+                    # ...actualizacion semanal
+                    serie_actualizada = update(path, p_dialog, i, t, serie, overwrite)
+                    if not serie_actualizada:
+                        if update_last <= hoy - datetime.timedelta(days=14):
+                            # si hace 2 semanas q no se actualiza, pasar el intervalo a mensual
+                            interval = 30
+
+                        update_next += datetime.timedelta(days=interval)
+
+                elif interval == 30 and update_next <= hoy:
+                    # ...actualizacion mensual
+                    serie_actualizada = update(path, p_dialog, i, t, serie, overwrite)
+                    if not serie_actualizada:
+                        update_next += datetime.timedelta(days=interval)
+
+                if interval != int(serie.active) or update_next.strftime('%Y-%m-%d') != serie.update_next:
+                    serie.active = interval
+                    serie.update_next = update_next.strftime('%Y-%m-%d')
+                    serie.channel = "biblioteca"
+                    serie.action = "get_temporadas"
+                    filetools.write(tvshow_file, head_nfo + serie.tojson())
+
+                if serie_actualizada:
+                    if config.get_setting("search_new_content", "biblioteca") == 0:
+                        # Actualizamos la biblioteca de Kodi: Buscar contenido en la carpeta de la serie
+                        xbmc_library.update(folder=filetools.basename(path))
+                        library_updated = True
                     else:
-                        logger.info("pelisalacarta.library_service No actualiza {0} (no existe el directorio)".
-                                    format(dict_data[tvshow_id]["name"]))
+                        update_when_finished = True
 
-                        p_dialog.update(int(math.ceil(i * t)), 'Error al obtener ruta...', dict_data[tvshow_id]["name"])
+            if config.get_setting("search_new_content", "biblioteca") == 1 and update_when_finished:
+                    # Actualizamos la biblioteca de Kodi: Buscar contenido en todas las series
+                    xbmc_library.update()
+                    library_updated = True
 
             p_dialog.close()
-            library.update()
+
         else:
             logger.info("No actualiza la biblioteca, está desactivado en la configuración de pelisalacarta")
 
     except Exception as ex:
-        import traceback
-        logger.info(traceback.format_exc())
+        logger.error("Se ha producido un error al actualizar las series")
+        template = "An exception of type %s occured. Arguments:\n%r"
+        message = template % (type(ex).__name__, ex.args)
+        logger.error(message)
 
         if p_dialog:
             p_dialog.close()
 
+
 if __name__ == "__main__":
-    main()
+    # Se ejecuta en cada inicio
+    import xbmc
+    updatelibrary_wait = [0, 10000, 20000, 30000, 60000]
+    wait = updatelibrary_wait[int(config.get_setting("updatelibrary_wait", "biblioteca"))]
+    if wait > 0:
+        xbmc.sleep(wait)
+
+    # Comprobar version de la bilbioteca y actualizar si es necesario
+    if config.get_setting("library_version") != 'v4':
+        platformtools.dialog_ok(config.PLUGIN_NAME.capitalize(), "Se va a actualizar la biblioteca al nuevo formato",
+                                "Seleccione el nombre correcto de cada serie o película, si no está seguro pulse 'Cancelar'.")
+
+        if not convert_old_to_v4():
+            platformtools.dialog_ok(config.PLUGIN_NAME.capitalize(),
+                                    "ERROR, al actualizar la biblioteca al nuevo formato")
+        else:
+            # La opcion 2 es "Una sola vez al dia"
+            if not config.get_setting("updatelibrary", "biblioteca") == 2:
+                check_for_update(overwrite=False)
+    else:
+        if not config.get_setting("updatelibrary", "biblioteca") == 2:
+            check_for_update(overwrite=False)
+
+
+    # Se ejecuta ciclicamente
+    if config.get_platform(True)['num_version'] >= 14:
+        monitor = xbmc.Monitor()  # For Kodi >= 14
+    else:
+        monitor = None  # For Kodi < 14
+
+    if monitor:
+        while not monitor.abortRequested():
+            update_setting = config.get_setting("updatelibrary", "biblioteca")
+            if update_setting == 2 or update_setting == 3:  # "Actualizar "Cada dia" o "Una vez al dia"
+                hoy = datetime.date.today()
+                last_check = config.get_setting("updatelibrary_last_check", "biblioteca")
+                if last_check:
+                    y, m, d = last_check.split('-')
+                    last_check = datetime.date(int(y), int(m), int(d))
+                else:
+                    last_check = hoy - datetime.timedelta(days=1)
+
+                everyday_delay = config.get_setting("everyday_delay", "biblioteca")
+                update_start = everyday_delay * 4
+
+                # logger.info("Ultima comprobacion: %s || Fecha de hoy:%s || Hora actual: %s" %
+                #             (last_check, hoy, datetime.datetime.now().hour))
+                # logger.info("Atraso del inicio del dia: %i:00" % update_start)
+
+                if last_check < hoy and datetime.datetime.now().hour >= int(update_start):
+                    logger.info("Inicio actualizacion programada: %s" % datetime.datetime.now())
+                    check_for_update(overwrite=False)
+
+            if monitor.waitForAbort(3600):  # cada hora
+                break
+
+    else:
+        while not xbmc.abortRequested:
+            update_setting = config.get_setting("updatelibrary", "biblioteca")
+            if update_setting == 2 or update_setting == 3:  # "Actualizar "Cada dia" o "Una vez al dia"
+                hoy = datetime.date.today()
+                last_check = config.get_setting("updatelibrary_last_check", "biblioteca")
+                if last_check:
+                    y, m, d = last_check.split('-')
+                    last_check = datetime.date(int(y), int(m), int(d))
+                else:
+                    last_check = hoy - datetime.timedelta(days=1)
+
+                everyday_delay = config.get_setting("everyday_delay", "biblioteca")
+                update_start = everyday_delay * 4
+
+                # logger.info("Ultima comprobacion: %s || Fecha de hoy:%s || Hora actual: %s" %
+                #             (last_check, hoy, datetime.datetime.now().hour))
+                # logger.info("Atraso del inicio del dia: %i:00" % update_start)
+
+                if last_check < hoy and datetime.datetime.now().hour >= int(update_start):
+                    logger.info("Inicio actualizacion programada: %s" % datetime.datetime.now())
+                    check_for_update(overwrite=False)
+
+            xbmc.sleep(3600)

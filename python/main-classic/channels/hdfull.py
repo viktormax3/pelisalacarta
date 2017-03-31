@@ -1,113 +1,116 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # pelisalacarta - XBMC Plugin
 # Canal para hdfull
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
-#------------------------------------------------------------
+# ------------------------------------------------------------
+
+import base64
 import re
-import sys
 import urllib
 import urlparse
 
 from core import config
+from core import httptools
 from core import jsontools
 from core import logger
 from core import scrapertools
+from core import servertools
 from core.item import Item
 from platformcode import platformtools
-from core import servertools
-
-__channel__ = "hdfull"
-__category__ = "F,S,D"
-__type__ = "generic"
-__title__ = "HDFull"
-__language__ = "ES"
 
 host = "http://hdfull.tv"
 
-account = ( config.get_setting('hdfulluser',__channel__) != "" )
+if config.get_setting('hdfulluser', 'hdfull'):
+    account = True
+else:
+    account = False
 
-def isGeneric():
-    return True
 
 def settingCanal(item):
     return platformtools.show_channel_settings()
 
 def login():
-    logger.info("pelisalacarta.channels.hdfull login")
+    logger.info()
 
-    data = agrupa_datos( scrapertools.cache_page(host) )
+    data = agrupa_datos( httptools.downloadpage(host).data )
 
     patron = "<input type='hidden' name='__csrf_magic' value=\"([^\"]+)\" />"
     sid = scrapertools.find_single_match(data, patron)
 
-    post = urllib.urlencode({'__csrf_magic':sid})+"&username="+config.get_setting('hdfulluser',__channel__)+"&password="+config.get_setting('hdfullpassword',__channel__)+"&action=login"
+    post = urllib.urlencode({'__csrf_magic':sid})+"&username="+config.get_setting('hdfulluser', 'hdfull')+"&password="+config.get_setting('hdfullpassword', 'hdfull')+"&action=login"
 
-    data = scrapertools.cache_page(host,post=post)
+    httptools.downloadpage(host, post=post)
 
 def mainlist(item):
-    logger.info("pelisalacarta.channels.hdfull mainlist")
+    logger.info()
 
     itemlist = []
 
-    itemlist.append( Item( channel=__channel__, action="menupeliculas", title="Películas", url=host, folder=True ) )
-    itemlist.append( Item( channel=__channel__, action="menuseries", title="Series", url=host, folder=True ) )
-    itemlist.append( Item( channel=__channel__, action="search", title="Buscar..." ) )
+    itemlist.append( Item( channel=item.channel, action="menupeliculas", title="Películas", url=host, folder=True ) )
+    itemlist.append( Item( channel=item.channel, action="menuseries", title="Series", url=host, folder=True ) )
+    itemlist.append( Item( channel=item.channel, action="search", title="Buscar..." ) )
     if not account:
-        itemlist.append( Item( channel=__channel__ , title=bbcode_kodi2html("[COLOR orange][B]Habilita tu cuenta para activar los items de usuario...[/B][/COLOR]"), action="settingCanal", url="" ) )
+        itemlist.append( Item( channel=item.channel , title=bbcode_kodi2html("[COLOR orange][B]Habilita tu cuenta para activar los items de usuario...[/B][/COLOR]"), action="settingCanal", url="" ) )
     else:
         login()
-        itemlist.append( Item(channel=__channel__, action="settingCanal"    , title="Configuración..."     , url="" ))
+        itemlist.append( Item(channel=item.channel, action="settingCanal"    , title="Configuración..."     , url="" ))
 
     return itemlist
 
 def menupeliculas(item):
-    logger.info("pelisalacarta.channels.hdfull menupeliculas")
+    logger.info()
 
     itemlist = []
 
     if account:
-        itemlist.append( Item( channel=__channel__, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Favoritos[/B][/COLOR]"), url=host+"/a/my?target=movies&action=favorite&start=-28&limit=28", folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Favoritos[/B][/COLOR]"), url=host+"/a/my?target=movies&action=favorite&start=-28&limit=28", folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Pendientes[/B][/COLOR]"), url=host+"/a/my?target=movies&action=pending&start=-28&limit=28", folder=True ) )
 
-    itemlist.append( Item( channel=__channel__, action="fichas", title="ABC", url=host+"/peliculas/abc", folder=True ) )
-    itemlist.append( Item( channel=__channel__, action="fichas", title="Últimas películas" , url=host+"/peliculas", folder=True ) )
-    itemlist.append( Item( channel=__channel__, action="fichas", title="Películas Estreno", url=host+"/peliculas-estreno", folder=True ) )
-    itemlist.append( Item( channel=__channel__, action="fichas", title="Películas Actualizadas", url=host+"/peliculas-actualizadas", folder=True ) )
-    itemlist.append( Item( channel=__channel__, action="fichas", title="Rating IMDB", url=host+"/peliculas/imdb_rating", folder=True ) )
-    itemlist.append( Item( channel=__channel__, action="generos", title="Películas por Género", url=host, folder=True))
+    itemlist.append( Item( channel=item.channel, action="fichas", title="ABC", url=host+"/peliculas/abc", folder=True ) )
+    itemlist.append( Item( channel=item.channel, action="fichas", title="Últimas películas" , url=host+"/peliculas", folder=True ) )
+    itemlist.append( Item( channel=item.channel, action="fichas", title="Películas Estreno", url=host+"/peliculas-estreno", folder=True ) )
+    itemlist.append( Item( channel=item.channel, action="fichas", title="Películas Actualizadas", url=host+"/peliculas-actualizadas", folder=True ) )
+    itemlist.append( Item( channel=item.channel, action="fichas", title="Rating IMDB", url=host+"/peliculas/imdb_rating", folder=True ) )
+    itemlist.append( Item( channel=item.channel, action="generos", title="Películas por Género", url=host, folder=True))
+    if account:
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Vistas[/B][/COLOR]"), url=host+"/a/my?target=movies&action=seen&start=-28&limit=28", folder=True ) )
 
     return itemlist
 
 def menuseries(item):
-    logger.info("pelisalacarta.channels.hdfull menuseries")
+    logger.info()
 
     itemlist = []
 
     if account:
-        itemlist.append( Item( channel=__channel__, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Siguiendo[/B][/COLOR]"), url=host+"/a/my?target=shows&action=following&start=-28&limit=28", folder=True ) )
-        itemlist.append( Item( channel=__channel__, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Para Ver[/B][/COLOR]"), url=host+"/a/my?target=shows&action=watch&start=-28&limit=28", folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Siguiendo[/B][/COLOR]"), url=host+"/a/my?target=shows&action=following&start=-28&limit=28", folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Para Ver[/B][/COLOR]"), url=host+"/a/my?target=shows&action=watch&start=-28&limit=28", folder=True ) )
 
-    itemlist.append( Item( channel=__channel__, action="series_abc", title="A-Z", folder=True ) )
+    itemlist.append( Item( channel=item.channel, action="series_abc", title="A-Z", folder=True ) )
 
-    itemlist.append( Item(channel=__channel__, action="novedades_episodios", title="Últimos Emitidos", url=host+"/a/episodes?action=latest&start=-24&limit=24&elang=ALL", folder=True ) )
-    itemlist.append( Item(channel=__channel__, action="novedades_episodios", title="Episodios Estreno", url=host+"/a/episodes?action=premiere&start=-24&limit=24&elang=ALL", folder=True ) )
-    itemlist.append( Item(channel=__channel__, action="novedades_episodios", title="Episodios Actualizados", url=host+"/a/episodes?action=updated&start=-24&limit=24&elang=ALL", folder=True ) )
-    itemlist.append( Item(channel=__channel__, action="fichas", title="Últimas series", url=host+"/series", folder=True ) )
-    itemlist.append( Item(channel=__channel__, action="fichas", title="Rating IMDB", url=host+"/series/imdb_rating", folder=True ) )
-    itemlist.append( Item(channel=__channel__, action="generos_series", title="Series por Género", url=host, folder=True ) )
-    itemlist.append( Item( channel=__channel__, action="listado_series", title="Listado de todas las series", url=host+"/series/list", folder=True ) )
+    itemlist.append( Item(channel=item.channel, action="novedades_episodios", title="Últimos Emitidos", url=host+"/a/episodes?action=latest&start=-24&limit=24&elang=ALL", folder=True ) )
+    itemlist.append( Item(channel=item.channel, action="novedades_episodios", title="Episodios Estreno", url=host+"/a/episodes?action=premiere&start=-24&limit=24&elang=ALL", folder=True ) )
+    itemlist.append( Item(channel=item.channel, action="novedades_episodios", title="Episodios Actualizados", url=host+"/a/episodes?action=updated&start=-24&limit=24&elang=ALL", folder=True ) )
+    itemlist.append( Item(channel=item.channel, action="fichas", title="Últimas series", url=host+"/series", folder=True ) )
+    itemlist.append( Item(channel=item.channel, action="fichas", title="Rating IMDB", url=host+"/series/imdb_rating", folder=True ) )
+    itemlist.append( Item(channel=item.channel, action="generos_series", title="Series por Género", url=host, folder=True ) )
+    itemlist.append( Item( channel=item.channel, action="listado_series", title="Listado de todas las series", url=host+"/series/list", folder=True ) )
+    if account:
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Favoritas[/B][/COLOR]"), url=host+"/a/my?target=shows&action=favorite&start=-28&limit=28", folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Pendientes[/B][/COLOR]"), url=host+"/a/my?target=shows&action=pending&start=-28&limit=28", folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=bbcode_kodi2html("[COLOR orange][B]Vistas[/B][/COLOR]"), url=host+"/a/my?target=shows&action=seen&start=-28&limit=28", folder=True ) )
 
     return itemlist
 
 def search(item,texto):
-    logger.info("pelisalacarta.channels.hdfull search")
+    logger.info()
 
-    data = agrupa_datos( scrapertools.cache_page(host) )
-
-    texto = texto.replace('+','%20')
+    data = agrupa_datos( httptools.downloadpage(host).data )
 
     sid = scrapertools.get_match(data, '.__csrf_magic. value="(sid:[^"]+)"')
     item.extra = urllib.urlencode({'__csrf_magic':sid})+'&menu=search&query='+texto
+    item.title = "Buscar..."
     item.url = host+"/buscar"
 
     try:
@@ -120,7 +123,7 @@ def search(item,texto):
         return []
 
 def series_abc(item):
-    logger.info("pelisalacarta.channels.hdfull series_abc")
+    logger.info()
 
     itemlist=[]
 
@@ -132,12 +135,11 @@ def series_abc(item):
     return itemlist
 
 def items_usuario(item):
-    logger.info("pelisalacarta.channels.hdfull menupeliculas")
+    logger.info()
 
     itemlist = []
-
     ## Carga estados
-    status = jsontools.load_json(scrapertools.cache_page(host+'/a/status/all'))
+    status = jsontools.load_json(httptools.downloadpage(host+'/a/status/all').data)
 
     ## Fichas usuario
     url = item.url.split("?")[0]
@@ -151,7 +153,7 @@ def items_usuario(item):
     next_page = url + "?" + post
 
     ## Carga las fichas de usuario
-    data = scrapertools.cache_page(url, post=post)
+    data = httptools.downloadpage(url, post=post).data
     fichas_usuario = jsontools.load_json( data )
 
     for ficha in fichas_usuario:
@@ -191,49 +193,49 @@ def items_usuario(item):
         #try: title = title.encode('utf-8')
         #except: pass
 
-        itemlist.append( Item( channel=__channel__, action=action, title=title, fulltitle=title, url=url, thumbnail=thumbnail, show=show, folder=True ) )
+        itemlist.append( Item( channel=item.channel, action=action, title=title, fulltitle=title, url=url, thumbnail=thumbnail, show=show, folder=True ) )
 
     if len(itemlist) == int(limit):
-        itemlist.append( Item( channel=__channel__, action="items_usuario", title=">> Página siguiente", url=next_page, folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="items_usuario", title=">> Página siguiente", url=next_page, folder=True ) )
 
     return itemlist
 
 def listado_series(item):
-    logger.info("pelisalacarta.channels.hdfull listado_series")
+    logger.info()
 
     itemlist = []
 
-    data = agrupa_datos( scrapertools.cache_page(item.url) )
+    data = agrupa_datos( httptools.downloadpage(item.url).data )
 
     patron = '<div class="list-item"><a href="([^"]+)"[^>]+>([^<]+)</a></div>'
     matches = re.compile(patron,re.DOTALL).findall(data)
 
     for scrapedurl,scrapedtitle in matches:
         url = scrapedurl + "###0;1"
-        itemlist.append( Item( channel=__channel__, action="episodios", title=scrapedtitle, fulltitle=scrapedtitle, url=url, show=scrapedtitle ) )
+        itemlist.append( Item( channel=item.channel, action="episodios", title=scrapedtitle, fulltitle=scrapedtitle, url=url, show=scrapedtitle, contentType="tvshow") )
 
     return itemlist
 
 def fichas(item):
-    logger.info("pelisalacarta.channels.hdfull series")
+    logger.info()
     itemlist = []
 
     ## Carga estados
-    status = jsontools.load_json(scrapertools.cache_page(host+'/a/status/all'))
+    status = jsontools.load_json(httptools.downloadpage(host+'/a/status/all').data)
 
     if item.title == "Buscar...":
-        data = agrupa_datos( scrapertools.cache_page(item.url,post=item.extra) )
+        data = agrupa_datos( httptools.downloadpage(item.url, post=item.extra).data )
 
         s_p = scrapertools.get_match(data, '<h3 class="section-title">(.*?)<div id="footer-wrapper">').split('<h3 class="section-title">')
 
         if len(s_p) == 1:
             data = s_p[0]
             if 'Lo sentimos</h3>' in s_p[0]:
-                return [ Item( channel=__channel__, title=bbcode_kodi2html("[COLOR gold][B]HDFull:[/B][/COLOR] [COLOR blue]"+texto.replace('%20',' ')+"[/COLOR] sin resultados") ) ]
+                return [ Item( channel=item.channel, title=bbcode_kodi2html("[COLOR gold][B]HDFull:[/B][/COLOR] [COLOR blue]"+texto.replace('%20',' ')+"[/COLOR] sin resultados") ) ]
         else:
             data = s_p[0]+s_p[1]
     else:
-        data = agrupa_datos( scrapertools.cache_page(item.url) )
+        data = agrupa_datos( httptools.downloadpage(item.url).data )
 
     data = re.sub(
         r'<div class="span-6[^<]+<div class="item"[^<]+' + \
@@ -257,6 +259,7 @@ def fichas(item):
 
         title = scrapedtitle.strip()
         show = title
+        contentTitle = scrapedtitle.strip()
 
         if scrapedlangs != ">":
             textoidiomas = extrae_idiomas(scrapedlangs)
@@ -272,10 +275,12 @@ def fichas(item):
             action = "episodios"
             url+=  "###" + scrapedid + ";1"
             type = "shows"
+            contentType = "tvshow"
         else:
             action = "findvideos"
             url+=  "###" + scrapedid + ";2"
             type = "movies"
+            contentType = "movie"
 
         str = get_status(status, type, scrapedid)
         if str != "": title+= str
@@ -284,22 +289,22 @@ def fichas(item):
             tag_type = scrapertools.get_match(url,'l.tv/([^/]+)/')
             title+= bbcode_kodi2html(" - [COLOR blue]" + tag_type.capitalize() + "[/COLOR]")
 
-        itemlist.append( Item( channel=__channel__, action=action, title=title, url=url, fulltitle=title, thumbnail=thumbnail, show=show, folder=True ) )
+        itemlist.append( Item( channel=item.channel, action=action, title=title, url=url, fulltitle=title, thumbnail=thumbnail, show=show, folder=True, contentType=contentType, contentTitle=contentTitle ) )
 
     ## Paginación
     next_page_url = scrapertools.find_single_match(data,'<a href="([^"]+)">.raquo;</a>')
     if next_page_url!="":
-        itemlist.append( Item( channel=__channel__, action="fichas", title=">> Página siguiente", url=urlparse.urljoin(item.url,next_page_url), folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="fichas", title=">> Página siguiente", url=urlparse.urljoin(item.url,next_page_url), folder=True ) )
 
     return itemlist
 
 def episodios(item):
-    logger.info("pelisalacarta.channels.hdfull episodios")
-
+    logger.info()
+    id = "0"
     itemlist = []
 
     ## Carga estados
-    status = jsontools.load_json(scrapertools.cache_page(host+'/a/status/all'))
+    status = jsontools.load_json(httptools.downloadpage(host+'/a/status/all').data)
 
     url_targets = item.url
 
@@ -309,7 +314,7 @@ def episodios(item):
         item.url = item.url.split("###")[0]
 
     ## Temporadas
-    data = agrupa_datos( scrapertools.cache_page(item.url) )
+    data = agrupa_datos( httptools.downloadpage(item.url).data )
 
     if id == "0":
         ## Se saca el id de la serie de la página cuando viene de listado_series
@@ -320,15 +325,15 @@ def episodios(item):
     if str != "" and account and item.category != "Series" and "XBMC" not in item.title:
         if config.get_library_support():
             title = bbcode_kodi2html(" ( [COLOR gray][B]" + item.show + "[/B][/COLOR] )")
-            itemlist.append( Item( channel=__channel__, action="episodios", title=title, fulltitle=title, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=False ) )
+            itemlist.append( Item( channel=item.channel, action="episodios", title=title, fulltitle=title, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=False ) )
         title = str.replace('green','red').replace('Siguiendo','Abandonar')
-        itemlist.append( Item( channel=__channel__, action="set_status", title=title, fulltitle=title, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="set_status", title=title, fulltitle=title, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=True ) )
     elif account and item.category != "Series" and "XBMC" not in item.title:
         if config.get_library_support():
             title = bbcode_kodi2html(" ( [COLOR gray][B]" + item.show + "[/B][/COLOR] )")
-            itemlist.append( Item( channel=__channel__, action="episodios", title=title, fulltitle=title, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=False ) )
+            itemlist.append( Item( channel=item.channel, action="episodios", title=title, fulltitle=title, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=False ) )
         title = bbcode_kodi2html(" ( [COLOR orange][B]Seguir[/B][/COLOR] )")
-        itemlist.append( Item( channel=__channel__, action="set_status", title=title, fulltitle=title, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="set_status", title=title, fulltitle=title, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=True ) )
 
     patron  = "<li><a href='([^']+)'>[^<]+</a></li>"
 
@@ -337,7 +342,7 @@ def episodios(item):
     for scrapedurl in matches:
 
         ## Episodios
-        data = agrupa_datos( scrapertools.cache_page(scrapedurl) )
+        data = agrupa_datos( httptools.downloadpage(scrapedurl).data )
 
         sid = scrapertools.get_match(data,"<script>var sid = '(\d+)'")
         ssid = scrapertools.get_match(scrapedurl,"temporada-(\d+)")
@@ -345,7 +350,7 @@ def episodios(item):
 
         url = host+"/a/episodes"
 
-        data = scrapertools.cache_page(url,post=post)
+        data = httptools.downloadpage(url, post=post).data
 
         episodes = jsontools.load_json( data )
 
@@ -384,7 +389,7 @@ def episodios(item):
 
             url = urlparse.urljoin( scrapedurl, 'temporada-' + temporada +'/episodio-' + episodio ) + "###" + episode['id'] + ";3"
 
-            itemlist.append( Item( channel=__channel__, action="findvideos", title=title, fulltitle=title, url=url, thumbnail=thumbnail, show=item.show, folder=True ) )
+            itemlist.append( Item( channel=item.channel, action="findvideos", title=title, fulltitle=title, url=url, thumbnail=thumbnail, show=item.show, folder=True,contentType = "episode" ) )
 
     if config.get_library_support() and len(itemlist)>0:
         itemlist.append( Item( channel=item.channel, title="Añadir esta serie a la biblioteca de XBMC", url=url_targets, action="add_serie_to_library", extra="episodios", show=item.show ) )
@@ -393,12 +398,11 @@ def episodios(item):
     return itemlist
 
 def novedades_episodios(item):
-    logger.info("pelisalacarta.channels.hdfull novedades_episodios")
+    logger.info()
 
     itemlist = []
-
     ## Carga estados
-    status = jsontools.load_json(scrapertools.cache_page(host+'/a/status/all'))
+    status = jsontools.load_json(httptools.downloadpage(host+'/a/status/all').data)
 
     ## Episodios
     url = item.url.split("?")[0]
@@ -410,7 +414,7 @@ def novedades_episodios(item):
     post = post.replace("start="+old_start, "start="+start)
     next_page = url + "?" + post
 
-    data = scrapertools.cache_page(url, post=post)
+    data = httptools.downloadpage(url, post=post).data
 
     episodes = jsontools.load_json( data )
 
@@ -453,19 +457,19 @@ def novedades_episodios(item):
 
         url = urlparse.urljoin( host, '/serie/'+ episode['permalink'] +'/temporada-' + temporada +'/episodio-' + episodio ) + "###" + episode['id'] + ";3"
 
-        itemlist.append( Item( channel=__channel__, action="findvideos", title=title, fulltitle=title, url=url, thumbnail=thumbnail, folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="findvideos", title=title, fulltitle=title, url=url, thumbnail=thumbnail, folder=True,contentType = "episode" ) )
 
     if len(itemlist) == 24:
-        itemlist.append( Item( channel=__channel__, action="novedades_episodios", title=">> Página siguiente", url=next_page, folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="novedades_episodios", title=">> Página siguiente", url=next_page, folder=True ) )
 
     return itemlist
 
 def generos(item):
-    logger.info("pelisalacarta.channels.hdfull generos")
+    logger.info()
 
     itemlist = []
 
-    data = agrupa_datos( scrapertools.cache_page(item.url) )
+    data = agrupa_datos( httptools.downloadpage(item.url).data )
     data = scrapertools.find_single_match(data,'<li class="dropdown"><a href="http://hdfull.tv/peliculas"(.*?)</ul>')
 
     patron  = '<li><a href="([^"]+)">([^<]+)</a></li>'
@@ -477,16 +481,16 @@ def generos(item):
         thumbnail = ""
         plot = ""
 
-        itemlist.append( Item( channel=__channel__, action="fichas", title=title, url=url, folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="fichas", title=title, url=url, folder=True ) )
 
     return itemlist
 
 def generos_series(item):
-    logger.info("pelisalacarta.channels.hdfull generos_series")
+    logger.info()
 
     itemlist = []
 
-    data = agrupa_datos( scrapertools.cache_page(item.url) )
+    data = agrupa_datos( httptools.downloadpage(item.url).data )
     data = scrapertools.find_single_match(data,'<li class="dropdown"><a href="http://hdfull.tv/series"(.*?)</ul>')
 
     patron  = '<li><a href="([^"]+)">([^<]+)</a></li>'
@@ -498,17 +502,16 @@ def generos_series(item):
         thumbnail = ""
         plot = ""
 
-        itemlist.append( Item( channel=__channel__, action="fichas", title=title, url=url, folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="fichas", title=title, url=url, folder=True ) )
 
     return itemlist
 
 def findvideos(item):
-    logger.info("pelisalacarta.channels.hdfull findvideos")
+    logger.info()
 
     itemlist=[]
-
     ## Carga estados
-    status = jsontools.load_json(scrapertools.cache_page(host+'/a/status/all'))
+    status = jsontools.load_json(httptools.downloadpage(host+'/a/status/all').data)
 
     url_targets = item.url
 
@@ -524,55 +527,82 @@ def findvideos(item):
             title = bbcode_kodi2html(" ( [COLOR red][B]Quitar de Favoritos[/B][/COLOR] )")
         if config.get_library_support():
             title_label = bbcode_kodi2html(" ( [COLOR gray][B]" + item.show + "[/B][/COLOR] )")
-            itemlist.append( Item( channel=__channel__, action="findvideos", title=title_label, fulltitle=title_label, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=False ) )
+            itemlist.append( Item( channel=item.channel, action="findvideos", title=title_label, fulltitle=title_label, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=False ) )
 
             title_label = bbcode_kodi2html(" ( [COLOR green][B]Tráiler[/B][/COLOR] )")
 
-            itemlist.append( Item( channel=__channel__, action="trailer", title=title_label, fulltitle=title_label, url=url_targets, thumbnail=item.thumbnail, show=item.show ) )
+            itemlist.append( Item( channel=item.channel, action="trailer", title=title_label, fulltitle=title_label, url=url_targets, thumbnail=item.thumbnail, show=item.show ) )
 
-        itemlist.append( Item( channel=__channel__, action="set_status", title=title, fulltitle=title, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=True ) )
+        itemlist.append( Item( channel=item.channel, action="set_status", title=title, fulltitle=title, url=url_targets, thumbnail=item.thumbnail, show=item.show, folder=True ) )
 
-    data = agrupa_datos( scrapertools.cache_page(item.url) )
 
-    patron  = '<div class="embed-selector"[^<]+'
-    patron += '<h5 class="left"[^<]+'
-    patron += '<span[^<]+<b class="key">\s*Idioma.\s*</b>([^<]+)</span[^<]+'
-    patron += '<span[^<]+<b class="key">\s*Servidor.\s*</b><b[^>]+>([^<]+)</b[^<]+</span[^<]+'
-    patron += '<span[^<]+<b class="key">\s*Calidad.\s*</b>([^<]+)</span[^<]+</h5.*?'
-    patron += '<a href="(http[^"]+)".*?'
-    patron += '</i>([^<]+)</a>'
+    data_js = httptools.downloadpage("http://hdfull.tv/templates/hdfull/js/jquery.hdfull.view.min.js").data
+    key = scrapertools.find_single_match(data_js, 'JSON.parse\(atob.*?substrings\((.*?)\)')
 
-    matches = re.compile(patron,re.DOTALL).findall(data)
+    data_js = httptools.downloadpage("http://hdfull.tv/js/providers.js").data
+    try:
+        data_js = jhexdecode(data_js)
+    except:
+        from lib.aadecode import decode as aadecode
+        data_js = data_js.split(";ﾟωﾟ")
+        decode_aa = ""
+        for match in data_js:
+            decode_aa += aadecode(match)
+    
+        data_js = re.sub(r':(function.*?\})', r':"\g<1>"', decode_aa)
+        data_js = re.sub(r':(var[^,]+),', r':"\g<1>",', data_js)
 
-    for idioma,servername,calidad,url,opcion in matches:
-        opcion = opcion.strip()
-        if opcion != "Descargar":
-            opcion = "Ver"
-        title = opcion+": "+servername.strip()+" ("+calidad.strip()+")"+" ("+idioma.strip()+")"
-        title = scrapertools.htmlclean(title)
-        #Se comprueba si existe el conector y si se oculta en caso de premium
-        servername = servername.lower().split(".")[0]
+    data = agrupa_datos( httptools.downloadpage(item.url).data )
+    data_obf = scrapertools.find_single_match(data, "var ad\s*=\s*'([^']+)'")
+    data_decrypt = jsontools.load_json(obfs(base64.b64decode(data_obf), 126 - int(key)))
 
+    infolabels = {}
+    year = scrapertools.find_single_match(data, '<span>A&ntilde;o:\s*</span>.*?(\d{4})')
+    infolabels["year"] = year
+
+    var0 = scrapertools.find_single_match(data_js, 'var_0=\[(.*?)\]').split(",")
+    matches = []
+    for match in data_decrypt:
+        prov = eval(scrapertools.find_single_match(data_js, 'p\[%s\]\s*=\s*(\{.*?\}[\'"]\})' % match["provider"]))
+        function = prov["l"].replace("code", match["code"]).replace("var_2", match["code"])
+        index = scrapertools.find_single_match(function, 'var_1\[(\d+)\]')
+        function = function.replace("var_1[%s]" % index, var0[int(index)])
+
+        url = scrapertools.find_single_match(function, "return\s*(.*?)[;]*\}")
+        url = re.sub(r'\'|"|\s|\+', '', url)
+        url = re.sub(r'var_\d+\[\d+\]', '', url)
+        index = scrapertools.find_single_match(prov["e"], 'var_1\[(\d+)\]')
+        embed = prov["e"].replace("var_1[%s]" % index, var0[int(index)])
+
+        matches.append([match["lang"], match["quality"], url, embed])
+
+    enlaces = []
+    for idioma, calidad, url, embed in matches:
+        servername = scrapertools.find_single_match(url, "(?:http:|https:)//(?:www.|)([^.]+).")
         if servername == "streamin": servername = "streaminto"
         if servername== "waaw": servername = "netutv"
-        if servername == "ul": servername = "uploadedto"
+        if servername == "uploaded" or servername == "ul": servername = "uploadedto"
         mostrar_server = True
-        if config.get_setting("hidepremium")=="true":
-            mostrar_server= servertools.is_server_enabled (servername)
+        if config.get_setting("hidepremium") == "true":
+            mostrar_server = servertools.is_server_enabled(servername)
         if mostrar_server:
-            try:
-                servers_module = __import__("servers."+servername)
-                thumbnail = item.thumbnail
-                plot = item.title+"\n\n"+scrapertools.find_single_match(data,'<meta property="og:description" content="([^"]+)"')
-                plot = scrapertools.htmlclean(plot)
-                fanart = scrapertools.find_single_match(data,'<div style="background-image.url. ([^\s]+)')
+            option = "Ver"
+            if re.search(r'return ([\'"]{2,}|\})', embed):
+                option = "Descargar"
+            calidad = unicode(calidad, "utf8").upper().encode("utf8")
+            servername_c = unicode(servername, "utf8").capitalize().encode("utf8")
+            title = option+": "+servername_c+" ("+calidad+")"+" ("+idioma+")"
+            thumbnail = item.thumbnail
+            plot = item.title+"\n\n"+scrapertools.find_single_match(data,'<meta property="og:description" content="([^"]+)"')
+            plot = scrapertools.htmlclean(plot)
+            fanart = scrapertools.find_single_match(data, '<div style="background-image.url. ([^\s]+)')
+            if account:
+                url += "###" + id + ";" + type
 
-                url+= "###" + id + ";" + type
+            enlaces.append(Item(channel=item.channel, action="play", title=title, fulltitle=title, url=url, thumbnail=thumbnail, plot=plot, fanart=fanart, show=item.show, folder=True, server=servername, infoLabels=infolabels, contentTitle=item.contentTitle, contentType=item.contentType, tipo=option))
 
-                itemlist.append( Item( channel=__channel__, action="play", title=title, fulltitle=title, url=url, thumbnail=thumbnail, plot=plot, fanart=fanart, show=item.show, folder=True ) )
-            except:
-                pass
-
+    enlaces.sort(key=lambda it:it.tipo, reverse=True)
+    itemlist.extend(enlaces)
     ## 2 = película
     if type == "2" and item.category != "Cine":
         ## STRM para todos los enlaces de servidores disponibles
@@ -600,11 +630,11 @@ def trailer(item):
 
 def file_cine_library(item,url_targets):
     import os
-    from platformcode import library
+    from core import filetools
     librarypath = os.path.join(config.get_library_path(),"CINE")
-    archivo = library.title_to_filename(item.show.strip())
+    archivo = item.show.strip()
     strmfile = archivo+".strm"
-    strmfilepath = os.path.join(librarypath,strmfile)
+    strmfilepath = filetools.join(librarypath,strmfile)
 
     if not os.path.exists(strmfilepath):
         itemlist = []
@@ -614,35 +644,34 @@ def file_cine_library(item,url_targets):
 
 
 def add_file_cine_library(item):
-    from platformcode import library, xbmctools
+    from core import library
     new_item = item.clone(title=item.show, action="play_from_library")
-    library.savelibrary(new_item)
+    library.save_library_movie(new_item)
     itemlist = []
     itemlist.append(Item(title='El vídeo '+item.show+' se ha añadido a la biblioteca'))
-    xbmctools.renderItems(itemlist, "", "", "")
+    # xbmctools.renderItems(itemlist, "", "", "")
+    platformtools.render_items(itemlist, "")
 
     return
 
 def play(item):
-    logger.info("pelisalacarta.channels.hdfull play")
-
     if "###" in item.url:
         id = item.url.split("###")[1].split(";")[0]
         type = item.url.split("###")[1].split(";")[1]
         item.url = item.url.split("###")[0]
-
-    itemlist = servertools.find_video_items(data=item.url)
-
-    for videoitem in itemlist:
-        videoitem.title = item.show
-        #videoitem.title = "Enlace encontrado en "+videoitem.server+" ("+scrapertools.get_filename_from_url(videoitem.url)+")"
-        videoitem.fulltitle = item.fulltitle
-        videoitem.thumbnail = item.thumbnail
-        videoitem.channel = __channel__
         post = "target_id=%s&target_type=%s&target_status=1" % (id, type)
-        data = scrapertools.cache_page(host+"/a/status",post=post)
+        data = httptools.downloadpage(host+"/a/status", post=post).data
 
-    return itemlist
+    devuelve = servertools.findvideosbyserver(item.url, item.server)
+    if devuelve:
+        item.url = devuelve[0][1]
+    else:
+        devuelve = servertools.findvideos(item.url, True)
+        if devuelve:
+            item.url = devuelve[0][1]
+            item.server = devuelve[0][2]
+    
+    return [item]
 
 ## --------------------------------------------------------------------------------
 ## --------------------------------------------------------------------------------
@@ -705,11 +734,11 @@ def set_status(item):
         path = "/a/favorite"
         post = "like_id=" + id + "&like_type=" + type + "&like_comment=&vote=-1"
 
-    data = scrapertools.cache_page(host + path, post=post)
+    data = httptools.downloadpage(host + path, post=post).data
 
     title = bbcode_kodi2html("[COLOR green][B]OK[/B][/COLOR]")
 
-    return [ Item( channel=__channel__, action="episodios", title=title, fulltitle=title, url=item.url, thumbnail=item.thumbnail, show=item.show, folder=False ) ]
+    return [ Item( channel=item.channel, action="episodios", title=title, fulltitle=title, url=item.url, thumbnail=item.thumbnail, show=item.show, folder=False ) ]
 
 def get_status(status,type,id):
 
@@ -740,3 +769,42 @@ def get_status(status,type,id):
 
 ## --------------------------------------------------------------------------------
 ## --------------------------------------------------------------------------------
+
+
+def jhexdecode(t):
+
+    r = re.sub(r'_\d+x\w+x(\d+)', 'var_' + r'\1', t)
+    r = re.sub(r'_\d+x\w+', 'var_0', r)
+
+    def to_hx(c):
+        h = int("%s" % c.groups(0),16)
+        if 19 < h < 160:
+            return chr(h)
+        else:
+            return ""
+
+    r = re.sub(r'(?:\\|)x(\w{2})', to_hx, r).replace('var ','')
+
+    f = eval(scrapertools.get_match(r, '\s*var_0\s*=\s*([^;]+);'))
+    for i, v in enumerate(f):
+        r = r.replace('[[var_0[%s]]' % i, "." + f[i])
+        r = r.replace(':var_0[%s]' % i, ":\"" + f[i] + "\"")
+        r = r.replace(' var_0[%s]' % i, " \"" + f[i] + "\"")
+        r = r.replace('(var_0[%s]' % i, "(\"" + f[i] + "\"")
+        r = r.replace('[var_0[%s]]' % i, "." + f[i])
+        if v == "": r = r.replace('var_0[%s]' % i, '""')
+
+    r = re.sub(r':(function.*?\})', r":'\g<1>'", r)
+    r = re.sub(r':(var[^,]+),', r":'\g<1>',", r)
+
+    return r
+
+def obfs(data, key, n=126):
+    chars = list(data)
+    for i in range(0, len(chars)):
+        c = ord(chars[i])
+        if c <= n:
+            number = (ord(chars[i]) + key) % n
+            chars[i] = chr(number)
+
+    return "".join(chars)

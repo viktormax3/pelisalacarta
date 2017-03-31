@@ -1,9 +1,29 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------
-# tvalacarta
-# Generic Launcher
-# http://blog.tvalacarta.info/plugin-xbmc/
-#------------------------------------------------------------
+# ------------------------------------------------------------
+# pelisalacarta 4
+# Copyright 2015 tvalacarta@gmail.com
+# http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
+#
+# Distributed under the terms of GNU General Public License v3 (GPLv3)
+# http://www.gnu.org/licenses/gpl-3.0.html
+# ------------------------------------------------------------
+# This file is part of pelisalacarta 4.
+#
+# pelisalacarta 4 is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# pelisalacarta 4 is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with pelisalacarta 4.  If not, see <http://www.gnu.org/licenses/>.
+# ------------------------------------------------------------
+# Mediaserver Launcher
+# ------------------------------------------------------------
 
 import os
 import sys
@@ -13,32 +33,27 @@ from core import config
 from platformcode import platformtools
 from core import channeltools
 import channelselector
-
-#Temporal hasta que se junten las ramas
-try:
-	from core import servertools
-except:
-	from core import servertools
-
+from core import servertools
+from core import library
 
 def start():
-    ''' Primera funcion que se ejecuta al entrar en el plugin.
+    """ Primera funcion que se ejecuta al entrar en el plugin.
     Dentro de esta funcion deberian ir todas las llamadas a las
     funciones que deseamos que se ejecuten nada mas abrir el plugin.
-    
-    '''
+    """
     logger.info("pelisalacarta.platformcode.launcher start")
-    
+
     # Test if all the required directories are created
     config.verify_directories_created()
-    
+    import library_service
+    library_service.start()
       
 
 def run(item):
     itemlist = []
     #Muestra el item en el log:
     PrintItems(item)
-
+    
       
     #Control Parental, comprueba si es adulto o no
     if item.action=="mainlist":
@@ -50,17 +65,28 @@ def run(item):
 
     #Importa el canal para el item, todo item debe tener un canal, sino sale de la función
     if item.channel: channelmodule = ImportarCanal(item)
-    else: return []
-
+    
+    # If item has no action, stops here
+    if item.action == "":
+        logger.info("pelisalacarta.platformcode.launcher Item sin accion")
+        itemlist = None
+        
     #Action Play, para mostrar el menú con las opciones de reproduccion.
-    if item.action=="play":
+    elif item.action=="play":
       logger.info("pelisalacarta.platformcode.launcher play")
       # Si el canal tiene una acción "play" tiene prioridad
       if hasattr(channelmodule, 'play'):
           logger.info("pelisalacarta.platformcode.launcher executing channel 'play' method")
           itemlist = channelmodule.play(item)
-          if len(itemlist)>0:
-              play_menu(itemlist)
+          b_favourite = item.isFavourite
+          if len(itemlist)>0 and isinstance(itemlist[0], Item):
+              item = itemlist[0]
+              if b_favourite:
+                  item.isFavourite = True
+              play_menu(item)
+          elif len(itemlist)>0 and isinstance(itemlist[0], list):
+              item.video_urls = itemlist
+              play_menu(item)
           else:
               platformtools.dialog_ok("plugin", "No hay nada para reproducir")
       else:
@@ -85,7 +111,7 @@ def run(item):
       if item.action =="mainlist":
         itemlist = channelselector.getmainlist("bannermenu")
         
-        if config.get_setting("updatecheck2") == "true":
+        if config.get_setting("check_for_plugin_updates") == "true":
           logger.info("channelselector.mainlist Verificar actualizaciones activado")
           from core import updater
           try:
@@ -101,10 +127,10 @@ def run(item):
         else:
           logger.info("channelselector.mainlist Verificar actualizaciones desactivado")
 
-      if item.action =="channeltypes":
+      if item.action =="getchanneltypes":
         itemlist = channelselector.getchanneltypes("bannermenu")
-      if item.action =="listchannels":
-        itemlist = channelselector.filterchannels(item.category, "bannermenu")
+      if item.action =="filterchannels":
+        itemlist = channelselector.filterchannels(item.channel_type, "bannermenu")
                    
     #Todas las demas las intenta ejecturaren el siguiente orden:
     # 1. En el canal
@@ -146,24 +172,12 @@ def run(item):
     if type(itemlist)==list:
       if  len(itemlist) ==0:
         itemlist = [Item(title="No hay elementos para mostrar", thumbnail="http://media.tvalacarta.info/pelisalacarta/thumb_error.png")]
-
-    #Si la accion ha devuelto resultados:
-    if type(itemlist)==list:
     
-      #Añade los menus contextuales a los items
-      for x in range(len(itemlist)):
-        itemlist[x].context = AddContext(itemlist[x])
-        
-        if not (item.channel == "channelselector" and  item.action in ["mainlist", "channeltypes"]) and \
-           not item.channel in ["descargas","favoritos", "buscador", "ayuda"] and \
-           not "thumb_error" in itemlist[x].thumbnail:
-          itemlist[x].context.append({"title": "Añadir a Favoritos","action": "add_to_favorites"})
-        
       #Imprime en el log el resultado
       PrintItems(itemlist)
       
-      #Muestra los resultados en pantalla
-      platformtools.render_items(itemlist, item)
+    #Muestra los resultados en pantalla
+    platformtools.render_items(itemlist, item)
 
 
 def ImportarCanal(item):
@@ -190,33 +204,7 @@ def PrintItems(itemlist):
     logger.info("-----------------------------------------------------------------------")
     logger.info(item.tostring())    
     logger.info("-----------------------------------------------------------------------")
-    
 
-'''
-Añade los comandos del menu contectual, esta función esta obsoleta, el nuevo formato para item.context es un list con:
-{"title": "Titulo del Menu","action": "Accion del menu","channel" : "Canal donde ejecutar la accion"}
-y se deven añadir desde el canal.
-'''
-def AddContext(item):
-  contextCommands = []
-  if not type(item.context) == list and item.context:
-    if item.show != "": #Añadimos opción contextual para Añadir la serie completa a la biblioteca
-        contextCommands.append({"title": "Añadir Serie a Biblioteca","action": "addlist2Library"})
-    if "1" in item.context and item.action != "por_teclado":
-        contextCommands.append({"title": config.get_localized_string( 30300 ),"action": "borrar_busqueda","channel" : "buscador"})
-    if "4" in item.context:
-        contextCommands.append({"title": "XBMC Subtitle","action": "searchSubtitle","channel" : "subtitletools"})
-    if "5" in item.context:
-        contextCommands.append({"title": config.get_localized_string( 30162 ),"action": "buscartrailer","channel" : "trailertools"})
-    if "6" in item.context:
-        contextCommands.append({"title": config.get_localized_string( 30410 ),"action": "play_video","channel" : "justintv"})
-    if "8" in item.context:# Añadir canal a favoritos justintv
-        contextCommands.append({"title": config.get_localized_string( 30406 ),"action": "addToFavorites","channel" : "justintv"})
-    if "9" in item.context:# Remover canal de favoritos justintv
-        contextCommands.append({"title": config.get_localized_string( 30407 ),"action": "removeFromFavorites","channel" : "justintv"})
-  elif type(item.context) == list:
-    contextCommands = item.context
-  return contextCommands
   
 def findvideos(item):
     logger.info("pelisalacarta.platformcode.launcher findvideos")
@@ -224,87 +212,12 @@ def findvideos(item):
     return itemlist
 
 def add_pelicula_to_library(item):
-    logger.info("pelisalacarta.platformcode.launcher add_pelicula_to_library")
-    from platformcode import library
-    # Obtiene el listado desde el que se llamó
-    library.savelibrary( titulo=item.fulltitle , url=item.url , thumbnail=item.thumbnail , server=item.server , plot=item.plot , canal=item.channel , category="Cine" , Serie=item.show.strip() , verbose=False, accion="play_from_library", pedirnombre=False, subtitle=item.subtitle )
 
-
+  library.add_pelicula_to_library(item)
+                
 def add_serie_to_library(item):
-    logger.info("pelisalacarta.platformcode.launcher add_serie_to_library, show=#"+item.show+"#")
-    from platformcode import library
-    
-
-    # Obtiene el listado desde el que se llamó
-    action = item.extra
-    
-    # Esta marca es porque el item tiene algo más aparte en el atributo "extra"
-    if "###" in item.extra:
-        action = item.extra.split("###")[0]
-        item.extra = item.extra.split("###")[1]
-
-    exec "itemlist = channel."+action+"(item)"
-
-    # Progreso
-    pDialog = xplatformtools.dialog_progress('pelisalacarta', 'Añadiendo episodios...')
-    pDialog.update(0, 'Añadiendo episodio...')
-    totalepisodes = len(itemlist)
-    logger.info ("[launcher.py] Total Episodios:"+str(totalepisodes))
-    i = 0
-    errores = 0
-    nuevos = 0
-    for item in itemlist:
-        i = i + 1
-        pDialog.update(i*100/totalepisodes, 'Añadiendo episodio...',item.title)
-        logger.info("pelisalacarta.platformcode.launcher add_serie_to_library, title="+item.title)
-        if (pDialog.iscanceled()):
-            return
-
-        try:
-            #(titulo="",url="",thumbnail="",server="",plot="",canal="",category="Cine",Serie="",verbose=True,accion="strm",pedirnombre=True):
-            # Añade todos menos el que dice "Añadir esta serie..." o "Descargar esta serie..."
-            if item.action!="add_serie_to_library" and item.action!="download_all_episodes":
-                nuevos = nuevos + library.savelibrary( titulo=item.title , url=item.url , thumbnail=item.thumbnail , server=item.server , plot=item.plot , canal=item.channel , category="Series" , Serie=item.show.strip() , verbose=False, accion="play_from_library", pedirnombre=False, subtitle=item.subtitle, extra=item.extra )
-        except IOError:
-            import sys
-            for line in sys.exc_info():
-                logger.error( "%s" % line )
-            logger.info("pelisalacarta.platformcode.launcherError al grabar el archivo "+item.title)
-            errores = errores + 1
-        
-    pDialog.close()
-    
-    # Actualizacion de la biblioteca
-    itemlist=[]
-    if errores > 0:
-        itemlist.append(Item(title="ERROR, la serie NO se ha añadido a la biblioteca o lo ha hecho incompleta"))
-        logger.info ("[launcher.py] No se pudo añadir "+str(errores)+" episodios")
-    else:
-        itemlist.append(Item(title="La serie se ha añadido a la biblioteca"))
-        logger.info ("[launcher.py] Ningún error al añadir "+str(errores)+" episodios")
-    
-    # FIXME:jesus Comentado porque no funciona bien en todas las versiones de XBMC
-    #library.update(totalepisodes,errores,nuevos)
-    xbmctools.renderItems(itemlist, params, url, category)
-    
-    #Lista con series para actualizar
-    nombre_fichero_config_canal = os.path.join( config.get_library_path() , "series.xml" )
-    if not os.path.exists(nombre_fichero_config_canal):
-        nombre_fichero_config_canal = os.path.join( config.get_data_path() , "series.xml" )
-
-    logger.info("nombre_fichero_config_canal="+nombre_fichero_config_canal)
-    if not os.path.exists(nombre_fichero_config_canal):
-        f = open( nombre_fichero_config_canal , "w" )
-    else:
-        f = open( nombre_fichero_config_canal , "r" )
-        contenido = f.read()
-        f.close()
-        f = open( nombre_fichero_config_canal , "w" )
-        f.write(contenido)
-    from platformcode import library
-    f.write( library.title_to_folder_name(item.show)+","+item.url+","+item.channel+"\n")
-    f.close();
-
+  channel = ImportarCanal(item)
+  library.add_serie_to_library(item, channel)
 
 def download_all_episodes(item,first_episode="",preferred_server="vidspot",filter_language=""):
     logger.info("pelisalacarta.platformcode.launcher download_all_episodes, show="+item.show)
@@ -529,42 +442,35 @@ def filtered_servers(itemlist, server_white_list, server_black_list):
 
 def add_to_favorites(item):
     #Proviene del menu contextual:
-    if "item_action" in item: 
+    if "item_action" in item:
       item.action = item.item_action
       del item.item_action
       item.context=[]
-      
-    from core import favoritos
+
+    from channels import favoritos
     from core import downloadtools
     if not item.fulltitle: item.fulltitle = item.title
     title = platformtools.dialog_input(default=downloadtools.limpia_nombre_excepto_1(item.fulltitle)+" ["+item.channel+"]")
     if title is not None:
         item.title = title
-        favoritos.savebookmark(item)
+        favoritos.addFavourite(item)
         platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30102) +"\n"+ item.title +"\n"+ config.get_localized_string(30108))
     return
     
 def remove_from_favorites(item):
-    from core import favoritos
+    from channels import favoritos
     # En "extra" está el nombre del fichero en favoritos
-    favoritos.deletebookmark(item.extra)
+    favoritos.delFavourite(item.extra)
     platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30102) +"\n"+ item.title +"\n"+ config.get_localized_string(30105))
     platformtools.itemlist_refresh()
     return
 
 def download(item):
-    from core import downloadtools
-    if not item.fulltitle: item.fulltitle = item.title
-    title = platformtools.dialog_input(default=item.fulltitle)
-    if title is not None:
-      devuelve = downloadtools.downloadbest(item.video_urls,title)
-    
-      if devuelve==0:
-          platformtools.dialog_ok("Pelisalacarta", "Descargado con éxito")
-      elif devuelve==-1:
-          platformtools.dialog_ok("Pelisalacarta", "Descarga abortada")
-      else:
-          platformtools.dialog_ok("Pelisalacarta", "Error en la descarga")
+    from channels import descargas
+    if item.contentType == "list" or item.contentType == "tvshow":
+      item.contentType = "video"
+    item.play_menu = True
+    descargas.save_download(item)
     return
 
 def add_to_library(item):
@@ -572,56 +478,15 @@ def add_to_library(item):
       item.action = item.item_action
       del item.item_action
 
-    from platformcode import library
+    
     if not item.fulltitle=="":
         item.title = item.fulltitle
     library.savelibrary(item)
     platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30135))
     return
-
-def add_to_downloads(item):
-    if "item_action" in item: 
-      item.action = item.item_action
-      del item.item_action
-      
-    from core import descargas
-    from core import downloadtools
-    if not item.fulltitle: item.fulltitle = item.title
-    title = platformtools.dialog_input(default=downloadtools.limpia_nombre_excepto_1(item.fulltitle))
-    if title is not None:
-      item.title = title
-      descargas.savebookmark(item)
-        
-    platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30109))
-    return
-
-def remove_from_downloads(item):
-  from core import descargas
-  # La categoría es el nombre del fichero en la lista de descargas
-  descargas.deletebookmark(item.extra)
-
-  platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30106))
-  platformtools.itemlist_refresh()
-  return
-  
+    
 def delete_file(item):
   os.remove(item.url)
-  platformtools.itemlist_refresh()
-  return
-
-
-def move_to_downloads(item):
-  from core import descargas
-  descargas.mover_descarga_error_a_pendiente(item.extra)
-  platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30101))
-  platformtools.itemlist_refresh()
-  return
-
-def remove_from_downloads_error(item):
-  from core import descargas
-  descargas.mover_descarga_error_a_pendiente(item.extra)
-
-  platformtools.dialog_ok("Pelisalacarta", config.get_localized_string(30101) +"\n"+ item.title +"\n"+ config.get_localized_string(30107))
   platformtools.itemlist_refresh()
   return
 
@@ -648,9 +513,9 @@ def send_to_pyload(item):
 
 def search_trailer(item):
   config.set_setting("subtitulo", "false")
-  import sys
   item.channel = "trailertools"
   item.action ="buscartrailer"
+  item.contextual=True
   run(item)
   return
 
@@ -665,25 +530,18 @@ def check_video_options(item, video_urls):
   
   if item.server=="local":                            
     itemlist.append(item.clone(option=config.get_localized_string(30164), action="delete_file"))
+    
   if not item.server=="local" and playable:           
     itemlist.append(item.clone(option=config.get_localized_string(30153), action="download", video_urls = video_urls))
 
   if item.channel=="favoritos":                       
     itemlist.append(item.clone(option=config.get_localized_string(30154), action="remove_from_favorites"))
+    
   if not item.channel=="favoritos" and playable:      
     itemlist.append(item.clone(option=config.get_localized_string(30155), action="add_to_favorites", item_action = item.action))
 
-  if not item.strmfile and playable:                  
+  if not item.strmfile and playable and item.contentType == "movie":                  
     itemlist.append(item.clone(option=config.get_localized_string(30161), action="add_to_library", item_action = item.action))
-
-  if item.channel!="descargas" and playable:          
-    itemlist.append(item.clone(option=config.get_localized_string(30157), action="add_to_downloads", item_action = item.action))
-  if not item.channel!="descargas" and item.category=="errores":
-    itemlist.append(item.clone(option=config.get_localized_string(30159), action="remove_from_downloads_error"))
-  if not item.channel!="descargas" and item.category=="errores" and playable:
-    itemlist.append(item.clone(option=config.get_localized_string(30160), action="move_to_downloads"))
-  if not item.channel!="descargas" and not item.category=="errores":
-    itemlist.append(item.clone(option=config.get_localized_string(30156), action="remove_from_downloads"))
 
   if config.get_setting("jdownloader_enabled")=="true" and playable:
     itemlist.append(item.clone(option=config.get_localized_string(30158), action="send_to_jdownloader"))
@@ -698,30 +556,12 @@ def check_video_options(item, video_urls):
 #play_menu, abre el menu con las opciones para reproducir
 def play_menu(item):
 
-    if type(item) ==list and len(item)==1:
-      item = item[0]
-      
-    #Modo Normal
-    if type(item) == Item: 
-      if item.server=="": item.server="directo"
-      video_urls,puedes,motivo = servertools.resolve_video_urls_for_playing(item.server,item.url,item.password,True)
-      
-    #Modo "Play" en canal, puede devolver varias url
-    elif type(item) ==list and len(item)>1:
+    if item.server=="": item.server="directo"
     
-      itemlist = item     #En este caso en el argumento item, en realidad hay un itemlist
-      item = itemlist[0]  #Se asigna al item, el item primero del itemlist
-      
-      video_urls = []
-      for videoitem in itemlist:
-        if videoitem.server=="": videoitem.server="directo"
-        opcion_urls,puedes,motivo = servertools.resolve_video_urls_for_playing(videoitem.server,videoitem.url)
-        opcion_urls[0][0] = opcion_urls[0][0] + " [" + videoitem.fulltitle + "]"
-        video_urls.extend(opcion_urls)
-      item = itemlist[0]
-      puedes = True
-      motivo = ""
-      
+    if item.video_urls:
+      video_urls,puedes,motivo = item.video_urls, True, ""
+    else:
+      video_urls,puedes,motivo = servertools.resolve_video_urls_for_playing(item.server,item.url,item.password,True)
       
     if not "strmfile" in item: item.strmfile=False   
     #TODO: unificar show y Serie ya que se usan indistintamente.

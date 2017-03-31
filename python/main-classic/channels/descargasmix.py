@@ -1,353 +1,518 @@
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # pelisalacarta - XBMC Plugin
 # Canal para Descargasmix
 # Por SeiTaN, robalo y Cmos
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
-#------------------------------------------------------------
+# ------------------------------------------------------------
+import re
 import urllib
 
 from core import config
+from core import httptools
 from core import logger
 from core import scrapertools
 from core import servertools
 from core.item import Item
 
-__channel__ = "descargasmix"
-__category__ = "A"
-__type__ = "generic"
-__title__ = "Descargasmix"
-__language__ = "ES"
+__modo_grafico__ = config.get_setting("modo_grafico", "descargasmix")
+__perfil__ = int(config.get_setting("perfil", "descargasmix"))
 
-DEBUG = config.get_setting("debug")
+# Fijar perfil de color            
+perfil = [['0xFFFFE6CC', '0xFFFFCE9C', '0xFF994D00'],
+          ['0xFFA5F6AF', '0xFF5FDA6D', '0xFF11811E'],
+          ['0xFF58D3F7', '0xFF2E9AFE', '0xFF2E64FE']]
+color1, color2, color3 = perfil[__perfil__]
 
-DEFAULT_HEADERS = [["User-Agent","Magic Browser"]]
-
-def isGeneric():
-    return True
 
 def mainlist(item):
-    logger.info("pelisalacarta.channels.descargasmix mainlist")
+    logger.info()
     itemlist = []
-    itemlist.append( Item(channel=__channel__, title="Películas"      , action="lista", thumbnail= "http://i.imgur.com/tBTqIlV.jpg?1", fanart="http://i.imgur.com/c3HS8kj.png"))
-    itemlist.append( Item(channel=__channel__, title="Series"         , action="entradas", url="http://descargasmix.net/series/", thumbnail= "http://i.imgur.com/tBTqIlV.jpg?1", fanart="http://i.imgur.com/9loVksV.png"))
-    itemlist.append( Item(channel=__channel__, title="Documentales"   , action="entradas", url="http://descargasmix.net/documentales/", thumbnail= "http://i.imgur.com/tBTqIlV.jpg?1", fanart="http://i.imgur.com/Q7fsFI6.png"))
-    itemlist.append( Item(channel=__channel__, title="Anime"          , action="entradas", url="http://descargasmix.net/anime/", thumbnail= "http://i.imgur.com/tBTqIlV.jpg?1", fanart="http://i.imgur.com/whhzo8f.png"))
-    itemlist.append( Item(channel=__channel__, title="Deportes"       , action="entradas", url="http://descargasmix.net/deportes/", thumbnail= "http://i.imgur.com/tBTqIlV.jpg?1", fanart="http://i.imgur.com/ggFFR8o.png"))
-    itemlist.append( Item(channel=__channel__, title="Buscar..."      , action="search"  , thumbnail= "http://i.imgur.com/tBTqIlV.jpg?1"))
+    item.text_color = color1
+
+    itemlist.append(item.clone(title="Películas", action="lista", fanart="http://i.imgur.com/c3HS8kj.png"))
+    itemlist.append(item.clone(title="Series", action="lista_series", fanart="http://i.imgur.com/9loVksV.png"))
+    itemlist.append(item.clone(title="Documentales", action="entradas", url="https://desmix.net/documentales/",
+                               fanart="http://i.imgur.com/Q7fsFI6.png"))
+    itemlist.append(item.clone(title="Anime", action="entradas", url="https://desmix.net/anime/",
+                               fanart="http://i.imgur.com/whhzo8f.png"))
+    itemlist.append(item.clone(title="Deportes", action="entradas", url="https://desmix.net/deportes/",
+                               fanart="http://i.imgur.com/ggFFR8o.png"))
+    itemlist.append(item.clone(title="", action=""))
+    itemlist.append(item.clone(title="Buscar...", action="search"))
+    itemlist.append(item.clone(action="configuracion", title="Configurar canal...", text_color="gold", folder=False))
+
     return itemlist
 
-def search(item,texto):
-    logger.info("pelisalacarta.channels.descargasmix search")
+
+def configuracion(item):
+    from platformcode import platformtools
+    ret = platformtools.show_channel_settings()
+    platformtools.itemlist_refresh()
+    return ret
+
+
+def search(item, texto):
+    logger.info()
     try:
-        item.url= "http://descargasmix.net/?s=" + texto
-        itemlist = busqueda(item)
-        return itemlist
+        item.url = "https://desmix.net/?s=" + texto
+        return busqueda(item)
     # Se captura la excepción, para no interrumpir al buscador global si un canal falla
     except:
         import sys
         for line in sys.exc_info():
-            logger.error( "%s" % line )
+            logger.error("%s" % line)
         return []
+
+
 def busqueda(item):
-    logger.info("pelisalacarta.channels.descargasmix busqueda")
+    logger.info()
     itemlist = []
-    data = scrapertools.cachePage(item.url)
-    bloque = scrapertools.find_single_match(data, '<div id="content" role="main">(.*?)<div id="sidebar" role="complementary">')
-    patron = '<a class="clip-link".*?href="([^"]+)".*?<img alt="([^"]+)" src="([^"]+)"'
-    patron += '.*?<p class="stats">(.*?)</p>'
+
+    data = get_data(item.url)
+
+    contenido = ['Películas', 'Series', 'Documentales', 'Anime', 'Deportes', 'Miniseries', 'Vídeos']
+    bloque = scrapertools.find_single_match(data, '<div id="content" role="main">(.*?)<div id="sidebar" '
+                                                  'role="complementary">')
+    patron = '<a class="clip-link".*?href="([^"]+)".*?<img alt="([^"]+)" src="([^"]+)"' \
+             '.*?<span class="overlay.*?>(.*?)<.*?<p class="stats">(.*?)</p>'
     matches = scrapertools.find_multiple_matches(bloque, patron)
-    for scrapedurl, scrapedtitle, scrapedthumbnail,scrapedcat in matches:
-        scrapedthumbnail = "http:"+scrapedthumbnail.replace("-129x180","")
-        if (DEBUG): logger.info("title=["+scrapedtitle+"], url=["+scrapedurl+"], thumbnail=["+scrapedthumbnail+"]")
-        if ("Películas" in scrapedcat) | ("Documentales" in scrapedcat):
+    for scrapedurl, scrapedtitle, scrapedthumbnail, info, scrapedcat in matches:
+        if not [True for c in contenido if c in scrapedcat]:
+            continue
+        scrapedurl = urllib.unquote(re.sub(r'&amp;b=4|/go\.php\?u=', '', scrapedurl))
+        scrapedthumbnail = urllib.unquote(re.sub(r'&amp;b=4|/go\.php\?u=', '', scrapedthumbnail))
+        if not scrapedthumbnail.startswith("http"):
+            scrapedthumbnail = "http:" + scrapedthumbnail
+        scrapedthumbnail = scrapedthumbnail.replace("-129x180", "")
+        if ("Películas" in scrapedcat or "Documentales" in scrapedcat) and "Series" not in scrapedcat:
             titulo = scrapedtitle.split("[")[0]
-            itemlist.append( Item(channel=__channel__, action='findvideos', title= scrapedtitle , url=scrapedurl , thumbnail=scrapedthumbnail, fulltitle=titulo, context = "0", contentTitle=titulo,folder=True) )
+            if info:
+                scrapedtitle += " [%s]" % unicode(info, "utf-8").capitalize().encode("utf-8")
+            itemlist.append(item.clone(action="findvideos", title=scrapedtitle, url=scrapedurl, contentTitle=titulo,
+                                       thumbnail=scrapedthumbnail, fulltitle=titulo, contentType="movie"))
         else:
-            itemlist.append( Item(channel=__channel__, action='episodios', title= scrapedtitle , url=scrapedurl , thumbnail=scrapedthumbnail, fulltitle=scrapedtitle, context = "2", contentTitle=scrapedtitle, folder=True) )
+            itemlist.append(item.clone(action="episodios", title=scrapedtitle, url=scrapedurl,
+                                       thumbnail=scrapedthumbnail, fulltitle=scrapedtitle, contentTitle=scrapedtitle,
+                                       show=scrapedtitle, contentType="tvshow"))
 
-    patron = '<a class="nextpostslink".*?href="([^"]+)"'
-    matches = scrapertools.find_single_match(data, patron)
-    if len(matches) > 0:
-        npage = scrapertools.find_single_match(matches,"page/(.*?)/")
-        if DEBUG: logger.info("url=["+matches+"]")
-        itemlist.append( Item(channel=__channel__, action='busqueda', title= "Página "+npage , url=matches ,folder=True) )
+    next_page = scrapertools.find_single_match(data, '<a class="nextpostslink".*?href="([^"]+)"')
+    if next_page:
+        next_page = urllib.unquote(re.sub(r'&amp;b=4|/go\.php\?u=', '', next_page))
+        itemlist.append(item.clone(action="busqueda", title=">> Siguiente", url=next_page))
 
     return itemlist
-	
+
+
 def lista(item):
-    logger.info("pelisalacarta.channels.descargasmix lista")
+    logger.info()
     itemlist = []
-    itemlist.append( Item(channel=__channel__, title="Novedades"      , action="entradas"    , url="http://descargasmix.net/peliculas", thumbnail= item.thumbnail, fanart=item.fanart))
-    itemlist.append( Item(channel=__channel__, title="Estrenos"       , action="entradas"    , url="http://descargasmix.net/peliculas/estrenos", thumbnail= item.thumbnail, fanart=item.fanart))
-    itemlist.append( Item(channel=__channel__, title="Dvdrip"         , action="entradas"    , url="http://descargasmix.net/peliculas/dvdrip", thumbnail= item.thumbnail, fanart=item.fanart))
-    itemlist.append( Item(channel=__channel__, title="HD (720p/1080p)", action="entradas"    , url="http://descargasmix.net/peliculas/hd", thumbnail= item.thumbnail, fanart=item.fanart))
-    itemlist.append( Item(channel=__channel__, title="HDRIP"          , action="entradas"    , url="http://descargasmix.net/peliculas/hdrip", thumbnail= item.thumbnail, fanart=item.fanart))
-    itemlist.append( Item(channel=__channel__, title="Latino"         , action="entradas"    , url="http://descargasmix.net/peliculas/latino-peliculas", thumbnail= item.thumbnail, fanart=item.fanart))
-    itemlist.append( Item(channel=__channel__, title="VOSE"           , action="entradas"    , url="http://descargasmix.net/peliculas/subtituladas", thumbnail= item.thumbnail, fanart=item.fanart))
-    itemlist.append( Item(channel=__channel__, title="3D"             , action="entradas"    , url="http://descargasmix.net/peliculas/3d", thumbnail= item.thumbnail, fanart=item.fanart))
+
+    itemlist.append(item.clone(title="Novedades", action="entradas", url="https://desmix.net/peliculas"))
+    itemlist.append(item.clone(title="Estrenos", action="entradas", url="https://desmix.net/peliculas/estrenos"))
+    itemlist.append(item.clone(title="Dvdrip", action="entradas", url="https://desmix.net/peliculas/dvdrip"))
+    itemlist.append(item.clone(title="HD (720p/1080p)", action="entradas", url="https://desmix.net/peliculas/hd"))
+    itemlist.append(item.clone(title="HDRIP", action="entradas", url="https://desmix.net/peliculas/hdrip"))
+    itemlist.append(item.clone(title="Latino", action="entradas",
+                               url="https://desmix.net/peliculas/latino-peliculas"))
+    itemlist.append(item.clone(title="VOSE", action="entradas", url="https://desmix.net/peliculas/subtituladas"))
+    itemlist.append(item.clone(title="3D", action="entradas", url="https://desmix.net/peliculas/3d"))
+
     return itemlist
+
+
+def lista_series(item):
+    logger.info()
+    itemlist = []
+
+    itemlist.append(item.clone(title="Novedades", action="entradas", url="https://desmix.net/series/"))
+    itemlist.append(item.clone(title="Miniseries", action="entradas", url="https://desmix.net/series/miniseries"))
+
+    return itemlist
+
 
 def entradas(item):
-    logger.info("pelisalacarta.channels.descargasmix entradas")
+    logger.info()
     itemlist = []
-    data = scrapertools.cachePage(item.url)
-    bloque = scrapertools.find_single_match(data, '<div id="content" role="main">(.*?)<div id="sidebar" role="complementary">')
-    contenido = ["series","deportes","anime"]
+    item.text_color = color2
+
+    data = get_data(item.url)
+    bloque = scrapertools.find_single_match(data, '<div id="content" role="main">(.*?)<div id="sidebar" '
+                                                  'role="complementary">')
+    contenido = ["series", "deportes", "anime", 'miniseries']
     c_match = [True for match in contenido if match in item.url]
-    #Patron dependiendo del contenido
+    # Patron dependiendo del contenido
     if True in c_match:
-        patron = '<a class="clip-link".*?href="([^"]+)".*?<img alt="([^"]+)" src="([^"]+)"'
-        patron += '.*?<span class="overlay(|[^"]+)">'
+        patron = '<a class="clip-link".*?href="([^"]+)".*?<img alt="([^"]+)" src="([^"]+)"' \
+                 '.*?<span class="overlay(|[^"]+)">'
         matches = scrapertools.find_multiple_matches(bloque, patron)
-        for scrapedurl, scrapedtitle, scrapedthumbnail,scrapedinfo in matches:
-            if scrapedinfo != "": scrapedinfo = " [[COLOR red]"+scrapedinfo.replace(" ","").replace("-", " ").capitalize()+"[/COLOR]]"
-            titulo = scrapedtitle+scrapedinfo	
+        for scrapedurl, scrapedtitle, scrapedthumbnail, scrapedinfo in matches:
+            scrapedurl = urllib.unquote(re.sub(r'&amp;b=4|/go\.php\?u=', '', scrapedurl))
+            if scrapedinfo != "":
+                scrapedinfo = scrapedinfo.replace(" ", "").replace("-", " ")
+
+                scrapedinfo = "  [%s]" % unicode(scrapedinfo, "utf-8").capitalize().encode("utf-8")
+            titulo = scrapedtitle + scrapedinfo
             titulo = scrapertools.decodeHtmlentities(titulo)
             scrapedtitle = scrapertools.decodeHtmlentities(scrapedtitle)
-            scrapedthumbnail = "http:"+scrapedthumbnail.replace("-129x180","")
-            scrapedthumbnail = scrapedthumbnail.rsplit("/",1)[0]+"/"+urllib.quote(scrapedthumbnail.rsplit("/",1)[1])
-            if (DEBUG): logger.info("title=["+scrapedtitle+"], url=["+scrapedurl+"], thumbnail=["+scrapedthumbnail+"]")
-            itemlist.append( Item(channel=__channel__, action='episodios', title= titulo , url=scrapedurl , thumbnail=scrapedthumbnail, fanart=item.fanart, fulltitle=scrapedtitle, context = "2", contentTitle=scrapedtitle, folder=True) )
+            scrapedthumbnail = urllib.unquote(re.sub(r'&amp;b=4|/go\.php\?u=', '', scrapedthumbnail))
+            if not scrapedthumbnail.startswith("http"):
+                scrapedthumbnail = "http:" + scrapedthumbnail
+            scrapedthumbnail = scrapedthumbnail.replace("-129x180", "")
+            scrapedthumbnail = scrapedthumbnail.rsplit("/", 1)[0] + "/" + \
+                               urllib.quote(scrapedthumbnail.rsplit("/", 1)[1])
+            if "series" in item.url or "anime" in item.url:
+                item.show = scrapedtitle
+            itemlist.append(item.clone(action="episodios", title=titulo, url=scrapedurl, thumbnail=scrapedthumbnail,
+                                       fulltitle=scrapedtitle, contentTitle=scrapedtitle, contentType="tvshow"))
     else:
-        patron = '<a class="clip-link".*?href="([^"]+)".*?<img alt="([^"]+)" src="([^"]+)"'
+        patron = '<a class="clip-link".*?href="([^"]+)".*?<img alt="([^"]+)" src="([^"]+)"' \
+                 '.*?<span class="overlay.*?>(.*?)<.*?<p class="stats">(.*?)</p>'
         matches = scrapertools.find_multiple_matches(bloque, patron)
-        for scrapedurl, scrapedtitle, scrapedthumbnail in matches:
+        for scrapedurl, scrapedtitle, scrapedthumbnail, info, categoria in matches:
+            scrapedurl = urllib.unquote(re.sub(r'&amp;b=4|/go\.php\?u=', '', scrapedurl))
             titulo = scrapertools.decodeHtmlentities(scrapedtitle)
             scrapedtitle = scrapertools.decodeHtmlentities(scrapedtitle.split("[")[0])
-            scrapedthumbnail = "http:"+scrapedthumbnail.replace("-129x180","")
-            scrapedthumbnail = scrapedthumbnail.rsplit("/",1)[0]+"/"+urllib.quote(scrapedthumbnail.rsplit("/",1)[1])
-            if (DEBUG): logger.info("title=["+scrapedtitle+"], url=["+scrapedurl+"], thumbnail=["+scrapedthumbnail+"]")
-            itemlist.append( Item(channel=__channel__, action='findvideos', title= titulo , url=scrapedurl , thumbnail=scrapedthumbnail, fanart=item.fanart, fulltitle=scrapedtitle, context = "0", contentTitle=scrapedtitle, folder=True) )
-    #Paginación
-    patron = '<a class="nextpostslink".*?href="([^"]+)"'
-    matches = scrapertools.find_single_match(data, patron)
-    if len(matches) > 0:
-        npage = scrapertools.find_single_match(matches,"page/(.*?)/")
-        if DEBUG: logger.info("url=["+matches+"]")
-        itemlist.append( Item(channel=__channel__, action='entradas', title= "Página "+npage , url=matches , fanart=item.fanart, folder=True) )
+            action = "findvideos"
+            show = ""
+            if "Series" in categoria:
+                action = "episodios"
+                show = scrapedtitle
+            elif categoria and categoria != "Películas" and categoria != "Documentales":
+                try:
+                    titulo += " [%s]" % categoria.rsplit(", ", 1)[1]
+                except:
+                    titulo += " [%s]" % categoria
+                if 'l-espmini' in info:
+                    titulo += " [ESP]"
+                if 'l-latmini' in info:
+                    titulo += " [LAT]"
+                if 'l-vosemini' in info:
+                    titulo += " [VOSE]"
+
+            if info:
+                titulo += " [%s]" % unicode(info, "utf-8").capitalize().encode("utf-8")
+
+            scrapedthumbnail = urllib.unquote(re.sub(r'&amp;b=4|/go\.php\?u=', '', scrapedthumbnail))
+            if not scrapedthumbnail.startswith("http"):
+                scrapedthumbnail = "http:" + scrapedthumbnail
+            scrapedthumbnail = scrapedthumbnail.replace("-129x180", "")
+            scrapedthumbnail = scrapedthumbnail.rsplit("/", 1)[0] + "/" + \
+                               urllib.quote(scrapedthumbnail.rsplit("/", 1)[1])
+
+            itemlist.append(item.clone(action=action, title=titulo, url=scrapedurl, thumbnail=scrapedthumbnail,
+                                       fulltitle=scrapedtitle, contentTitle=scrapedtitle, viewmode="movie_with_plot",
+                                       show=show, contentType="movie"))
+
+    # Paginación
+    next_page = scrapertools.find_single_match(data, '<a class="nextpostslink".*?href="([^"]+)"')
+    if next_page:
+        next_page = urllib.unquote(re.sub(r'&amp;b=4|/go\.php\?u=', '', next_page))
+        itemlist.append(item.clone(title=">> Siguiente", url=next_page, text_color=color3))
 
     return itemlist
+
 
 def episodios(item):
-    logger.info("pelisalacarta.channels.descargasmix episodios")
+    logger.info()
     itemlist = []
-    fanart = item.fanart
-    thumbnail = item.thumbnail
-    if item.category == "":
-        try:
-            from core.tmdb import Tmdb
-            otmdb= Tmdb(texto_buscado=item.fulltitle, tipo="tv")
-        except:
-            pass
-    data = scrapertools.cachePage(item.url)
+
+    data = get_data(item.url)
     patron = '(<ul class="menu" id="seasons-list">.*?<div class="section-box related-posts">)'
     bloque = scrapertools.find_single_match(data, patron)
-    patron = '<strong>(.*?)</strong>'
-    matches = scrapertools.find_multiple_matches(bloque, patron)
+    matches = scrapertools.find_multiple_matches(bloque, '<div class="polo".*?>(.*?)</div>')
     for scrapedtitle in matches:
-        if item.category == "":
-            try:
-                item.plot, fanart, thumbnail = infoepi(otmdb, scrapedtitle)
-            except:
-                pass
-        scrapedtitle = item.fulltitle+" "+scrapedtitle.strip()
-        itemlist.append( Item(channel=__channel__, action="epienlaces", title=scrapedtitle, fulltitle = item.fulltitle, url=item.url , thumbnail=thumbnail , fanart=fanart, plot=str(item.plot), context = "2", contentTitle=item.fulltitle, show=item.fulltitle, folder=True ))
+        scrapedtitle = scrapedtitle.strip()
+        new_item = item.clone()
+        new_item.infoLabels['season'] = scrapedtitle.split(" ", 1)[0].split("x")[0]
+        new_item.infoLabels['episode'] = scrapedtitle.split(" ", 1)[0].split("x")[1]
+        if item.fulltitle != "Añadir esta serie a la biblioteca":
+            title = item.fulltitle + " " + scrapedtitle.strip()
+        else:
+            title = scrapedtitle.strip()
+        itemlist.append(new_item.clone(action="findvideos", title=title, extra=scrapedtitle, fulltitle=title,
+                                       contentType="episode"))
 
-    itemlist.sort(key=lambda item: item.title, reverse=True)
+    itemlist.sort(key=lambda it: it.title, reverse=True)
+    item.plot = scrapertools.find_single_match(data, '<strong>SINOPSIS</strong>:(.*?)</p>')
+    if item.show != "" and item.extra == "":
+        itemlist.append(item.clone(channel="trailertools", title="Buscar Tráiler", action="buscartrailer", context="",
+                                   text_color="magenta"))
+        if config.get_library_support():
+            itemlist.append(Item(channel=item.channel, title="Añadir esta serie a la biblioteca", url=item.url,
+                                 action="add_serie_to_library", extra="episodios", show=item.show,
+                                 text_color="green"))
 
-    if config.get_library_support():
-        itemlist.append( Item(channel=__channel__, title="[COLOR green]Añadir esta serie a la biblioteca[/COLOR]", url=item.url, action="add_serie_to_library", extra="episodios", fulltitle=item.fulltitle, show=item.fulltitle))
+        try:
+            from core import tmdb
+            tmdb.set_infoLabels_itemlist(itemlist[:-2], __modo_grafico__)
+        except:
+            pass
+
     return itemlist
 
-def epienlaces(item):
-    logger.info("pelisalacarta.channels.descargasmix epienlaces")
-    itemlist = []
-    data = scrapertools.cachePage(item.url)
-    data = data.replace("\n","").replace("\t", "")
 
-    #Bloque de enlaces
-    delimitador = item.title.replace(item.show,"")
-    patron = delimitador+'\s*</strong>(.*?)(?:</strong>|<div class="section-box related-posts")'
+def epienlaces(item):
+    logger.info()
+    itemlist = []
+    item.text_color = color3
+
+    data = get_data(item.url)
+    data = data.replace("\n", "").replace("\t", "")
+    # Bloque de enlaces
+    patron = '<div class="polo".*?>%s(.*?)(?:<div class="polo"|</li>)' % item.extra.strip()
     bloque = scrapertools.find_single_match(data, patron)
-     
-    logger.info(bloque)
-    patron = '<div class="episode-server">.*?href="([^"]+)"'
-    patron += '.*?data-server="([^"]+)"'
-    patron += '.*?<div style="float:left;width:140px;">(.*?)</div>'
+
+    patron = '<div class="episode-server">.*?data-sourcelk="([^"]+)"' \
+             '.*?data-server="([^"]+)"' \
+             '.*?<div class="caliycola">(.*?)</div>'
     matches = scrapertools.find_multiple_matches(bloque, patron)
+
+    itemlist.append(item.clone(action="", title="Enlaces Online/Descarga", text_color=color1))
+    lista_enlaces = []
     for scrapedurl, scrapedserver, scrapedcalidad in matches:
-        if scrapedserver == "ul": scrapedserver = "uploadedto"
-        if scrapedserver == "streamin": scrapedserver = "streaminto"
-        titulo = scrapedserver.capitalize()+" ["+scrapedcalidad+"]"
-        #Enlaces descarga
+        if scrapedserver == "ul":
+            scrapedserver = "uploadedto"
+        if scrapedserver == "streamin":
+            scrapedserver = "streaminto"
+        titulo = "    %s [%s]" % (unicode(scrapedserver, "utf-8").capitalize().encode("utf-8"), scrapedcalidad)
+        # Enlaces descarga
         if scrapedserver == "magnet":
-            titulo = titulo.replace("Magnet", "[COLOR green][Enlace en Torrent][/COLOR]")
-            itemlist.insert(0, Item(channel=__channel__, action="play", title=titulo, server="torrent", url=scrapedurl , fulltitle = item.fulltitle, thumbnail=item.thumbnail , fanart=item.fanart, plot=item.plot, folder=False) )
+            itemlist.insert(0, item.clone(action="play", title=titulo, server="torrent", url=scrapedurl))
         else:
-            mostrar_server= True
-            if config.get_setting("hidepremium")=="true":
-                mostrar_server= servertools.is_server_enabled (scrapedserver)
+            mostrar_server = True
+            if config.get_setting("hidepremium") == "true":
+                mostrar_server = servertools.is_server_enabled(scrapedserver)
             if mostrar_server:
                 try:
-                    servers_module = __import__("servers."+scrapedserver)
-                    if "http://descargasmix" in scrapedurl:
-                        DEFAULT_HEADERS.append( ["Referer", item.url] )
-                        data = scrapertools.cache_page(scrapedurl, headers=DEFAULT_HEADERS)
-                        scrapedurl = scrapertools.find_single_match(data, 'iframe src="([^"]+)"')
-                         
-                    enlaces = servertools.findvideos(data=scrapedurl)
-                    if len(enlaces)> 0:
-                        for enlace in enlaces:
-                            titulo = "Enlace encontrado en [COLOR sandybrown]"+enlaces[0][0]+"[/COLOR] ["+scrapedcalidad+"]"
-                            itemlist.append( Item(channel=__channel__, action="play", server=enlaces[0][2], title=titulo , url=enlaces[0][1] , fulltitle = item.fulltitle, thumbnail=item.thumbnail , fanart=item.fanart, plot=item.plot, folder=False) )
+                    servers_module = __import__("servers." + scrapedserver)
+                    lista_enlaces.append(item.clone(action="play", title=titulo, server=scrapedserver, url=scrapedurl,
+                                                    extra=item.url))
                 except:
                     pass
-    if config.get_library_support() and item.category == "":
-        itemlist.append( Item(channel=__channel__, title="[COLOR green]Añadir enlaces a la biblioteca[/COLOR]", url=item.url+"|", action="add_pelicula_to_library", extra="epienlaces", fulltitle=item.title, show=item.title))
+    lista_enlaces.reverse()
+    itemlist.extend(lista_enlaces)
+
+    if itemlist[0].server == "torrent":
+        itemlist.insert(0, item.clone(action="", title="Enlaces Torrent", text_color=color1))
 
     return itemlist
 
 
 def findvideos(item):
-    logger.info("pelisalacarta.channels.descargasmix findvideos")
-    if item.category == "Series" or item.show!="": return epienlaces(item)
-    itemlist = []
-    data = scrapertools.cachePage(item.url)
+    logger.info()
+    if (item.extra and item.extra != "findvideos") or item.path:
+        return epienlaces(item)
 
-    fanart = item.fanart
-    sinopsis = scrapertools.find_single_match(data, '<strong>SINOPSIS</strong>:(.*?)</p>')
-    if item.category == "":
+    itemlist = []
+    item.text_color = color3
+
+    data = get_data(item.url)
+    item.plot = scrapertools.find_single_match(data, 'SINOPSIS(?:</span>|</strong>):(.*?)</p>')
+    year = scrapertools.find_single_match(data, '(?:<span class="bold">|<strong>)AÑO(?:</span>|</strong>):\s*(\d+)')
+    if year:
         try:
-            sinopsis, fanart = info(item.fulltitle, "movie", sinopsis)
+            from core import tmdb
+            item.infoLabels['year'] = year
+            tmdb.set_infoLabels_item(item, __modo_grafico__)
         except:
             pass
-    #Patron torrent
-    patron = 'class="separate3 magnet".*?href="([^"]+)"'
-    matches = scrapertools.find_multiple_matches(data, patron)
-    for scrapedurl in matches:
-        title = urllib.unquote(scrapedurl)
-        try:
-            if item.fulltitle != "": titulo = item.fulltitle.strip().rsplit(" ",1)[1]
-            else: titulo = item.title.strip().rsplit(" ",1)[1]
-        except:
-            if item.fulltitle != "": titulo = item.fulltitle.strip()
-            else: titulo = item.title.strip()
 
-        title = "["+scrapertools.find_single_match(title, titulo+"(?:\.|)(.*?)(?:\.|[wW])")+"]"
-        itemlist.append( Item(channel=__channel__, action="play", server="torrent", title="[COLOR green][Enlace en Torrent][/COLOR] "+title , fulltitle = item.fulltitle, url=scrapedurl , thumbnail=item.thumbnail , fanart=fanart, plot=str(sinopsis) , context = "0", contentTitle=item.fulltitle, folder=False) )
-    
-    #Patron online
-    data_online = scrapertools.find_single_match(data, 'Enlaces para ver online(.*?)<div class="section-box related-posts">')
-    if len(data_online)> 0:
-        patron = 'dm\(c.a\(\'([^\']+)\''
+    old_format = False
+    # Patron torrent antiguo formato
+    if "Enlaces de descarga</div>" in data:
+        old_format = True
+        matches = scrapertools.find_multiple_matches(data, 'class="separate3 magnet".*?href="([^"]+)"')
+        for scrapedurl in matches:
+            scrapedurl = scrapertools.find_single_match(scrapedurl, '(magnet.*)')
+            scrapedurl = urllib.unquote(re.sub(r'&amp;b=4', '', scrapedurl))
+            title = "[Torrent] "
+            title += urllib.unquote(scrapertools.find_single_match(scrapedurl, 'dn=(.*?)(?i)WWW.DescargasMix'))
+            itemlist.append(item.clone(action="play", server="torrent", title=title, url=scrapedurl,
+                                       text_color="green"))
+
+    # Patron online
+    data_online = scrapertools.find_single_match(data, 'Ver online</div>(.*?)<div class="section-box related-posts">')
+    if data_online:
+        title = "Enlaces Online"
+        if '"l-latino2"' in data_online:
+            title += " [LAT]"
+        elif '"l-esp2"' in data_online:
+            title += " [ESP]"
+        elif '"l-vose2"' in data_online:
+            title += " [VOSE]"
+
+        patron = 'make_links.*?,[\'"]([^"\']+)["\']'
         matches = scrapertools.find_multiple_matches(data_online, patron)
-        for code in matches:
-            enlace = dm(code)
-            enlaces = servertools.findvideos(data=enlace)
-            titulo = "Enlace encontrado en [COLOR sandybrown]"+enlaces[0][0]+"[/COLOR]"
-            if len(enlaces)> 0:
-                itemlist.append( Item(channel=__channel__, action="play", server=enlaces[0][2], title=titulo, url=enlaces[0][1] , fulltitle = item.fulltitle, thumbnail=item.thumbnail , fanart=fanart, plot=str(sinopsis) , context = "0", contentTitle=item.fulltitle, viewmode="movie_with_plot", folder=False) )
+        for i, code in enumerate(matches):
+            enlace = mostrar_enlaces(code)
+            enlaces = servertools.findvideos(data=enlace[0])
+            if enlaces and "peliculas.nu" not in enlaces:
+                if i == 0:
+                    extra_info = scrapertools.find_single_match(data_online, '<span class="tooltiptext">(.*?)</span>')
+                    size = scrapertools.find_single_match(data_online, '(?i)TAMAÑO:\s*(.*?)<').strip()
 
-    #Patron descarga
-    data_descarga = scrapertools.find_single_match(data, 'Enlaces de descarga(.*?)<script>')
-    patron = '<div class="fondoenlaces".*?id=".*?_([^"]+)".*?textContent=nice=dm\(c.a\(\'([^\']+)\''
-    matches = scrapertools.find_multiple_matches(data_descarga, patron)
-    for scrapedserver, scrapedurl in matches:
-        if (scrapedserver == "ul") | (scrapedserver == "uploaded"): scrapedserver = "uploadedto"
-        titulo = scrapedserver.capitalize()
-        if titulo == "Magnet":continue
-        mostrar_server= True
-        if config.get_setting("hidepremium")=="true":
-            mostrar_server= servertools.is_server_enabled (scrapedserver)
-        if mostrar_server:
-            try:
-                servers_module = __import__("servers."+scrapedserver)
-                #Saca numero de enlaces
-                patron = "(dm\(c.a\('"+scrapedurl.replace("+","\+")+"'.*?)</div>"
-                data_enlaces = scrapertools.find_single_match(data_descarga, patron)
-                patron = 'dm\(c.a\(\'([^\']+)\''
-                matches_enlaces = scrapertools.find_multiple_matches(data_enlaces,patron)
-                numero = str(len(matches_enlaces))
-                if item.category == "": itemlist.append( Item(channel=__channel__, action="enlaces", server="", title=titulo+" - Nº enlaces:"+numero , url=item.url , fulltitle = item.fulltitle, thumbnail=item.thumbnail , fanart=fanart, plot=str(sinopsis) , extra=scrapedurl, context = "0", contentTitle=item.fulltitle, viewmode="movie_with_plot", folder=True) )
-            except:
-                pass
+                    if size:
+                        title += " [%s]" % size
+                    new_item = item.clone(title=title, action="", text_color=color1)
+                    if extra_info:
+                        extra_info = scrapertools.htmlclean(extra_info)
+                        new_item.infoLabels["plot"] = extra_info
+                        new_item.title += " +INFO"
+                    itemlist.append(new_item)
 
-    if config.get_library_support() and item.category == "":
-        itemlist.append( Item(channel=__channel__, title="[COLOR green]Añadir enlaces a la biblioteca[/COLOR]", url=item.url, action="add_pelicula_to_library", extra="findvideos", fulltitle=item.fulltitle.strip()))
+                title = "   Ver vídeo en " + enlaces[0][2]
+                itemlist.append(item.clone(action="play", server=enlaces[0][2], title=title, url=enlaces[0][1]))
+    scriptg = scrapertools.find_single_match(data, "<script type='text/javascript'>str='([^']+)'")
+    if scriptg:
+        gvideo = urllib.unquote_plus(scriptg.replace("@", "%"))
+        url = scrapertools.find_single_match(gvideo, 'src="([^"]+)"')
+        if url:
+            itemlist.append(item.clone(action="play", server="directo", url=url, extra=item.url,
+                                       title="   Ver vídeo en Googlevideo (Máxima calidad)"))
+
+    # Patron descarga
+    patron = '<div class="(?:floatLeft |)double(?:nuevo|)">(.*?)</div>(.*?)' \
+             '(?:<div(?: id="mirrors"|) class="(?:contentModuleSmall |)mirrors">|<div class="section-box related-' \
+             'posts">)'
+    bloques_descarga = scrapertools.find_multiple_matches(data, patron)
+    for title_bloque, bloque in bloques_descarga:
+        if title_bloque == "Ver online":
+            continue
+        if '"l-latino2"' in bloque:
+            title_bloque += " [LAT]"
+        elif '"l-esp2"' in bloque:
+            title_bloque += " [ESP]"
+        elif '"l-vose2"' in bloque:
+            title_bloque += " [VOSE]"
+
+        extra_info = scrapertools.find_single_match(bloque, '<span class="tooltiptext">(.*?)</span>')
+        size = scrapertools.find_single_match(bloque, '(?i)TAMAÑO:\s*(.*?)<').strip()
+
+        if size:
+            title_bloque += " [%s]" % size
+        new_item = item.clone(title=title_bloque, action="", text_color=color1)
+        if extra_info:
+            extra_info = scrapertools.htmlclean(extra_info)
+            new_item.infoLabels["plot"] = extra_info
+            new_item.title += " +INFO"
+        itemlist.append(new_item)
+
+        if '<div class="subiendo">' in bloque:
+            itemlist.append(item.clone(title="   Los enlaces se están subiendo", action=""))
+            continue
+        patron = 'class="separate.*? ([^"]+)".*?(?:make_links.*?,|href=)[\'"]([^"\']+)["\']'
+        matches = scrapertools.find_multiple_matches(bloque, patron)
+        for scrapedserver, scrapedurl in matches:
+            if (scrapedserver == "ul") | (scrapedserver == "uploaded"):
+                scrapedserver = "uploadedto"
+            titulo = unicode(scrapedserver, "utf-8").capitalize().encode("utf-8")
+            if titulo == "Magnet" and old_format:
+                continue
+            elif titulo == "Magnet" and not old_format:
+                title = "   Enlace Torrent"
+                scrapedurl = scrapertools.find_single_match(scrapedurl, '(magnet.*)')
+                scrapedurl = urllib.unquote(re.sub(r'&amp;b=4', '', scrapedurl))
+                itemlist.append(item.clone(action="play", server="torrent", title=title, url=scrapedurl,
+                                           text_color="green"))
+                continue
+            mostrar_server = True
+            if config.get_setting("hidepremium") == "true":
+                mostrar_server = servertools.is_server_enabled(scrapedserver)
+            if mostrar_server:
+                try:
+                    servers_module = __import__("servers." + scrapedserver)
+                    # Saca numero de enlaces
+                    urls = mostrar_enlaces(scrapedurl)
+                    numero = str(len(urls))
+                    titulo = "   %s - Nº enlaces: %s" % (titulo, numero)
+                    itemlist.append(item.clone(action="enlaces", title=titulo, extra=scrapedurl, server=scrapedserver))
+                except:
+                    pass
+
+    itemlist.append(item.clone(channel="trailertools", title="Buscar Tráiler", action="buscartrailer", context="",
+                               text_color="magenta"))
+    if item.extra != "findvideos" and config.get_library_support():
+        itemlist.append(Item(channel=item.channel, title="Añadir a la biblioteca", action="add_pelicula_to_library",
+                             extra="findvideos", url=item.url, infoLabels={'title': item.fulltitle},
+                             fulltitle=item.fulltitle, text_color="green"))
+
     return itemlist
-	
-def enlaces(item):
-    logger.info("pelisalacarta.channels.descargasmix enlaces")
+
+
+def play(item):
+    logger.info()
     itemlist = []
-    data = scrapertools.cachePage(item.url)
-    #Bloque de enlaces
-    patron = "(dm\(c.a\('"+item.extra.replace("+","\+")+"'.*?)</div>"
-    data_enlaces = scrapertools.find_single_match(data,patron)
-    patron = 'dm\(c.a\(\'([^\']+)\''
-    matches = scrapertools.find_multiple_matches(data_enlaces, patron)
-    numero = len(matches)
-    for code in matches:
-        enlace = dm(code)
-        enlaces = servertools.findvideos(data=enlace)
-        if len(enlaces)> 0:
-            for link in enlaces:
-                if "/folder/" in enlace: titulo = link[0]
-                else:
-                    titulo = item.title.split("-")[0]+" - Enlace "+str(numero)
-                    numero -= 1
-                itemlist.append( Item(channel=__channel__, action="play", server=link[2], title=titulo , url=link[1] , fulltitle = item.fulltitle, thumbnail=item.thumbnail , fanart=item.fanart, plot=item.plot, folder=False) )
-    itemlist.sort(key=lambda item: item.title)
+
+    if not item.url.startswith("http") and not item.url.startswith("magnet"):
+        post = "source=%s&action=obtenerurl" % urllib.quote(item.url)
+        headers = {'X-Requested-With': 'XMLHttpRequest'}
+        data = httptools.downloadpage("http://desmix.net/wp-admin/admin-ajax.php", post=post, headers=headers, follow_redirects=False).data
+
+        url = scrapertools.find_single_match(data, 'url":"([^"]+)"').replace("\\", "")
+        enlaces = servertools.findvideosbyserver(url, item.server)
+        if enlaces:
+            itemlist.append(item.clone(action="play", server=enlaces[0][2], url=enlaces[0][1]))
+    else:
+        itemlist.append(item.clone())
+
     return itemlist
 
-def dm(h):
+
+def enlaces(item):
+    logger.info()
+    itemlist = []
+
+    urls = mostrar_enlaces(item.extra)
+    numero = len(urls)
+    for enlace in urls:
+        enlaces = servertools.findvideos(data=enlace)
+        if enlaces:
+            for link in enlaces:
+                if "/folder/" in enlace:
+                    titulo = link[0]
+                else:
+                    titulo = "%s - Enlace %s" % (item.title.split("-")[0], str(numero))
+                    numero -= 1
+                itemlist.append(item.clone(action="play", server=link[2], title=titulo, url=link[1]))
+
+    itemlist.sort(key=lambda it: it.title)
+    return itemlist
+
+
+def mostrar_enlaces(data):
     import base64
-    h = base64.decodestring(h)
+    data = data.split(",")
+    len_data = len(data)
+    urls = []
+    for i in range(0, len_data):
+        url = []
+        value1 = base64.b64decode(data[i])
+        value2 = value1.split("-")
+        for j in range(0, len(value2)):
+            url.append(chr(int(value2[j])))
 
-    copies = ""
-    i = 0
-    while i < len(h):
-        copies += chr(ord(h[i]) ^ 123 * ~~ True)
-        i += 1
+        urls.append("".join(url))
 
-    return copies
-	
+    return urls
 
-def info(title, type, sinopsis):
-    logger.info("pelisalacarta.descargasmix info")
-    infolabels={}
-    plot={}
+
+def get_data(url_orig):
     try:
-        from core.tmdb import Tmdb
-        otmdb= Tmdb(texto_buscado=title, tipo= type)
-        if otmdb.get_sinopsis() == "": infolabels['plot'] = sinopsis
-        else: infolabels['plot'] = otmdb.get_sinopsis()
-        infolabels['year']= otmdb.result["release_date"][:4]
-        infolabels['genre'] = otmdb.get_generos()
-        infolabels['rating'] = float(otmdb.result["vote_average"])
-        fanart=otmdb.get_backdrop()
-        plot['infoLabels']=infolabels
-        return plot, fanart
+        data = httptools.downloadpage(url_orig).data
     except:
-        pass
+        import random
+        server_random = ['nl', 'de', 'us']
+        url = "https://%s.hideproxy.me/includes/process.php?action=update" % server_random[random.randint(0, 2)]
+        post = "u=%s&proxy_formdata_server=%s&allowCookies=1&encodeURL=0&encodePage=0&stripObjects=0&stripJS=0&go=" \
+               % (url_orig, server_random[random.randint(0, 2)])
+        while True:
+            response = httptools.downloadpage(url, post, follow_redirects=False)
+            if response.headers.get("location"):
+                url = response.headers["location"]
+                post = ""
+            else:
+                data = response.data
+                break
 
-def infoepi(otmdb, episode):
-    logger.info("pelisalacarta.descargasmix infoepi")
-    infolabels={}
-    plot={}
-    try:
-        infolabels['season'] = episode.split("x")[0]
-        infolabels['episode'] = episode.split("x")[1]
-        episodio = otmdb.get_episodio(infolabels['season'], infolabels['episode'])
-        if episodio["episodio_sinopsis"] == "": infolabels['plot'] = otmdb.get_sinopsis()
-        else: infolabels['plot'] = episodio["episodio_sinopsis"]
-        infolabels['year']= otmdb.result["release_date"][:4]
-        infolabels['genre'] = otmdb.get_generos()
-        infolabels['rating'] = float(otmdb.result["vote_average"])
-        fanart=otmdb.get_backdrop()
-        if episodio["episodio_imagen"] == "": thumbnail = otmdb.get_poster()
-        else: thumbnail = episodio["episodio_imagen"]
-        plot['infoLabels']=infolabels
-        return plot, fanart, thumbnail
-    except:
-        pass
+    return data

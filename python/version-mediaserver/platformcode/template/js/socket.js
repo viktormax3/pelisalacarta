@@ -1,51 +1,79 @@
-function WebSocketConnect() {
-    if (websocket!=""){websocket.close()}
-    document.getElementById("Conexion").innerHTML = "Conectando...";
-    document.getElementById("Loading-Text").innerHTML = "Estableciendo conexión...";
-    websocket = new WebSocket(WebSocketHost);
-    websocket.onopen = function(evt) {
-        document.getElementById("Loading-Text").innerHTML = "Cargando...";
-        document.getElementById("Conexion").innerHTML = "Conectado";
-    };
-
-    websocket.onclose = function(evt) {
-        document.getElementById("Conexion").innerHTML = "Desconectado";
-    };
-
-    websocket.onmessage = function(evt) {
-        GetResponses(evt.data);
-    };
-
-    websocket.onerror = function(evt) {
+function websocket_connect() {
+    if (websocket) {
         websocket.close();
     };
-}
+    var status = document.getElementById("footer").getElementById("status");
+    status.innerHTML = "Conectando...";
 
-function WebSocketSend(data) {
+    loading.show("Estableciendo conexión...");
+    websocket = new WebSocket(websocket_host);
+    websocket.onopen = function (evt) {
+        loading.show();
+        status.innerHTML = "Conectado";
+    };
+
+    websocket.onclose = function (evt) {
+        status.innerHTML = "Desconectado";
+    };
+
+    websocket.onmessage = function (evt) {
+        get_response(evt.data);
+    };
+
+    websocket.onerror = function (evt) {
+        websocket.close();
+    };
+};
+
+function websocket_send(data, retry) {
+    if (!retry) {
+        connection_retry = true;
+    };
+	if (!websocket){
+		websocket_connect();
+	};
     if (websocket.readyState != 1) {
-        WebSocketConnect()
-        setTimeout(WebSocketSend, 500, data);
+		if ((websocket.readyState == 2 || websocket.readyState == 3) && connection_retry) {
+			websocket_connect();
+		};
+        setTimeout(websocket_send, 500, data, true);
         return;
-    } else {
-      data["id"] = ID
-      websocket.send(JSON.stringify(data));
     }
-}
+    else if (websocket.readyState == 1) {
+        data["id"] = session_id;
+        websocket.send(JSON.stringify(data));
+    };
+};
 
+function send_request(url) {
+    if (url == "go_back") {
+        nav_history.go(-1);
+        return;
+    };
 
-function DescargarContenido(url) {
-    AbrirLoading()
-    ItemList = "";
+    nav_history.newRequest(url);
 
-    UltimoRequest = url;
-    UltimoRequestTime = new Date().getTime();
-    Send = {}
-    Send["request"] = url
-    WebSocketSend(Send);
-}
+    loading.show();
+    var send = {};
+    send["request"] = url;
+    websocket_send(send);
+};
 
-function EnviarDatos(dato) {
-    Send = {}
-    Send["data"] = dato
-    WebSocketSend(Send)
-}
+function send_data(dato) {
+    var send = {};
+    send["data"] = dato;
+    websocket_send(send);
+};
+
+function ajax_to_dict(url, obj, key) {
+    var xhttp = new XMLHttpRequest();
+    ajax_running.push(xhttp);
+    xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            eval("obj." + key + " = xhttp.responseText");
+            ajax_running.remove(xhttp)
+        };
+    };
+    xhttp.open("GET", url, true);
+    xhttp.send();
+};

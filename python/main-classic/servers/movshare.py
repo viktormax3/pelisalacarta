@@ -1,4 +1,4 @@
-# -*- coding: iso-8859-1 -*-
+# -*- coding: utf-8 -*-
 #------------------------------------------------------------
 # pelisalacarta - XBMC Plugin
 # Conector para Movshare
@@ -30,12 +30,12 @@ def get_video_url( page_url , premium = False , user="" , password="" , video_pa
     videoid = scrapertools.get_match(page_url,"http://www.movshare.net/video/([a-z0-9]+)")
     video_urls = []
 
-    # Descarga la página
+    # Descarga la pÃ¡gina
     headers = []
     headers.append( ['User-Agent','Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'] )
     html = scrapertools.cache_page(page_url , headers = headers)
     
-    # La vuelve a descargar, como si hubieras hecho click en el botón
+    # La vuelve a descargar, como si hubieras hecho click en el botÃ³n
     #html = scrapertools.cache_page(page_url , headers = headers)
     filekey = scrapertools.find_single_match(html,'flashvars.filekey="([^"]+)"')
         
@@ -55,7 +55,7 @@ def get_video_url( page_url , premium = False , user="" , password="" , video_pa
 
     return video_urls
 
-# Encuentra vídeos del servidor en el texto pasado
+# Encuentra vÃ­deos del servidor en el texto pasado
 def find_videos(data):
     encontrados = set()
     devuelve = []
@@ -109,9 +109,3 @@ def find_videos(data):
             logger.info("  url duplicada="+url)
 
     return devuelve
-
-def test():
-    #http://www.movshare.net/video/6090de0821098
-    video_urls = get_video_url("http://www.movshare.net/video/isj5p3f0d58x6")
-
-    return len(video_urls)>0

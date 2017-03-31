@@ -5,20 +5,22 @@
 # Launcher
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
 # ------------------------------------------------------------
-
-import os, sys, socket
-sys.dont_write_bytecode = True
-from core import logger
-from core import config
-import threading
-from platformcode import platformtools
-from functools import wraps
+import sys
+import os
 import time
+import threading
+from functools import wraps
+sys.dont_write_bytecode = True
+from core import config
 sys.path.append(os.path.join(config.get_runtime_path(), 'lib'))
+from core import logger
+from platformcode import platformtools
+import HTTPServer
+import WebSocket
+
 http_port = int(config.get_setting("server.port"))
 websocket_port = int(config.get_setting("websocket.port"))
 myip = config.get_local_ip()
-platformtools.requests = {}
 
 def ThreadNameWrap(func):
     @wraps(func)
@@ -31,6 +33,9 @@ def ThreadNameWrap(func):
 
 threading.Thread.__init__ = ThreadNameWrap(threading.Thread.__init__)
 
+if sys.version_info < (2,7,11):
+  import ssl
+  ssl._create_default_https_context = ssl._create_unverified_context
 
 def MostrarInfo():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -44,28 +49,23 @@ def MostrarInfo():
     print ("Download Path     : " + config.get_setting("downloadpath"))
     print ("DownloadList Path : " + config.get_setting("downloadlistpath"))
     print ("Bookmark Path     : " + config.get_setting("bookmarkpath"))
-    print ("Library Path      : " + config.get_setting("library_path"))
+    print ("Library Path      : " + config.get_setting("librarypath"))
     print ("--------------------------------------------------------------------")
     conexiones = []
-    requests = platformtools.requests
-    for a in requests:
-        conexiones.append(requests[a].client_ip + " (" + requests[a].name + ")")
-    if len(conexiones) > 0:
-        print ("Clientes conectados:")
-        for conexion in conexiones:
-            print (conexion)
-    else:
-        print ("No hay conexiones")
+    controllers = platformtools.controllers
+    for a in controllers:
+        try:
+          print platformtools.controllers[a].controller.client_ip + " - (" + platformtools.controllers[a].controller.name + ")"
+        except:
+          pass
+
 
 
 def start():
     logger.info("pelisalacarta server init...")
-    import services
     config.verify_directories_created()
     try:
-        import HTTPServer
         HTTPServer.start(MostrarInfo)
-        import WebSocket
         WebSocket.start(MostrarInfo)
 
         # Da por levantado el servicio

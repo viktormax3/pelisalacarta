@@ -1,456 +1,635 @@
-var default_settings = {}
-function GetResponses(data) {
-    response = JSON.parse(data)
-    data = response["data"];
-    switch (response["action"]) {
-        case "connect":
-            document.getElementById("Version").innerHTML = data["version"]
-            document.getElementById("Date").innerHTML = data["date"]
-            ID = response["id"]
-            break;
-        case "EndItems":
-            for (h = 0; h < data["itemlist"].length; h++) {
-              JsonItem = data["itemlist"][h]
-              //[COLOR xxx][/COLOR]
-              var re = /(\[COLOR ([^\]]+)\])(?:.*?)(\[\/COLOR\])/g; 
-              var str = JsonItem["title"];
-              while ((resultado= re.exec(str)) !== null) {
-                  if (resultado.index === re.lastIndex) {
-                      re.lastIndex++;
-                  }
-                  JsonItem["title"] = JsonItem["title"].replace(resultado[1],"<span style='color:"+resultado[2]+"'>")
-                  JsonItem["title"] = JsonItem["title"].replace(resultado[3],"</span>")
-              }
-              
-              //[B][/B]
-              var re = /(\[B\])(?:.*?)(\[\/B\])/g; 
-              var str = JsonItem["title"];
-              while ((resultado= re.exec(str)) !== null) {
-                  if (resultado.index === re.lastIndex) {
-                      re.lastIndex++;
-                  }
-                  JsonItem["title"] = JsonItem["title"].replace(resultado[1],"<b>")
-                  JsonItem["title"] = JsonItem["title"].replace(resultado[2],"</b>")
-              }
-              
-              //[i][/i]
-              var re = /(\[I\])(?:.*?)(\[\/I\])/g; 
-              var str = JsonItem["title"];
-              while ((resultado= re.exec(str)) !== null) {
-                  if (resultado.index === re.lastIndex) {
-                      re.lastIndex++;
-                  }
-                  JsonItem["title"] = JsonItem["title"].replace(resultado[1],"<i>")
-                  JsonItem["title"] = JsonItem["title"].replace(resultado[2],"</i>")
-              }
-              //[COLOR xxx][/COLOR]
-              var re = /(\[COLOR ([^\]]+)\])(?:.*?)(\[\/COLOR\])/g; 
-              var str = JsonItem["plot"];
-              while ((resultado= re.exec(str)) !== null) {
-                  if (resultado.index === re.lastIndex) {
-                      re.lastIndex++;
-                  }
-                  JsonItem["plot"] = JsonItem["plot"].replace(resultado[1],"<span style='color:"+resultado[2]+"'>")
-                  JsonItem["plot"] = JsonItem["plot"].replace(resultado[3],"</span>")
-              }
-              
-              //[B][/B]
-              var re = /(\[B\])(?:.*?)(\[\/B\])/g; 
-              var str = JsonItem["plot"];
-              while ((resultado= re.exec(str)) !== null) {
-                  if (resultado.index === re.lastIndex) {
-                      re.lastIndex++;
-                  }
-                  JsonItem["plot"] = JsonItem["plot"].replace(resultado[1],"<b>")
-                  JsonItem["plot"] = JsonItem["plot"].replace(resultado[2],"</b>")
-              }
-              
-              //[i][/i]
-              var re = /(\[I\])(?:.*?)(\[\/I\])/g; 
-              var str = JsonItem["plot"];
-              while ((resultado= re.exec(str)) !== null) {
-                  if (resultado.index === re.lastIndex) {
-                      re.lastIndex++;
-                  }
-                  JsonItem["plot"] = JsonItem["plot"].replace(resultado[1],"<i>")
-                  JsonItem["plot"] = JsonItem["plot"].replace(resultado[2],"</i>")
-              }
-              
-              if (JsonItem["action"]=="go_back"){
-                Action = 'Back()'
-              }else{
-                Action = 'DescargarContenido(\''+ JsonItem["url"] +'\')'
-              }
-              if (JsonItem["thumbnail"].indexOf("http") != 0){JsonItem["thumbnail"] = data["host"] +"/local/"+encodeURIComponent(btoa(JsonItem["thumbnail"]))}
-              if (data["mode"]==0){
-                HtmlItem ='<li class="ListItemBanner"><a onblur="" onfocus="ItemFocus=this" onmouseover="this.focus()" class="ListItem {$ClassMenu}" href="javascript:void(0)" onclick="ItemFocus=this;'+Action+'"><div class="ListItem"><img class="ListItem" onerror="ImgError(this)" alt="'+data["host"]+'" src="'+JsonItem["thumbnail"]+'"></div><h3 class="ListItem">' + JsonItem["title"] + '</h3><p class="ListItem"></p></a>{$BotonMenu}</li>'
-              }else if (data["mode"]==1){
-                HtmlItem ='<li class="ListItemChannels"><a onblur="DesCargarInfo(this)" onfocus="ItemFocus=this" onmouseover="this.focus()" class="ListItem {$ClassMenu}" href="javascript:void(0)" onclick="ItemFocus=this;'+Action+'"><h3 class="ListItem">' + JsonItem["title"] + '</h3><div class="ListItem"><img class="ListItem" onerror="ImgError(this)" alt="'+data["host"]+'" src="'+JsonItem["thumbnail"]+'"></div></a>{$BotonMenu}</li>'
-             
-              }else if (data["mode"]==2){
-                if (JsonItem["action"]=="go_back" || JsonItem["action"]=="search" || JsonItem["thumbnail"].indexOf("thumb_folder") != -1 || JsonItem["thumbnail"].indexOf("thumb_nofolder") != -1 || JsonItem["thumbnail"].indexOf("thumb_error") != -1){
-                  HtmlItem ='<li class="ListItem"><a onfocus="DesCargarInfo(this);ItemFocus=this" onmouseover="this.focus()" class="ListItem {$ClassMenu}" href="javascript:void(0)" onclick="ItemFocus=this;'+Action+'"><div class="ListItem"><img class="ListItem" onerror="ImgError(this)" alt="'+data["host"]+'" src="'+JsonItem["thumbnail"]+'"><img class="Default" src="http://media.tvalacarta.info/pelisalacarta/squares/thumb_folder.png"></div><h3 class="ListItem">' + JsonItem["title"] + '</h3><p class="ListItem">' + JsonItem["plot"] + '</p></a>{$BotonMenu}</li>'
-                }else{
-                  HtmlItem ='<li class="ListItem"><a onblur="DesCargarInfo(this)" onfocus="CargarInfo(this);ItemFocus=this" onmouseover="this.focus()" class="ListItem {$ClassMenu}" href="javascript:void(0)" onclick="ItemFocus=this;'+Action+'"><div class="ListItem"><img class="ListItem" onerror="ImgError(this)" alt="'+data["host"]+'" src="'+JsonItem["thumbnail"]+'"><img class="Default" src="http://media.tvalacarta.info/pelisalacarta/squares/thumb_folder.png"></div><h3 class="ListItem">' + JsonItem["title"] + '</h3><p class="ListItem">' + JsonItem["plot"] + '</p></a>{$BotonMenu}</li>'
-                }
-              }
-              Lista = "";
-              for (x = 0; x < JsonItem["context"].length; x++) {
-                Lista +=
-                '<li class="Lista"><a href="javascript:void(0)" onmouseover="this.focus()" onclick="CerrarDialogos();DescargarContenido(\'' + JsonItem["context"][x]["url"] +
-                '\')" class="Lista"><h3>' + JsonItem["context"][x]["title"] + '</h3></a></li>';
-              }
-              BotonMenu = '<a class="ListItemButton" href="javascript:void(0)" onmouseover="this.focus()" onclick=\'ItemFocus=this;AbrirMenu("Menu","'+btoa(Lista)+'")\'></a>';
-              ClassMenu = "ListItemMenu"
-              if (JsonItem["context"].length === 0) {
-                  BotonMenu = "";
-                  ClassMenu = "";
-              }
-              HtmlItem = HtmlItem.replace("{$BotonMenu}", BotonMenu);
-              HtmlItem = HtmlItem.replace("{$ClassMenu}", ClassMenu);
-              ItemList += HtmlItem;
+function get_response(data) {
+    var response = JSON.parse(data)
+    var data = response.data;
 
+    switch (response.action) {
+    case "connect":
+        document.getElementById("version").innerHTML = data.version;
+        document.getElementById("date").innerHTML = data.date;
+        session_id = response.id;
+        break;
+
+    case "EndItems":
+        var item_list = [];
+
+        for (var item in data.itemlist) {
+            context_items = [];
+            item = data.itemlist[item];
+            if (item.thumbnail && item.thumbnail.indexOf("http") != 0) {
+                item.thumbnail = domain + "/local/" + encodeURIComponent(btoa(item.thumbnail));
             }
+			else if (item.thumbnail & false){
+				item.thumbnail = domain + "/proxy/" + encodeURIComponent(btoa(item.thumbnail));
+			};
+			if (item.fanart && item.fanart.indexOf("http") != 0) {
+                item.fanart = domain + "/local/" + encodeURIComponent(btoa(item.fanart));
+            }
+			else if (item.fanart & false){
+				item.fanart = domain + "/proxy/" + encodeURIComponent(btoa(item.fanart));
+			};
 
-            if (Navegacion.length > 0) {
-                if (Navegacion[Navegacion.length - 1].Url == UltimoRequest) {
-                    Navegacion[Navegacion.length - 1].Time          = new Date().getTime() - UltimoRequestTime;
-                    document.getElementById("Contenedor").innerHTML = '<ul class="ListItem" id="itemlist">' + ItemList + '</ul>';
-                    if (Navegacion[Navegacion.length - 1].Time > TiempoCache){
-                      Navegacion[Navegacion.length - 1].Data            = document.getElementById("Contenedor").innerHTML;
+            if (item.action == "go_back") {
+                item.url = "go_back";
+            };
+
+            if (item.context.length ) {
+                for (var x in item.context) {
+                    html_item = replace_list(html.dialog.select.item, {
+                        "item_action": "send_request('" + item.context[x].url + "')",
+                        "item_title": item.context[x].title
+                    });
+                    context_items.push(html_item);
+                }
+                var menu_button = replace_list(html.itemlist.menu, {
+                    "menu_items": btoa(context_items.join(""))
+                });
+                var menu_class = "item_with_menu";
+            }
+            else {
+                var menu_button = "";
+                var menu_class = "";
+            };
+
+            var replace_dict = {
+                "item_class": menu_class,
+                "item_url": item.url,
+                "item_thumbnail": item.thumbnail,
+                "item_fanart": item.fanart,
+                "item_title": item.title,
+                "item_plot": item.plot,
+                "item_menu": menu_button,
+				"menu_items": btoa(context_items.join(""))
+            };
+
+            if (html.itemlist[data.viewmode]) {
+                var html_item = replace_list(html.itemlist[data.viewmode], replace_dict);
+            }
+            else {
+                var html_item = replace_list(html.itemlist.movie, replace_dict);
+            }
+            item_list.push(html_item);
+
+        };
+
+        document.getElementById("itemlist").innerHTML = item_list.join("");
+        set_category(data.category);
+        document.getElementById("itemlist").children[0].children[0].focus();
+        document.getElementById("itemlist").scrollTop = 0;
+		show_images();
+
+        nav_history.newResponse(item_list, data.category);
+
+        //console.debug(nav_history)
+        send_data({
+            "id": response.id,
+            "result": true
+        });
+        loading.close();
+        break;
+
+    case "Refresh":
+        nav_history.current -= 1
+        send_request(nav_history.states[nav_history.current].url);
+        send_data({
+            "id": response.id,
+            "result": true
+        });
+        break;
+
+    case "Alert":
+        loading.close();
+        dialog.ok(response.id, data);
+        break;
+
+    case "AlertYesNo":
+        loading.close()
+        dialog.yesno(response.id, data)
+        break;
+
+    case "ProgressBG":
+        dialog.progress_bg(response.id, data);
+        send_data({
+            "id": response.id,
+            "result": true
+        });
+        break;
+
+    case "ProgressBGUpdate":
+        dialog.progress_bg(response.id, data);
+        break;
+
+    case "ProgressBGClose":
+        dialog.progress_bg_close();
+        send_data({
+            "id": response.id,
+            "result": true
+        });
+        break;
+
+    case "Progress":
+        loading.close();
+        dialog.progress(response.id, data);
+        send_data({
+            "id": response.id,
+            "result": true
+        });
+        break;
+
+    case "ProgressUpdate":
+        dialog.progress_update(response.id, data);
+        break;
+
+    case "ProgressClose":
+        dialog.progress_close();
+        send_data({
+            "id": response.id,
+            "result": true
+        });
+        loading.close();
+        break;
+
+    case "ProgressIsCanceled":
+        send_data({
+            "id": response.id,
+            "result": document.getElementById("window_progress").getElementById("canceled").checked != ""
+        });
+        break;
+
+    case "isPlaying":
+        send_data({
+            "id": response.id,
+            "result": document.getElementById("Player-popup").style.display == "block" || document.getElementById("Lista-popup").style.display == "block"
+        });
+        break;
+
+    case "Keyboard":
+        loading.close();
+        dialog.keyboard(response.id, data);
+        break;
+
+    case "List":
+        loading.close();
+        dialog.select(response.id, data);
+        break;
+
+    case "Play":
+        send_data({
+            "id": response.id,
+            "result": true
+        });
+		
+        loading.close();
+
+        if (settings.player_mode == 0) {
+            var lista = [];
+            for (var player in players) {
+                lista.push(replace_list(html.dialog.select.item, {
+                    "item_title": players[player],
+                    "item_action": "play_mode('" + data.video_url + "','" + data.title + "','" + player + "')"
+                }));
+            };
+            dialog.menu("Elige el Reproductor", btoa(lista.join("")));
+
+        }
+        else {
+            play_mode(data.video_url, data.title, Object.keys(players)[settings.player_mode - 1]);
+        };
+		
+        break;
+		
+    case "Update":
+        send_request(data.url);
+        loading.close();
+        break;
+		
+    case "HideLoading":
+        loading.close();
+        break;
+		
+    case "OpenInfo":
+        loading.close();
+        dialog.info(response.id, data);
+        break;
+
+    case "OpenConfig":
+        loading.close();
+        var itemlist = {};
+        default_settings = {};
+        settings_controls = [];
+
+        for (var x in data.items) {
+
+            if (!itemlist[data.items[x].category]) {
+                itemlist[data.items[x].category] = [];
+            };
+            if (data.items[x].id) {
+                default_settings[data.items[x].id] = data.items[x]["default"];
+            }
+            if (!data.items[x].color || data.items[x].color == "auto") {
+                data.items[x].color = "#FFFFFF";
+            };
+
+            settings_controls.push(data.items[x]);
+
+            switch (data.items[x].type) {
+            case "sep":
+                itemlist[data.items[x].category].push(replace_list(html.config.sep, {}));
+                break;
+
+            case "lsep":
+            case "label":
+                itemlist[data.items[x].category].push(replace_list(html.config.label, {
+                    "item_color": data.items[x].color,
+                    "item_label": data.items[x].label
+                }));
+                break;
+
+            case "number":
+            case "text":
+                if (data.items[x].hidden) {
+                    var type = "password";
+                }
+                else {
+                    var type = "text";
+                };
+                itemlist[data.items[x].category].push(replace_list(html.config.text, {
+                    "item_color": data.items[x].color,
+                    "item_label": data.items[x].label,
+                    "item_id": data.items[x].id,
+                    "item_value": data.items[x].value,
+                    "item_type": type
+                }));
+                break;
+
+            case "bool":
+                if (data.items[x].value == "true" || data.items[x].value == true) {
+                    var value = "checked='checked'";
+                }
+                else {
+                    var value = "";
+                };
+                itemlist[data.items[x].category].push(replace_list(html.config.bool, {
+                    "item_color": data.items[x].color,
+                    "item_label": data.items[x].label,
+                    "item_id": data.items[x].id,
+                    "item_value": value
+                }));
+                break;
+
+            case "labelenum":
+                if (!data.items[x].values) {
+                    var values = data.items[x].lvalues.split("|");
+                }
+                else {
+                    var values = data.items[x].values.split("|");
+                };
+
+                var options = [];
+                for (var y in values) {
+                    if (data.items[x].value == values[y]) {
+                        options.push("<option selected=selected>" + values[y] + "</option>");
                     }
-                    if (document.getElementById("Contenedor").children[0].children.length > Navegacion[Navegacion.length - 1].Focus){
-                      document.getElementById("Contenedor").children[0].children[Navegacion[Navegacion.length - 1].Focus].children[0].focus();
-                    }else{
-                      document.getElementById("Contenedor").children[0].children[document.getElementById("Contenedor").children[0].children.length -1].children[0].focus();
+                    else {
+                        options.push("<option>" + values[y] + "</option>");
+                    };
+                };
+                itemlist[data.items[x].category].push(replace_list(html.config.list, {
+                    "item_type": "labelenum",
+                    "item_color": data.items[x].color,
+                    "item_label": data.items[x].label,
+                    "item_id": data.items[x].id,
+                    "item_values": options
+                }));
+                break;
+
+            case "list":
+                var options = [];
+                for (var y in data.items[x].lvalues) {
+                    if (data.items[x].value == y) {
+                        options.push("<option selected=selected>" + data.items[x].lvalues[y] + "</option>");
                     }
-                    document.getElementById("Contenedor").scrollTop = Navegacion[Navegacion.length - 1].Scroll;
-                    
-                } else {
-                    Navegacion[Navegacion.length - 1].Scroll        = document.getElementById("Contenedor").scrollTop;
-                    Navegacion[Navegacion.length - 1].Focus         = Array.prototype.indexOf.call(document.getElementById("itemlist").children, ItemFocus.parentNode);
-                    Navegacion.push({});
-                    Navegacion[Navegacion.length - 1].Titulo        = ItemFocus.children[1].textContent;
-                    Navegacion[Navegacion.length - 1].Url           = UltimoRequest;
-                    Navegacion[Navegacion.length - 1].Time          = new Date().getTime() - UltimoRequestTime;
-                    document.getElementById("Contenedor").innerHTML = '<ul class="ListItem" id="itemlist">' + ItemList + '</ul>';
-                    if (Navegacion[Navegacion.length - 1].Time > TiempoCache){
-                      Navegacion[Navegacion.length - 1].Data            = document.getElementById("Contenedor").innerHTML;
+                    else {
+                        options.push("<option>" + data.items[x].lvalues[y] + "</option>");
+                    };
+                };
+
+                itemlist[data.items[x].category].push(replace_list(html.config.list, {
+                    "item_type": "enum",
+                    "item_color": data.items[x].color,
+                    "item_label": data.items[x].label,
+                    "item_id": data.items[x].id,
+                    "item_values": options
+                }));
+                break;
+
+            case "enum":
+                if (!data.items[x].values) {
+                    var values = data.items[x].lvalues.split("|");
+                }
+                else {
+                    var values = data.items[x].values.split("|");
+                };
+
+                var options = [];
+                for (var y in values) {
+                    if (data.items[x].value == y) {
+                        options.push("<option selected=selected>" + values[y] + "</option>");
                     }
-                    document.getElementById("Contenedor").children[0].children[0].children[0].focus();
-                    document.getElementById("Contenedor").scrollTop = 0;
-                }
-            } else {
-                Navegacion.push({});
-                Navegacion[Navegacion.length - 1].Titulo          = "Inicio";
-                Navegacion[Navegacion.length - 1].Url             = UltimoRequest;
-                Navegacion[Navegacion.length - 1].Time            = new Date().getTime() - UltimoRequestTime;
-                Navegacion[Navegacion.length - 1].Scroll          = "";
-                Navegacion[Navegacion.length - 1].Focus           = "";
-                document.getElementById("Contenedor").innerHTML   = '<ul class="ListItem" id="itemlist">' + ItemList + '</ul>'
-                if (Navegacion[Navegacion.length - 1].Time > TiempoCache){
-                  Navegacion[Navegacion.length - 1].Data            = document.getElementById("Contenedor").innerHTML;
-                }
-                document.getElementById("Contenedor").children[0].children[0].children[0].focus();
+                    else {
+                        options.push("<option>" + values[y] + "</option>");
+                    };
+                };
 
-            }
-            
-            
-            ActualizarNavegacion()           
-            EnviarDatos({"id":response["id"], "result":true });
-            CerrarLoading()
-            break;
-        case "Refresh":
-            Consulta = Navegacion[Navegacion.length - 1].Url;
-            Navegacion[Navegacion.length - 1].Scroll = document.getElementById("Contenedor").scrollTop;
-            Navegacion[Navegacion.length - 1].Focus  = Array.prototype.indexOf.call(document.getElementById("itemlist").children, ItemFocus.parentNode);
-            DescargarContenido(Consulta);
-            EnviarDatos({"id":response["id"], "result":true });
-            break;
-        case "Alert":
-            CerrarLoading()
-            AbrirAlert(response["id"],data)
-            break;
-        case "AlertYesNo":
-            CerrarLoading()
-            AbrirAlertYesNo(response["id"],data)
-            break;
-        case "ProgressBG":
-            AbrirProgressBG(response["id"],data)
-            EnviarDatos({"id":response["id"], "result":true });
-            break;
-        case "ProgressBGUpdate":
-            UpdateProgressBG(response["id"],data)
-            break;
-        case "ProgressBGClose":
-            CerrarProgressBG();
-            EnviarDatos({"id":response["id"], "result":true });
-            break;
-        case "Progress":
-            CerrarLoading()
-            AbrirProgress(response["id"],data)
-            EnviarDatos({"id":response["id"], "result":true });
-            break;
-        case "ProgressUpdate":
-            UpdateProgress(response["id"],data)
-            break;
-        case "ProgressClose":
-            CerrarProgress();
-            EnviarDatos({"id":response["id"], "result":true });
-            CerrarLoading()
-            break;
-        case "ProgressIsCanceled":
-            EnviarDatos({"id":response["id"], "result":document.getElementById("ProgressBar-Cancelled").checked !="" });
-            break;
-        case "isPlaying":
-            EnviarDatos({"id":response["id"], "result": document.getElementById("Player-popup").style.display=="block" || document.getElementById("Lista-popup").style.display=="block"});
-            break;
-        case "Keyboard":
-            CerrarLoading()
-            AbrirKeyboard(response["id"],data);
-            break;
-        case "List":
-            CerrarLoading()
-            Lista = "";
-            for (x = 0; x < data["list"].length; x++) {
-                Lista +=
-                    '<li class="Lista"><a href="javascript:void(0)" onmouseover="this.focus()" onclick="CerrarDialogos();EnviarDatos({\'id\':\''+response["id"]+'\', \'result\':'+x+' })" class="Lista"><h3>' + data["list"][x] + '</h3></a></li>';
-            }
-            AbrirLista(response["id"],data,Lista)
-            break;
-        case "Play":
-            EnviarDatos({"id":response["id"], "result":true });
-            CerrarLoading()
-            if(!new RegExp("^(.+://)").test(data["video_url"])){
-             data["video_url"] = data["host"]+"/local/"+encodeURIComponent(btoa(Utf8.encode(data["video_url"])))+"/video.mp4"}
-             
-            else if(new RegExp("^(?:http\://.*?\.vkcache\.com)").test(data["video_url"])){
-            
-             data["video_url"] = data["host"]+"/netutv-"+encodeURIComponent(btoa(Utf8.encode(data["video_url"])))+".mp4"} 
-            
-            ProxyUrl = data["host"]+"/proxy/"+encodeURIComponent(btoa(Utf8.encode(data["video_url"])))+"/video.mp4"
-            Lista  = '<li onmouseover="this.focus()" class="Lista"><a href="#" onmouseover="this.focus()" onclick="CerrarDialogos();Play(\''+data["video_url"]+'\',\''+btoa(data["title"])+'\')" class="Lista"><h3>Abrir Enlace</h3></a></li>';
-            Lista += '<li onmouseover="this.focus()" class="Lista"><a href="#" onmouseover="this.focus()" onclick="CerrarDialogos();Play_VLC(\''+data["video_url"]+'\',\''+btoa(data["title"])+'\')" class="Lista"><h3>Plugin VLC</h3></a></li>';
-            Lista += '<li onmouseover="this.focus()" class="Lista"><a href="#" onmouseover="this.focus()" onclick="CerrarDialogos();Play_HTML(\''+data["video_url"]+'\',\''+btoa(data["title"])+'\')" class="Lista"><h3>Video HTML</h3></a></li>';
+                itemlist[data.items[x].category].push(replace_list(html.config.list, {
+                    "item_type": "enum",
+                    "item_color": data.items[x].color,
+                    "item_label": data.items[x].label,
+                    "item_id": data.items[x].id,
+                    "item_values": options
+                }));
+                break;
+				
+            default:
+                break;
+            };
 
-            AbrirLista("",{"title": "Elige el Reproductor"},Lista)
+        };
+		
+        var categories = [];
+        var category_list = [];
 
-            break;
-        case "Update":
-            DescargarContenido(data["url"]);
-            CerrarLoading()
-            break;
-        case "HideLoading":
-            CerrarLoading()
-            break;
-        case "OpenConfig":
-            CerrarLoading()
-            Opciones = {};
-            default_settings = {}
-            for (x = 0; x < data["items"].length; x++) {
-                if (typeof(Opciones[data["items"][x]["category"]]) == 'undefined') {
-                    Opciones[data["items"][x]["category"]] = "";
-                }
-                if (data["items"][x]["color"] != ""){
-                  data["items"][x]["label"] = "<span style='color:"+data["items"][x]["color"]+"'>" + data["items"][x]["label"] + "</span>"
-                }
-                default_settings[data["items"][x]["id"]] = data["items"][x]["default"]
-                switch (data["items"][x]["type"]) {
-                    case "sep":
-                        Opciones[data["items"][x]["category"]] +=
-                            '<li class="ListItem"><div class="Separador"></div></li>';
-                        break;
-                    case "lsep", "label":
-                        Opciones[data["items"][x]["category"]] +=
-                            '<li class="ListItem"><div class="LabelSeparador">' + data["items"][x]["label"] + '</div></li>';
-                        break;
-                    case "text":
-                        if (data["items"][x]["option"] == "hidden") {
-                            Opciones[data["items"][x]["category"]] += '<li class="ListItem"><div class="ListItem"><h3 class="Ajuste">' + data["items"][x]["label"] + '</h3><span class="Control"><div class="Text"><input class="Text" onchange="ChangeSetting(this)" onfocus="this.parentNode.parentNode.parentNode.className=\'ListItem ListItem-hover\'" onblur="this.parentNode.parentNode.parentNode.className=\'ListItem\'" type="password" id="' + data["items"][x]["id"] + '" value="' + data["items"][x]["value"] + '"></div></span</div></li>';
-                        } else {
-                            Opciones[data["items"][x]["category"]] += '<li class="ListItem"><div class="ListItem"><h3 class="Ajuste">' + data["items"][x]["label"] + '</h3><span class="Control"><div class="Text"><input class="Text" onchange="ChangeSetting(this)" onfocus="this.parentNode.parentNode.parentNode.className=\'ListItem ListItem-hover\'" onblur="this.parentNode.parentNode.parentNode.className=\'ListItem\'" type="text" id="' + data["items"][x]["id"] + '" value="' + data["items"][x]["value"] + '"></div></span</div></li>';
-                        }
-                        break;
-                    case "bool":
-                        if (data["items"][x]["value"] == "true" || data["items"][x]["value"] == true) {
-                            Opciones[data["items"][x]["category"]] += '<li class="ListItem"><div class="ListItem"><h3 class="Ajuste">' + data["items"][x]["label"] + '</h3><span class="Control"><div class="Check"><input class="Check" onchange="ChangeSetting(this)" onfocus="this.parentNode.parentNode.parentNode.className=\'ListItem ListItem-hover\'" onblur="this.parentNode.parentNode.parentNode.className=\'ListItem\'" type="checkbox" checked=checked id="' + data["items"][x]["id"] + '" value="' + data["items"][x]["value"] + '"></div></span</div></li>';
-                        } else {
-                            Opciones[data["items"][x]["category"]] += '<li class="ListItem"><div class="ListItem"><h3 class="Ajuste">' + data["items"][x]["label"] + '</h3><span class="Control"><div class="Check"><input class="Check" onchange="ChangeSetting(this)" onfocus="this.parentNode.parentNode.parentNode.className=\'ListItem ListItem-hover\'" onblur="this.parentNode.parentNode.parentNode.className=\'ListItem\'" type="checkbox" id="' + data["items"][x]["id"] + '" value="' + data["items"][x]["value"] + '"></div></span</div></li>';
-                        }
-                        break;
-                    case "labelenum":
-                        if (data["items"][x]["values"] === "" || typeof(data["items"][x]["values"]) === "undefined") {
-                            Opcion = data["items"][x]["lvalues"].split("|");
-                        } else {
-                            Opcion = data["items"][x]["values"].split("|");
-                        }
-                        SOpciones = "";
-                        for (y = 0; y < Opcion.length; y++) {
-                            if (data["items"][x]["value"] == Opcion[y]) {
-                                if (data["items"][x]["lvalues"] === "" || typeof(data["items"][x]["lvalues"]) === "undefined") {
-                                    SOpciones += "<option selected=selected>" + data["items"][x]["values"].split("|")[y] +
-                                        "</option>";
-                                } else {
-                                    SOpciones += "<option selected=selected>" + data["items"][x]["lvalues"].split("|")[y] +
-                                        "</option>";
-                                }
-                            } else {
-                                if (data["items"][x]["lvalues"] === "" || typeof(data["items"][x]["lvalues"]) === "undefined") {
-                                    SOpciones += "<option>" + data["items"][x]["values"].split("|")[y] +
-                                        "</option>";
-                                } else {
-                                    SOpciones += "<option>" + data["items"][x]["lvalues"].split("|")[y] + "</option>";
-                                }
-                            }
-                        }
-                        Opciones[data["items"][x]["category"]] += '<li class="ListItem"><div class="ListItem"><h3 class="Ajuste">' + data["items"][x]["label"] + '</h3><span class="Control"><div class="Select"><select class="Select" onchange="ChangeSetting(this)" name="labelenum" onfocus="this.parentNode.parentNode.parentNode.className=\'ListItem ListItem-hover\'" onblur="this.parentNode.parentNode.parentNode.className=\'ListItem\'" id="' + data["items"][x]["id"] + '">' + SOpciones + '</select></div></span</div></li>';
-                        break;
-                        
-                    case "list":
-                  
-                        SOpciones = "";
-                        for (y = 0; y < + data["items"][x]["lvalues"].length; y++) {
-                            if (data["items"][x]["value"] == y) {
-                              SOpciones += "<option selected=selected>" + data["items"][x]["lvalues"][y] + "</option>";
-                            } else {
-              
-                              SOpciones += "<option>" + data["items"][x]["lvalues"][y] + "</option>";
-                            }
-                        }
-                        Opciones[data["items"][x]["category"]] += '<li class="ListItem"><div class="ListItem"><h3 class="Ajuste">' + data["items"][x]["label"] + '</h3><span class="Control"><div class="Select"><select class="Select" onchange="ChangeSetting(this)" name="enum" onfocus="this.parentNode.parentNode.parentNode.className=\'ListItem ListItem-hover\'" onblur="this.parentNode.parentNode.parentNode.className=\'ListItem\'" id="' + data["items"][x]["id"] + '">' + SOpciones + '</select></div></span</div></li>';
-                        break;
-                    case "enum":
-                        if (data["items"][x]["values"] === "" || typeof(data["items"][x]["values"]) === "undefined") {
-                            Opcion = data["items"][x]["lvalues"].split("|");
-                            for (y = 0; y < Opcion.length; y++) {
-                                Opcion[y] = y;
-                            }
-                        } else {
-                            Opcion = data["items"][x]["values"].split("|");
-                        }
-                        SOpciones = "";
-                        for (y = 0; y < Opcion.length; y++) {
-                            if (data["items"][x]["value"] == Opcion[y]) {
-                                if (data["items"][x]["lvalues"] === "" || typeof(data["items"][x]["lvalues"]) === "undefined") {
-                                    SOpciones += "<option selected=selected>" + data["items"][x]["values"].split("|")[y] +
-                                        "</option>";
-                                } else {
-                                    SOpciones += "<option selected=selected>" + data["items"][x]["lvalues"].split("|")[y] +
-                                        "</option>";
-                                }
-                            } else {
-                                if (data["items"][x]["lvalues"] === "" || typeof(data["items"][x]["lvalues"]) === "undefined") {
-                                    SOpciones += "<option>" + data["items"][x]["values"].split("|")[y] +
-                                        "</option>";
-                                } else {
-                                    SOpciones += "<option>" + data["items"][x]["lvalues"].split("|")[y] + "</option>";
-                                }
-                            }
-                        }
-                        Opciones[data["items"][x]["category"]] += '<li class="ListItem"><div class="ListItem"><h3 class="Ajuste">' + data["items"][x]["label"] + '</h3><span class="Control"><div class="Select"><select class="Select" onchange="ChangeSetting(this)" name="enum" onfocus="this.parentNode.parentNode.parentNode.className=\'ListItem ListItem-hover\'" onblur="this.parentNode.parentNode.parentNode.className=\'ListItem\'" id="' + data["items"][x]["id"] + '">' + SOpciones + '</select></div></span</div></li>';
-                        break;
-                    default:
-                        break;
-                }
+        for (var category in itemlist) {
+            if (Object.keys(itemlist).length > 1 || category != "undefined") {
+                categories.push(replace_list(html.config.category, {
+                    "item_label": category,
+                    "item_category": category
+                }));
+            };
+            category_list.push(replace_list(html.config.container, {
+                "item_id": "category_" + category,
+                "item_value": itemlist[category].join("")
+            }));
 
-            }
-            Secciones = "";
-            Lista = "";
-            
-            for (var key in Opciones) {
-                if (Opciones.hasOwnProperty(key)) {
-                    if (Object.keys(Opciones).length > 1 || key !="undefined"){
-                      Secciones += '<a href="javascript:void(0)" class="Boton" onmouseover="this.focus()" onclick="MostrarSeccion(\'' + key + '\')">' + key + '</a>\n';
-                    }
-                    Lista +=
-                        '<ul class="ListItem" style="display:none" id="Config-' + key + '">' + Opciones[key] + '</ul>';
-                }
-            }
-            AbrirConfig(response["id"],data, Secciones, Lista)
-            break;
+        };
+        dialog.config(response.id, data, categories.join(""), category_list.join(""));
+        evaluate_controls();
+        break;
 
-        default:
-            break;
+    default:
+        break;
+    };
+};
+
+function custom_button(data) {
+    if (data == null) {
+        var controls = document.getElementById("window_settings").getControls();
+
+        for (var x in controls) {
+            switch (controls[x].type) {
+            case "text":
+                controls[x].value = default_settings[controls[x].id];
+                break;
+            case "password":
+                controls[x].value = default_settings[controls[x].id];
+                break;
+            case "checkbox":
+                value = default_settings[controls[x].id];
+                if (value == true) {
+                    value = "checked";
+                }
+                else {
+                    value = "";
+                };
+                controls[x].checked = value;
+                break;
+            case "select-one":
+                if (controls[x].name == "enum") {
+                    controls[x].selectedIndex = default_settings[controls[x].id];
+                }
+                else if (controls[x].name == "labelenum") {
+                    controls[x].value = default_settings[controls[x].id];
+                };
+                break;
+            };
+			controls[x].onchange()
+        };
     }
-}
+    else {
+        send_data({
+            "id": document.getElementById("window_settings").RequestID,
+            "result": "custom_button"
+        });
+        if (data["close"] == true) {
+            dialog.closeall();
+        };
+    };
+};
 
-function DefaultConfig() {
-        Objetos = document.getElementById("Config-popup").getElementsByTagName("input")
-        
-        for(x=0;x<Objetos.length;x++){
-          switch (Objetos[x].type) {
-                case "text":
-                    Objetos[x].value = default_settings[Objetos[x].id]
-                    break;
-                case "password":
-                    Objetos[x].value = default_settings[Objetos[x].id]
-                    break;
-                case "checkbox":
-                    value = default_settings[Objetos[x].id]
-                    if (value == true) {
-                      value = "checked"
-                    } else{
-                      value = ""
-                    }
-                    Objetos[x].checked = value
-                    break;
-                case "select-one":
-                    Objetos[x].selectedIndex = default_settings[Objetos[x].id]
-                    break;
-            }
-        }
-        Objetos = document.getElementById("Config-popup").getElementsByTagName("select")
-        for(x=0;x<Objetos.length;x++){
-          switch (Objetos[x].type) {
-                case "select-one":
-                    if (Objetos[x].name == "enum"){
-                      Objetos[x].selectedIndex = default_settings[Objetos[x].id]
-                    } else if (Objetos[x].name == "labelenum"){
-                      Objetos[x].value = default_settings[Objetos[x].id]
-                    }
-                    break;
-            }
-        }
+function info_window(comando) {
+    send_data({
+        "id": document.getElementById("window_info").RequestID,
+        "result": comando
+    });
+};
 
-}
-function GuardarConfig(Guardar) {
-    var Ajustes = {};
+function save_config(Guardar) {
     if (Guardar === true) {
-        JsonAjustes = {};
-        Objetos = document.getElementById("Config-popup").getElementsByTagName("input")
-        
-        for(x=0;x<Objetos.length;x++){
-          switch (Objetos[x].type) {
+        var JsonAjustes = {};
+        var controls = document.getElementById("window_settings").getControls();
+
+        for (var x in controls) {
+            switch (controls[x].type) {
+            case "text":
+                JsonAjustes[controls[x].id] = controls[x].value;
+                break;
+            case "password":
+                JsonAjustes[controls[x].id] = controls[x].value;
+                break;
+            case "checkbox":
+                JsonAjustes[controls[x].id] = controls[x].checked.toString();
+                break;
+            case "select-one":
+                if (controls[x].name == "enum") {
+                    JsonAjustes[controls[x].id] = controls[x].selectedIndex.toString();
+                }
+                else if (controls[x].name == "labelenum") {
+                    JsonAjustes[controls[x].id] = controls[x].value;
+                }
+                break;
+            }
+        }
+        send_data({
+            "id": document.getElementById("window_settings").RequestID,
+            "result": JsonAjustes
+        });
+    }
+    else {
+        send_data({
+            "id": document.getElementById("window_settings").RequestID,
+            "result": false
+        });
+    };
+
+    loading.show();
+};
+
+function evaluate_controls(control_changed) {
+    if (typeof control_changed != "undefined") {
+        for (var x in settings_controls) {
+            if (settings_controls[x].id == control_changed.id) {
+                switch (control_changed.type) {
                 case "text":
-                    JsonAjustes[Objetos[x].id] = Objetos[x].value;
+                    settings_controls[x].value = control_changed.value;
                     break;
                 case "password":
-                    JsonAjustes[Objetos[x].id] = Objetos[x].value;
+                    settings_controls[x].value = control_changed.value;
                     break;
                 case "checkbox":
-                    JsonAjustes[Objetos[x].id] = Objetos[x].checked.toString();
+                    settings_controls[x].value = control_changed.checked;
                     break;
                 case "select-one":
-                    JsonAjustes[Objetos[x].id] = Objetos[x].selectedIndex.toString();
-                    break;
-            }
-        }
-        Objetos = document.getElementById("Config-popup").getElementsByTagName("select")
-        for(x=0;x<Objetos.length;x++){
-          switch (Objetos[x].type) {
-                case "select-one":
-                    if (Objetos[x].name == "enum"){
-                      JsonAjustes[Objetos[x].id] = Objetos[x].selectedIndex.toString();
-                    } else if (Objetos[x].name == "labelenum"){
-                      JsonAjustes[Objetos[x].id] = Objetos[x].value;
+                    if (control_changed.name == "enum") {
+                        settings_controls[x].value = control_changed.selectedIndex;
                     }
+                    else if (control_changed.name == "labelenum") {
+                        settings_controls[x].value = control_changed.value;
+                    };
                     break;
-            }
-        }
-        EnviarDatos({"id":document.getElementById("Config-popup").RequestID, "result":JsonAjustes });
-    } else {
-        EnviarDatos({"id":document.getElementById("Config-popup").RequestID, "result":false });
+                };
+                break;
+            };
+        };
+    };
+
+    for (var index in settings_controls) {
+        control = get_control_group(index);
+        set_visible(document.getElementById("window_settings").getElementById("controls_container").children[control[0]].children[control[1]], evaluate(index, settings_controls[index].visible));
+        set_enabled(document.getElementById("window_settings").getElementById("controls_container").children[control[0]].children[control[1]], evaluate(index, settings_controls[index].enabled));
+    };
+};
+
+function set_visible(element, visible) {
+    if (visible) {
+        element.style.display = "block";
     }
-    
-    AbrirLoading()
-}
+    else {
+        element.style.display = "none";
+    };
+};
+
+function set_enabled(element, enabled) {
+    if (element.children[0].className == "control") {
+        element.children[0].children[1].disabled = !enabled;
+    };
+};
+
+function get_control_group(index) {
+    var group = 0;
+    var pos = 0;
+    var children = document.getElementById("window_settings").getElementById("controls_container").children;
+    for (child in children) {
+        if (pos + children[child].children.length <= index) {
+            group ++;
+            pos += children[child].children.length;
+        }
+        else {
+            break;
+        };
+    };
+    return [group, index - pos];
+};
+
+function evaluate(index, condition) {
+    index = parseInt(index);
+
+    if (typeof condition == "undefined") {
+        return true;
+    };
+    if (typeof condition == "boolean") {
+        return condition;
+    };
+
+    if (condition.toLocaleLowerCase() == "true") {
+        return true;
+    }
+    else if (condition.toLocaleLowerCase() == "false") {
+        return false;
+    };
+
+    const regex = /(!?eq|!?gt|!?lt)?\(([^,]+),[\"|']?([^)|'|\"]*)['|\"]?\)[ ]*([+||])?/g;
+
+    while ((m = regex.exec(condition)) !== null) {
+        // This is necessary to avoid infinite loops with zero-width matches
+        if (m.index === regex.lastIndex) {
+            regex.lastIndex++;
+        };
+
+        var operator = m[1];
+        var id = parseInt(m[2]);
+        var value = m[3];
+        var next = m[4];
+
+        if (isNaN(id)) {
+            return false;
+        };
+
+        if (index + id < 0 || index + id >= settings_controls.length) {
+            return false;
+        }
+        else {
+            if (settings_controls[index + id].type == "list" || settings_controls[index + id].type == "enum") {
+                control_value = settings_controls[index + id].lvalues[settings_controls[index + id].value];
+            }
+            else {
+                control_value = settings_controls[index + id].value;
+            };
+        };
+
+        if (["lt", "!lt", "gt", "!gt"].indexOf(operator) > -1) {
+            value = parseInt(value);
+            if (isNaN(value)) {
+                return false;
+            };
+        };
+
+        if (["eq", "!eq"].indexOf(operator) > -1) {
+
+            if (!isNaN(parseInt(value))) {
+                value = parseInt(value);
+            };
+            if (value.toLocaleLowerCase() == "true") {
+                value = true;
+            }
+            else if (value.toLocaleLowerCase() == "false") {
+                value = false;
+            };
+        };
+
+        if (operator == "eq") {
+            ok = (control_value == value);
+        };
+        if (operator == "!eq") {
+            ok = !(control_value == value);
+        };
+        if (operator == "gt") {
+            ok = (control_value > value);
+        };
+        if (operator == "!gt") {
+            ok = !(control_value > value);
+        };
+        if (operator == "lt") {
+            ok = (control_value < value);
+        };
+        if (operator == "!lt") {
+            ok = !(control_value < value);
+        };
+
+        if (next == "|" && ok == true) {
+            break;
+        };
+        if (next == "+" && ok == false) {
+            break;
+        };
+    };
+    return ok;
+};

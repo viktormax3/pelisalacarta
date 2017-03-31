@@ -19,41 +19,41 @@ class proxy(Controller):
     def run(self, path):
         url= path.replace("/proxy/","").split("/")[0]
         url = base64.b64decode(urllib.unquote_plus(url))
+        
+        request_headers = self.handler.headers.dict
+        
+        if "host" in request_headers: request_headers.pop("host")
+        if "referer" in request_headers: request_headers.pop("referer")
+        if "cookie" in request_headers: request_headers.pop("cookie")
+        
+        if "|" in url:
+          url_headers = dict([[header.split("=")[0].lower(),urllib.unquote_plus("=".join(header.split("=")[1:]))] for header in url.split("|")[1].split("&")])
+          url = url.split("|")[0]
+          request_headers.update(url_headers)
 
-        Headers = self.handler.headers.dict
-        
-        h=urllib2.HTTPHandler(debuglevel=0)
-        request = urllib2.Request(url)
-        request.add_header("Accept-Encoding","")
-        
-        for header in Headers:
-          if not header in ["host","referer"]:
-            request.add_header(header,Headers[header])
+        req = urllib2.Request(url, headers=request_headers)
+        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))
           
-        opener = urllib2.build_opener(h)
-        urllib2.install_opener(opener)  
-        connexion = opener.open(request)
-        self.handler.send_response(connexion.getcode())
-        
-        ResponseHeaders = connexion.info()
-        logger.info("------------------------------------")
-        logger.info(url)
-        logger.info(connexion.getcode())
-        logger.info("Headers:")
-        for header in ResponseHeaders:
-            self.handler.send_header(header, ResponseHeaders[header])
-            logger.info("Reenviado Header ->" + header + "=" + ResponseHeaders[header])
-  
+        try:
+          h = opener.open(req)
+        except urllib2.HTTPError, e:
+          h = e
+        except:
+          self.handler.send_response("503")
+          self.handler.wfile.close()
+          h.close()
+          
+        self.handler.send_response(h.getcode())
+        for header in h.info():
+            self.handler.send_header(header, h.info()[header])
+
         self.handler.end_headers()
         
         blocksize = 1024
-        bloqueleido = connexion.read(blocksize)
+        bloqueleido = h.read(blocksize)
         while len(bloqueleido)>0:
           self.handler.wfile.write(bloqueleido)
-          bloqueleido = connexion.read(blocksize)
-          
-        logger.info("Terminado")
-        logger.info("------------------------------------")
-        
+          bloqueleido = h.read(blocksize)
+
         self.handler.wfile.close()
-        connexion.close()
+        h.close()

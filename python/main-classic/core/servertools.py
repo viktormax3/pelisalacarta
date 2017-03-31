@@ -110,7 +110,7 @@ def findvideosbyserver(data, serverid):
 
     return devuelve
 
-def findvideos(data):
+def findvideos(data, skip=False):
     logger.info("pelisalacarta.core.servertools findvideos") # en #"+data+"#")
     encontrados = set()
     devuelve = []
@@ -124,7 +124,9 @@ def findvideos(data):
             #exec "devuelve.extend("+serverid+".find_videos(data))"
             servers_module = __import__("servers."+serverid)
             server_module = getattr(servers_module,serverid)
-            devuelve.extend( server_module.find_videos(data) )
+            result = server_module.find_videos(data)
+            if result and skip: return result
+            devuelve.extend(result)
         except ImportError:
             logger.info("No existe conector para #"+serverid+"#")
             #import traceback
@@ -147,12 +149,14 @@ def get_video_urls(server,url):
     return video_urls
 
 def get_channel_module(channel_name):
-    channels_module = __import__("channels."+channel_name)
-    channel_module = getattr(channels_module,channel_name)
+    if not "." in channel_name:
+      channel_module = __import__('channels.%s' % channel_name, None, None, ["channels.%s" % channel_name])
+    else:
+      channel_module = __import__(channel_name, None, None, [channel_name])
     return channel_module
 
 def get_server_from_url(url):
-    encontrado = findvideos(url)
+    encontrado = findvideos(url, True)
     if len(encontrado)>0:
         devuelve = encontrado[0][2]
     else:
@@ -195,7 +199,7 @@ def resolve_video_urls_for_playing(server,url,video_password="",muestra_dialogo=
 
             #Cuenta las opciones disponibles, para calcular el porcentaje
             opciones = []
-            if server_parameters["free"]:
+            if server_parameters["free"] == "true":
               opciones.append("free")
             opciones.extend([premium for premium in server_parameters["premium"] if config.get_setting(premium+"premium")=="true"])
             logger.info("pelisalacarta.core.servertools opciones disponibles para " + server + ": " + str(len(opciones)) + " "+str(opciones))
@@ -234,13 +238,33 @@ def resolve_video_urls_for_playing(server,url,video_password="",muestra_dialogo=
                     return video_urls,False,"No se puede encontrar el vídeo en "+server
 
             # Obtiene enlaces para las diferentes opciones premium
+            error_message = []
             for premium in server_parameters["premium"]:
               if config.get_setting(premium+"premium")=="true":
                 if muestra_dialogo:
                   progreso.update((100 / len(opciones)) * opciones.index(premium)  , "Conectando con "+premium)
-                exec "from servers import "+premium+" as premium_conector"
-                video_urls.extend(premium_conector.get_video_url( page_url=url , premium=True , user=config.get_setting(premium+"user") , password=config.get_setting(premium+"password"), video_password=video_password ))
+                if premium == server: #Cuenta Premium propia
+                    video_urls.extend(server_connector.get_video_url( page_url=url , premium=True , user=config.get_setting(premium+"user") , password=config.get_setting(premium+"password"), video_password=video_password ))
+                elif premium == "realdebrid":
+                    exec "from servers.debriders import "+premium+" as premium_conector"
+                    debrid_urls = premium_conector.get_video_url( page_url=url , premium=True , video_password=video_password )
+                    if not "REAL-DEBRID:" in debrid_urls[0][0]:
+                        video_urls.extend(debrid_urls)
+                    else:
+                        error_message.append(debrid_urls[0][0])
+                elif premium == "alldebrid":
+                    exec "from servers.debriders import "+premium+" as premium_conector"
+                    alldebrid_urls = premium_conector.get_video_url( page_url=url , premium=True , user=config.get_setting(premium+"user") , password=config.get_setting(premium+"password"), video_password=video_password )
+                    if not "Alldebrid:" in alldebrid_urls[0][0]:
+                        video_urls.extend(alldebrid_urls)
+                    else:
+                        error_message.append(alldebrid_urls[0][0])
+                else:
+                    exec "from servers.debriders import "+premium+" as premium_conector"
+                    video_urls.extend(premium_conector.get_video_url( page_url=url , premium=True , user=config.get_setting(premium+"user") , password=config.get_setting(premium+"password"), video_password=video_password ))
 
+            if not video_urls and error_message:
+                return video_urls, False, " || ".join(error_message)
 
             if muestra_dialogo:
                 progreso.update( 100 , "Proceso finalizado")
@@ -270,16 +294,33 @@ def resolve_video_urls_for_playing(server,url,video_password="",muestra_dialogo=
 
     return video_urls,True,""
 
-def is_server_enabled (server):
+def is_server_enabled(server):
     try:
-      return get_server_parameters(server)["active"]
+        server_parameters = get_server_parameters(server)
+        if server_parameters["active"] == "true":
+            if not config.get_setting("hidepremium")=="true":
+                return True
+            else:
+                if server_parameters["free"] == "true":
+                    return True
+                if [premium for premium in server_parameters["premium"] if config.get_setting(premium+"premium")=="true"]:
+                    return True
+                else:
+                    return False
+        else:
+            return False
     except:
-      return False
+        import traceback
+        logger.info(traceback.format_exc())
+        return False
 
 def get_server_parameters(server):
     server=scrapertools.find_single_match(server,'([^\.]+)')
     try:
-      JSONFile =  xml2dict(os.path.join(config.get_runtime_path(),"servers", server + ".xml"))["server"]
+      if os.path.isfile(os.path.join(config.get_runtime_path(),"servers", server + ".xml")):  
+        JSONFile =  xml2dict(os.path.join(config.get_runtime_path(),"servers", server + ".xml"))["server"]
+      elif os.path.isfile(os.path.join(config.get_runtime_path(),"servers", "debriders", server + ".xml")):  
+        JSONFile =  xml2dict(os.path.join(config.get_runtime_path(),"servers", "debriders", server + ".xml"))["server"]
       if type(JSONFile["premium"]) == dict: JSONFile["premium"]=JSONFile["premium"]["value"]
       if JSONFile["premium"] == "": JSONFile["premium"]=[]
       if type(JSONFile["premium"]) == str and not JSONFile["premium"] == "": JSONFile["premium"]=[JSONFile["premium"]]
@@ -296,23 +337,10 @@ def get_servers_list():
   ServerList={}
   for server in os.listdir(ServersPath):
     if server.endswith(".xml"):
-      try:
-        server_parameters =  get_server_parameters(server)
+        if is_server_enabled(server):
+            server_parameters = get_server_parameters(server)
+            ServerList[server_parameters["id"]] = server_parameters
 
-        #Si no esta activo, lo saltamos.
-        if not server_parameters["active"]=="true": continue
-
-        #Ocultar servidores premium sin cuenta
-        if config.get_setting("hidepremium")=="true" and not server_parameters["free"]:
-          for premium in server_parameters["premium"]:
-            if not config.get_setting(premium+"premium")=="true": continue
-
-        JSONServer = {}
-        ServerList[server_parameters["id"]] = server_parameters
-      except:
-        logger.info("Error al cargar el servidor: " + server)
-        import traceback
-        logger.info(traceback.format_exc())
   return ServerList
 
 def xml2dict(file = None, xmldata = None):
@@ -334,7 +362,7 @@ def xml2dict(file = None, xmldata = None):
         if type(return_dict[tag])== list:
           return_dict[tag].append(parse(xmldata=value))
         else:
-          return_dict[tag] = [dct[tags[x]]]
+          return_dict[tag] = [return_dict[tag]]
           return_dict[tag].append(parse(xmldata=value))
       else:
           return_dict[tag] = parse(xmldata=value)
