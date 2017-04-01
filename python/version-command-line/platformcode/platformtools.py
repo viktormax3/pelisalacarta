@@ -48,3 +48,6 @@ def play_video(item):
     
 def show_channel_settings(list_controls=None, dict_values=None, caption="", callback=None, item=None):
     return None
+
+def show_recaptcha(key, referer):
+    return None

@@ -79,6 +79,13 @@
             </div>
         </div>
 
+		<!-- window_notification -->
+        <div class="window_notification" id="window_notification">
+            <div class="window_icon" id="window_icon"></div>
+			<div Class="window_heading" id="window_heading"></div>
+            <div Class="window_message" id="window_message"></div>
+        </div>
+
         <!--/window_progress -->
         <div class="window_progress" id="window_progress">
             <a class="window_close" href="javascript:void(0)" onmouseover="this.focus()" onclick="this.parentNode.querySelector('#canceled').checked='checked';this.parentNode.querySelector('#window_heading').innerHTML += ' Cancelando...';"></a>
@@ -104,6 +111,30 @@
             <div class="window_footer" id="window_footer">
                 <a href="javascript:void(0)" class="control_button button_ok" onmouseover="this.focus()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result':this.parentNode.parentNode.getElementById('window_value').value});dialog.closeall();loading.show();">Aceptar</a>
                 <a href="javascript:void(0)" class="control_button button_close" onmouseover="this.focus()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result':null });dialog.closeall();">Cancelar</a>
+            </div>
+        </div>
+
+		<!-- window_captcha -->
+        <div class="window_recaptcha" id="window_recaptcha">
+            <a class="window_close" href="javascript:void(0)" onmouseover="this.focus()" onclick="send_data({'id':this.parentNode.RequestID, 'result':null });dialog.closeall();"></a>
+            <div class="window_heading" id="window_heading"></div>
+			<div Class="window_message" id="window_message"></div>
+			<div class="window_image" id= "window_image">
+				<a href="javascript:void(0)" onmouseover="this.focus()" onmouseout="this.blur()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result': 0})"></a>
+				<a href="javascript:void(0)" onmouseover="this.focus()" onmouseout="this.blur()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result': 1})"></a>
+				<a href="javascript:void(0)" onmouseover="this.focus()" onmouseout="this.blur()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result': 2})"></a>
+				<a href="javascript:void(0)" onmouseover="this.focus()" onmouseout="this.blur()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result': 3})"></a>
+				<a href="javascript:void(0)" onmouseover="this.focus()" onmouseout="this.blur()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result': 4})"></a>
+				<a href="javascript:void(0)" onmouseover="this.focus()" onmouseout="this.blur()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result': 5})"></a>
+				<a href="javascript:void(0)" onmouseover="this.focus()" onmouseout="this.blur()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result': 6})"></a>
+				<a href="javascript:void(0)" onmouseover="this.focus()" onmouseout="this.blur()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result': 7})"></a>
+				<a href="javascript:void(0)" onmouseover="this.focus()" onmouseout="this.blur()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result': 8})"></a>
+            </div>			
+            <div class="window_footer" id="window_footer">
+                <a href="javascript:void(0)" class="control_button button_ok" onmouseover="this.focus()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result':true});dialog.closeall();loading.show();">Aceptar</a>
+                <a href="javascript:void(0)" class="control_button button_close" onmouseover="this.focus()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result':null });dialog.closeall();">Cancelar</a>
+				<a href="javascript:void(0)" class="control_button button_ok" onmouseover="this.focus()" onclick="send_data({'id':this.parentNode.parentNode.RequestID, 'result':'refresh'});dialog.closeall();loading.show();">Recargar</a>
+
             </div>
         </div>
 
