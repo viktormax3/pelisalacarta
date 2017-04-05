@@ -100,3 +100,7 @@ def show_channel_settings(*args, **kwargs):
 def show_video_info(*args, **kwargs):
     id = threading.current_thread().name
     return controllers[id].show_video_info(*args, **kwargs)
+
+def show_recaptcha(*args, **kwargs):
+    id = threading.current_thread().name
+    return controllers[id].show_recaptcha(*args, **kwargs)

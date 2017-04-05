@@ -73,3 +73,6 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", chan
     '''
     from platformcode import plex_config_menu
     return plex_config_menu.show_channel_settings(list_controls=list_controls, dict_values=dict_values, caption=caption, callback=callback, item=item, custom_button=custom_button, channelpath=channelpath)
+ 
+def show_recaptcha(key, referer):
+    return None
