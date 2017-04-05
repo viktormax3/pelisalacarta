@@ -35,6 +35,7 @@ dialog.closeall = function () {
     document.getElementById("window_ok").style.display = "none";
     document.getElementById("window_yesno").style.display = "none";
     document.getElementById("window_input").style.display = "none";
+	document.getElementById("window_recaptcha").style.display = "none";
     document.getElementById("window_progress").style.display = "none";
     document.getElementById("window_info").style.display = "none";
     if (focused_item) {
@@ -114,6 +115,20 @@ dialog.yesno = function (id, data) {
     center_window(el);
 };
 
+dialog.notification = function (id, data) {
+    var el = document.getElementById("window_notification");
+    el.style.display = "block";
+	if (!data.icon){data.icon = 0}
+	el.getElementById("window_heading").innerHTML = data.title;
+	el.getElementById("window_message").innerHTML = data.text;
+	el.getElementById("window_icon").className = "window_icon" + data.icon;
+
+	
+	
+	auto_scroll(el.getElementById("window_message"))
+	setTimeout(function(){ el.style.display = "none"; }, data.time);
+};
+
 dialog.keyboard = function (id, data) {
     dialog.closeall();
     var el = document.getElementById("window_input");
@@ -135,6 +150,41 @@ dialog.keyboard = function (id, data) {
     el.getElementById("window_heading").innerHTML = data.title;
     el.getElementById("window_value").focus();
     center_window(el);
+};
+
+dialog.recaptcha = function (id, data) {
+    dialog.closeall();
+    var el = document.getElementById("window_recaptcha");
+
+    if (data.title === "") {
+        data.title = "Introduce el texto de la imagen";
+    };
+
+    el.RequestID = id;
+    document.getElementById("window_overlay").style.display = "block";
+    el.style.display = "block";
+	el.getElementById("window_image").style.backgroundImage = "url(" + data.image + ")";
+    el.getElementById("window_heading").innerHTML = data.title;
+	el.getElementById("window_message").innerHTML = data.message;
+
+	for (var x in [0,1,2,3,4,5,6,7,8]) {
+		el.getElementById("window_image").children[x].className = "";
+	}
+	el.getElementById("window_footer").children[0].focus();
+    center_window(el);
+};
+
+dialog.recaptcha_select = function (id, data) {
+    var el = document.getElementById("window_recaptcha");
+	console.log(data.selected)
+	console.log(data.unselected)
+	for (var x in data.selected) {
+		el.getElementById("window_image").children[data.selected[x]].className = "selected";
+	}
+	for (var x in data.unselected) {
+		el.getElementById("window_image").children[data.unselected[x]].className = "";
+	}
+  
 };
 
 dialog.progress_bg = function (id, data) {
