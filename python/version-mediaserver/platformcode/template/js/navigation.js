@@ -21,6 +21,9 @@ window.onkeydown = function (e) {
     if (document.getElementById("window_yesno").contains(e.target)) {
         window_generic_events(e);
     };
+	if (document.getElementById("window_recaptcha").contains(e.target)) {
+        window_recaptcha_events(e);
+    };
     if (document.getElementById("window_progress").contains(e.target)) {
         window_generic_events(e);
     };
@@ -180,6 +183,87 @@ function window_generic_events(e) {
         if (e.target.parentNode == el) {
             el.getElementById("window_footer").children[0].focus();
         };
+        break;
+    };
+};
+
+function window_recaptcha_events(e) {
+    var el = document.getElementById("window_recaptcha");
+
+    switch (e.keyCode) {
+    case 8: //BACK
+        e.preventDefault();
+        dialog.closeall();
+        break;
+
+    case 38: //UP
+        e.preventDefault();
+        if (el.getElementById("window_footer").contains(e.target)) {
+            el.getElementById("window_image").children[el.getElementById("window_image").children.length -1].focus();
+        }
+		
+		else {
+			var index = Array.prototype.indexOf.call(el.getElementById("window_image").children, e.target) -3;
+			if (index >-1) {
+				el.getElementById("window_image").children[index].focus();
+			}
+			else {
+				el.children[0].focus();
+			};
+		};
+        break;
+
+    case 37: //LEFT
+        e.preventDefault();
+
+        if (el.getElementById("window_footer").contains(e.target)) {
+            var index = Array.prototype.indexOf.call(el.getElementById("window_footer").children, e.target) -1;
+			while (index >= 0 && el.getElementById("window_footer").children[index].disabled){
+				index --;
+			};
+			if (index >=0){
+				el.getElementById("window_footer").children[index].focus();
+			};
+        } else if (e.target.parentNode == el.getElementById("window_image")) {
+			var index = Array.prototype.indexOf.call(el.getElementById("window_image").children, e.target) -1;
+			if ([-1,2,5].indexOf(index) == -1) {
+				el.getElementById("window_image").children[index].focus();
+			};
+		};
+        break;
+
+    case 39: //RIGHT
+        e.preventDefault();
+        if (el.getElementById("window_footer").contains(e.target)) {
+            var index = Array.prototype.indexOf.call(el.getElementById("window_footer").children, e.target) +1;
+			while (index < el.getElementById("window_footer").children.length && el.getElementById("window_footer").children[index].disabled){
+				index ++;
+			};
+			if (index < el.getElementById("window_footer").children.length){
+				el.getElementById("window_footer").children[index].focus();
+			};
+        } else if (e.target.parentNode == el.getElementById("window_image")) {
+			var index = Array.prototype.indexOf.call(el.getElementById("window_image").children, e.target) +1;
+			if ([3,6,9].indexOf(index) == -1) {
+				el.getElementById("window_image").children[index].focus();
+			};
+		};
+        break;
+
+    case 40: //DOWN
+        e.preventDefault();
+        if (e.target.parentNode == el) {
+            el.getElementById("window_image").children[0].focus();
+        }
+		else if (e.target.parentNode == el.getElementById("window_image")) {
+			var index = Array.prototype.indexOf.call(el.getElementById("window_image").children, e.target) +3;
+			if (index < el.getElementById("window_image").children.length) {
+				el.getElementById("window_image").children[index].focus();
+			}
+			else {
+				el.getElementById("window_footer").children[0].focus();
+			};
+		};
         break;
     };
 };
