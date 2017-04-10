@@ -13,7 +13,7 @@ sys.path.append (os.path.join( config.get_runtime_path(), 'lib' ))
 
 # Passing log and config to an external library
 # Credits to https://gist.github.com/mikew/5011984
-bridge.init(Log,Prefs,Locale)
+bridge.init(Log, Prefs, Locale, Dict)
 
 
 ###################################################################################################
@@ -21,6 +21,7 @@ bridge.init(Log,Prefs,Locale)
 PLUGIN_TITLE     = "pelisalacarta"
 ART_DEFAULT      = "art-default.jpg"
 ICON_DEFAULT     = "icon-default.png"
+ADULT_MODE       = "0"
 
 ###################################################################################################
 def Start():
@@ -46,6 +47,66 @@ def Start():
 
     HTTP.CacheTime = CACHE_1DAY
     HTTP.Headers['User-Agent'] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2"
+
+    Log.Info("##############################################################")
+    Log.Info("###                 START PELISALACARTA                     ##")
+    Log.Info("##############################################################")
+
+    global ADULT_MODE
+    ADULT_MODE = config.get_setting("adult_mode")
+    if  ADULT_MODE == "2":
+        ADULT_MODE = config.set_setting("adult_mode", "0")
+
+
+def ValidatePrefs():
+    Log.Info("Pelisalacarta: ValidatePref")
+    global ADULT_MODE
+    validate = True
+
+    # Control parental
+    adult_aux_intro_password = config.get_setting("adult_aux_intro_password")
+    pass_ok = False
+    if adult_aux_intro_password:
+        # Hemos accedido a la seccion de Canales para adultos
+        adult_password = config.get_setting("adult_password")
+        if not adult_password: adult_password = "1111"
+
+        if adult_aux_intro_password == adult_password:
+            # La contraseña de acceso es correcta
+            pass_ok= True
+
+            # Cambio de contraseña
+            new_password1 = config.get_setting("adult_aux_new_password1")
+            new_password2 = config.get_setting("adult_aux_new_password2")
+            if new_password1 or new_password2:
+                if new_password1 == new_password2:
+                    config.set_setting("adult_password",new_password1)
+                else:
+                    Log.Info("Pelisalacarta - ValidatePref: Los campos 'Nueva contraseña' y 'Confirmar nueva contraseña' no coinciden.")
+                    validate = False
+
+        else:
+            Log.Info("Pelisalacarta - ValidatePref: La contraseña no es correcta.")
+            validate = False
+
+
+    if ADULT_MODE != config.get_setting("adult_mode"):
+        # El modo adulto ha cambiado
+        if pass_ok:
+            ADULT_MODE = config.get_setting("adult_mode")
+        else:
+            config.set_setting("adult_mode", ADULT_MODE)
+            validate = False
+
+
+    # Borramos settings auxiliares
+    config.set_setting('adult_aux_new_password1', '')
+    config.set_setting('adult_aux_new_password2', '')
+    config.set_setting('adult_aux_intro_password', '')
+
+    return validate
+
+
 
 ####################################################################################################
 @handler('/video/pelisalacarta', 'Pelisalacarta', art=ART_DEFAULT, thumb=ICON_DEFAULT)
@@ -73,7 +134,7 @@ def mainlist():
     oc.add(DirectoryObject(key=Callback(canal, channel_name="buscador", action="mainlist"), title='Buscador global', thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_buscar.png"))
     oc.add(PrefsObject(title="Configuracion...",thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_configuracion.png"))
     oc.add(DirectoryObject(key=Callback(canal, channel_name="ayuda", action="mainlist"), title="Ayuda", thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_ayuda.png"))
-
+    
     return oc
 
 ####################################################################################################
