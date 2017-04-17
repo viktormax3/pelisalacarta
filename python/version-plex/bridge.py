@@ -17,9 +17,14 @@ def init(log, pref, locale, d_global):
     localized_strings = locale
     dict_global = d_global
 
-def log_info(texto):
+def log_info(texto, level='Info'):
     global logger
-    logger(texto)
+    if level.lower() == 'debug':
+        logger.Debug(texto)
+    elif level.lower() == 'error':
+        logger.Error(texto)
+    else:
+        logger(texto)
 
 def get_setting(name):
     global config, dict_global

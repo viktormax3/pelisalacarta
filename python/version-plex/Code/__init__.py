@@ -25,7 +25,7 @@ ADULT_MODE       = "0"
 
 ###################################################################################################
 def Start():
-    Plugin.AddPrefixHandler("/video/pelisalacarta", mainlist, PLUGIN_TITLE, ICON_DEFAULT, ART_DEFAULT)
+    #Plugin.AddPrefixHandler("/video/pelisalacarta", mainlist, PLUGIN_TITLE, ICON_DEFAULT, ART_DEFAULT)
 
     '''
     ViewModes = {"List": 65586, "InfoList": 65592, "MediaPreview": 458803, "Showcase": 458810, "Coverflow": 65591,
@@ -45,7 +45,7 @@ def Start():
     ObjectContainer.view_group = "InfoList"
     DirectoryObject.thumb      = R(ICON_DEFAULT)
 
-    HTTP.CacheTime = CACHE_1DAY
+    #HTTP.CacheTime = 3600
     HTTP.Headers['User-Agent'] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2"
 
     Log.Info("##############################################################")
@@ -104,6 +104,13 @@ def ValidatePrefs():
     config.set_setting('adult_aux_new_password2', '')
     config.set_setting('adult_aux_intro_password', '')
 
+    """
+    if validate:
+        # Si es necesario se pueden hacer aqui otras validaciones
+        ...
+        validate = True / False
+    """
+
     return validate
 
 
@@ -117,6 +124,7 @@ def mainlist():
     HTTP.Request("http://blog.tvalacarta.info/descargas/pelisalacarta-version.xml")
 
     # TODO: Menú completo (da un error extraño al leer el de channelselector.py)
+
     '''
     itemlist = channelselector.getmainlist()
 
@@ -134,22 +142,14 @@ def mainlist():
     oc.add(DirectoryObject(key=Callback(canal, channel_name="buscador", action="mainlist"), title='Buscador global', thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_buscar.png"))
     oc.add(PrefsObject(title="Configuracion...",thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_configuracion.png"))
     oc.add(DirectoryObject(key=Callback(canal, channel_name="ayuda", action="mainlist"), title="Ayuda", thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_ayuda.png"))
-    
+    # oc.add(DirectoryObject(key=Callback(canal, channel_name="biblioteca", action="mainlist"), title="Biblioteca"))#, thumb="http://media.tvalacarta.info/pelisalacarta/squares/thumb_ayuda.png"))
+
     return oc
 
 ####################################################################################################
 @route('/video/pelisalacarta/channels_list')
 def channels_list():
     oc = ObjectContainer(view_group="PanelStream")
-
-    '''
-    oc.add(DirectoryObject(key=Callback(FrontPageList, name="Canales (Todos los idiomas)"), title="Canales (Todos los idiomas)", thumb="http://pelisalacarta.mimediacenter.info/squares/channelselector.png"))
-    oc.add(DirectoryObject(key=Callback(FrontPageList, name="Buscador"), title="Buscador", thumb="http://pelisalacarta.mimediacenter.info/squares/buscador.png"))
-    oc.add(DirectoryObject(key=Callback(ThemeList, name="Favoritos"), title="Favoritos"))
-    oc.add(DirectoryObject(key=Callback(ThemeList, name="Descargas"), title="Descargas"))
-    oc.add(DirectoryObject(key=Callback(ThemeList, name="Configuración"), title="Configuración"))
-    oc.add(DirectoryObject(key=Callback(TagsList, name="Ayuda"), title="Ayuda t"))
-    '''
 
     itemlist = channelselector.filterchannels(category="all")
     for item in itemlist:

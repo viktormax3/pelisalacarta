@@ -136,7 +136,7 @@ def get_cookie_data():
 
     cookiedatafile = open(ficherocookies,'r')
     cookiedata = cookiedatafile.read()
-    cookiedatafile.close();
+    cookiedatafile.close()
 
     return cookiedata
 
