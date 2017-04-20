@@ -101,6 +101,10 @@ function get_response(data) {
         dialog.ok(response.id, data);
         break;
 
+	case "notification":
+        dialog.notification(response.id, data);
+        break;
+
     case "AlertYesNo":
         loading.close()
         dialog.yesno(response.id, data)
@@ -167,6 +171,16 @@ function get_response(data) {
         dialog.keyboard(response.id, data);
         break;
 
+	case "recaptcha":
+        loading.close();
+        dialog.recaptcha(response.id, data);
+        break;
+	
+	case "recaptcha_select":
+        loading.close();
+        dialog.recaptcha_select(response.id, data);
+        break
+
     case "List":
         loading.close();
         dialog.select(response.id, data);
@@ -204,6 +218,10 @@ function get_response(data) {
 		
     case "HideLoading":
         loading.close();
+        break;
+	
+	case "ShowLoading":
+        loading.show();
         break;
 		
     case "OpenInfo":

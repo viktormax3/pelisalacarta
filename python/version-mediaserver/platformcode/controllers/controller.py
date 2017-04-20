@@ -152,3 +152,6 @@ class Platformtools(object):
   def show_video_info(self,data, caption="Información del vídeo", callback=None, item=None):
     pass
     
+  def show_recaptcha(self, key, url):
+    pass
+    

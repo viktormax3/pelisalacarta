@@ -294,8 +294,16 @@ class platform(Platformtools):
 
       
     def dialog_notification(self, heading, message, icon=0, time=5000, sound=True):
-        #No disponible por ahora, muestra un dialog_ok
-        self.dialog_ok(heading,message)
+        JsonData = {}
+        JsonData["action"]="notification" 
+        JsonData["data"]={}
+        JsonData["data"]["title"]=self.kodi_labels_to_html(heading)
+        JsonData["data"]["text"]=self.kodi_labels_to_html(message)
+        JsonData["data"]["icon"]=icon
+        JsonData["data"]["sound"]=sound
+        JsonData["data"]["time"]=time
+        self.send_message(JsonData)
+        return 
 
     def dialog_yesno(self, heading, line1, line2="", line3="", nolabel="No", yeslabel="Si", autoclose=""):
         text = line1
@@ -405,8 +413,8 @@ class platform(Platformtools):
                 message = self.platformtools.kodi_labels_to_html(message)
                 JsonData["action"]="ProgressBGUpdate" 
                 JsonData["data"]={}
-                JsonData["data"]["title"]=heading
-                JsonData["data"]["text"]=message
+                JsonData["data"]["title"]=self.platformtools.kodi_labels_to_html(heading)
+                JsonData["data"]["text"]=self.platformtools.kodi_labels_to_html(message)
                 JsonData["data"]["percent"]=percent
                 self.platformtools.send_message(JsonData)
 
@@ -736,6 +744,10 @@ class platform(Platformtools):
     def show_video_info(self,data, caption="", item=None, scraper=Tmdb):
         from platformcode import html_info_window
         return html_info_window.InfoWindow().Start(self, data, caption, item, scraper)
+    
+    def show_recaptcha(self, key, url):
+        from platformcode import html_recaptcha
+        return html_recaptcha.recaptcha().start(self, key, url)
     
     def kodi_labels_to_html(self, text):
       text = re.sub(r"(?:\[I\])(.*?)(?:\[/I\])", r"<i>\1</i>", text)
