@@ -68,9 +68,6 @@ def play_video(item):
 def stop_video():
     pass
 
-def video_total_time():
-    return None
-    
 def show_channel_settings(list_controls=None, dict_values=None, caption="", channel="", callback=None, item=None, custom_button = None, channelpath=None):
     '''
     Muestra un cuadro de configuracion personalizado para cada canal y guarda los datos al cerrarlo.
