@@ -26,11 +26,11 @@
 <project name="pelisalacarta" default="package">
     <description>pelisalacarta</description>
 
-    <property name="version" value="4.2.0-beta3"/>
-    <property name="versionboxee" value="10.28"/>
-    <property name="versiondate" value="18/Marzo/2017"/>
-    <property name="channels_version" value="20170323"/>
-    <property name="servers_version" value="20170323"/>
+    <property name="version" value="4.2.0-final"/>
+    <property name="versionboxee" value="10.29"/>
+    <property name="versiondate" value="30/Abril/2017"/>
+    <property name="channels_version" value="20170506"/>
+    <property name="servers_version" value="20170506"/>
 
     <property name="target_base_folder" value="../../target/python"/>
 
@@ -142,7 +142,7 @@
         <zip destfile="${target_base_folder}/servers-${servers_version}.zip" basedir="${target_base_folder}/servers"/>
 
         <!-- Copy channel files -->
-        <copy todir="${target_base_folder}/servers-ui/plugin.video.pelisalacarta/servers">
+        <copy todir="${target_base_folder}/servers-ui/plugin.video.pelisalacarta-ui/servers">
             <fileset dir="main-classic/servers">
                 <exclude name="**/.*"/>
                 <exclude name="**/.*/**"/>
