@@ -4,7 +4,8 @@
 # Configuracion
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
 #------------------------------------------------------------
-import os,io
+import os, re
+import bridge
 from types import *
 
 PLATFORM_NAME = "plex"
@@ -40,9 +41,9 @@ def get_setting(name, channel=""):
     if channel:
         from core import channeltools
         value = channeltools.get_channel_setting(name, channel)
-        return value
+        if not value is None:
+            return value
 
-        
     # Devolvemos el valor del parametro global 'name'
     if name=="cache.dir":
         return ""
@@ -56,7 +57,6 @@ def get_setting(name, channel=""):
     if name=="cache.mode" or name=="thumbnail_type":
         return 2
     else:
-        import bridge
         try:
             devuelve = bridge.get_setting(name)
         except:
@@ -64,26 +64,59 @@ def get_setting(name, channel=""):
         
         # hack para devolver el tipo correspondiente
         if devuelve == "true":
-            return True
+            devuelve = True
         elif devuelve == "false":
-            return False
+            devuelve = False
         else:
             try:
                 devuelve = int(devuelve)
             except ValueError:
                 pass
 
-            return devuelve
+            if name == "adult_mode":
+                devuelve = str(["Nunca", "Siempre", "Solo hasta que se reinicie Plex Media Server"].index(devuelve))
+
+        return devuelve
 
 
 def set_setting(name,value, channel=""):
     if channel:
       from core import channeltools
       return channeltools.set_channel_setting(name,value, channel)
-    else:   
-      return ""
-            
-    
+    else:
+        encontrado = False
+        try:
+            # Leer el archivo user_preferences
+            sep = os.path.sep
+            user_preferences = get_data_path().replace(sep + "Data" + sep, sep + "Preferences" + sep) + ".xml"
+            data = open(user_preferences, "rb").readlines()
+
+            # Eliminar el parametro name si existe
+            for line in data:
+                if re.match("<%s/?>" % name, line.strip()):
+                    data.remove(line)
+                    encontrado = True
+
+            if encontrado:
+                # Añadir al final del listado el parametro con su nuevo valor
+                if value:
+                    data.insert(-1, "  <{0}>{1}</{0}>\n".format(name, value))
+                else:
+                    data.insert(-1, "  <{0}/>\n".format(name))
+
+                # Guardar el archivo de nuevo
+                out_file = open(user_preferences, "wb")
+                for line in data:
+                    out_file.write(line)
+            else:
+                # Añadir el nuevo parametro con su valor en dict_global
+                bridge.dict_global[name] = value
+
+            return value
+
+        except:
+            return ""
+
     
             
 def get_localized_string(code):
@@ -108,7 +141,7 @@ def get_cookie_data():
 
     cookiedatafile = open(ficherocookies,'r')
     cookiedata = cookiedatafile.read()
-    cookiedatafile.close();
+    cookiedatafile.close()
 
     return cookiedata
 
