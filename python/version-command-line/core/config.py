@@ -87,6 +87,17 @@ def get_setting(name):
         else:
             dev=configfile.get("General",name)
             #print "Config file: ",name,"=",dev
+
+            if dev == "true":
+                return True
+            elif dev == "false":
+                return False
+            else:
+                try:
+                    dev = int(dev)
+                except ValueError:
+                    pass
+
         #print "get_setting",name,dev
         return dev
     except:
@@ -95,6 +106,14 @@ def get_setting(name):
     
 def set_setting(name,value):
     #print "set_setting",name,value
+    if isinstance(value, bool):
+        if value:
+            value = "true"
+        else:
+            value = "false"
+    elif isinstance(value, (int, long)):
+        value = str(value)
+
     overrides[name]=value
 
 def get_localized_string(code):
@@ -140,7 +159,7 @@ print "get_runtime_path="+get_runtime_path()
 def verify_directories_created():
     import logger
     import os
-    logger.info("pelisalacarta.core.config.verify_directories_created")
+    logger.info()
 
     # Force download path if empty
     download_path = get_setting("downloadpath")

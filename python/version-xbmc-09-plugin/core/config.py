@@ -103,10 +103,7 @@ def get_setting(name, channel=""):
         value = channeltools.get_channel_setting(name, channel)
         # logger.info("config.get_setting -> '"+repr(value)+"'")
 
-        if value is not None:
-            return value
-        else:
-            return ""
+        return value
 
     # Global setting
     else:
@@ -117,7 +114,19 @@ def get_setting(name, channel=""):
             value = xbmc.translatePath(value)
 
         # logger.info("config.get_setting -> '"+value+"'")
-        return value
+
+        # hack para devolver el tipo correspondiente
+        if value == "true":
+            return True
+        elif value == "false":
+            return False
+        else:
+            try:
+                value = int(value)
+            except ValueError:
+                pass
+
+            return value
 
 
 def set_setting(name, value, channel=""):
@@ -149,6 +158,14 @@ def set_setting(name, value, channel=""):
         return channeltools.set_channel_setting(name, value, channel)
     else:
         try:
+            if isinstance(value, bool):
+                if value:
+                    value = "true"
+                else:
+                    value = "false"
+            elif isinstance(value, (int, long)):
+                value = str(value)
+
             xbmcplugin.setSetting(name, value)
         except:
             return None

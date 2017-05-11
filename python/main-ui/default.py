@@ -31,9 +31,9 @@ from core import config
 from core import logger
 from core.item import Item
 
-plugintools.application_log_enabled = (plugintools.get_setting("debug")=="true")
-plugintools.module_log_enabled = (plugintools.get_setting("debug")=="true")
-plugintools.http_debug_log_enabled = (plugintools.get_setting("debug")=="true")
+plugintools.application_log_enabled = (plugintools.get_setting("debug")== True)
+plugintools.module_log_enabled = (plugintools.get_setting("debug")== True)
+plugintools.http_debug_log_enabled = (plugintools.get_setting("debug")== True)
 
 plugintools.log("pelisalacarta.default")
 
@@ -41,9 +41,9 @@ plugintools.log("pelisalacarta.default")
 config.verify_directories_created()
 
 # Check for new updates
-if config.get_setting("check_for_plugin_updates") == "true":
+if config.get_setting("check_for_plugin_updates") == True:
 
-    logger.info("pelisalacarta.default Verificar actualizaciones activado")
+    logger.info("Verificar actualizaciones activado")
   
     from core import updater
   
@@ -64,10 +64,10 @@ if config.get_setting("check_for_plugin_updates") == "true":
         import xbmcgui
         advertencia = xbmcgui.Dialog()
         advertencia.ok("No se puede conectar","No ha sido posible comprobar","si hay actualizaciones")
-        logger.info("pelisalacarta.default Fallo al verificar la actualización")
+        logger.info("Fallo al verificar la actualización")
 
 else:
-    logger.info("pelisalacarta.default Verificar actualizaciones desactivado")
+    logger.info("Verificar actualizaciones desactivado")
 
 # Get items for main menu
 item = Item( channel="navigation", action="mainlist" )
