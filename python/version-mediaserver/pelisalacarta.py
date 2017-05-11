@@ -18,8 +18,8 @@ from platformcode import platformtools
 import HTTPServer
 import WebSocket
 
-http_port = int(config.get_setting("server.port"))
-websocket_port = int(config.get_setting("websocket.port"))
+http_port = config.get_setting("server.port")
+websocket_port = config.get_setting("websocket.port")
 myip = config.get_local_ip()
 
 def ThreadNameWrap(func):

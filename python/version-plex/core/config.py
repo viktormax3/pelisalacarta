@@ -44,35 +44,40 @@ def get_setting(name, channel=""):
         if not value is None:
             return value
 
-        
-    # Devolvemos el valor del parametro global 'name'        
+    # Devolvemos el valor del parametro global 'name'
     if name=="cache.dir":
         return ""
 
     if name=="debug" or name=="download.enabled":
-        return "false"
+        return False
     
     if name=="cookies.dir":
         return os.getcwd()
 
     if name=="cache.mode" or name=="thumbnail_type":
-        return "2"
+        return 2
     else:
         try:
             devuelve = bridge.get_setting(name)
         except:
             devuelve = ""
         
-        if type(devuelve) == BooleanType:
-            if devuelve:
-                devuelve = "true"
-            else:
-                devuelve = "false"
+        # hack para devolver el tipo correspondiente
+        if devuelve == "true":
+            devuelve = True
+        elif devuelve == "false":
+            devuelve = False
+        else:
+            try:
+                devuelve = int(devuelve)
+            except ValueError:
+                pass
 
-        if name == "adult_mode":
-            devuelve = str(["Nunca","Siempre","Solo hasta que se reinicie Plex Media Server"].index(devuelve))
+            if name == "adult_mode":
+                devuelve = str(["Nunca", "Siempre", "Solo hasta que se reinicie Plex Media Server"].index(devuelve))
 
         return devuelve
+
 
 def set_setting(name,value, channel=""):
     if channel:

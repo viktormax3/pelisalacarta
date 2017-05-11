@@ -138,7 +138,7 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", call
             cuando le das a aceptar, llama a la función 'cb' del canal desde donde se ha llamado, pasando como parámetros, el ítem y el dict_values    
     
     '''
-    logger.info("[plex_config_menu] show_channel_settings")
+    logger.info()
     global params
     itemlist = []
 

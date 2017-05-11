@@ -53,7 +53,7 @@ class HandleWebSocket(WebSocketServer.WebSocket):
         self.server.fnc_info()
 
 
-port = int(config.get_setting("websocket.port"))
+port = config.get_setting("websocket.port")
 server = WebSocketServer.SimpleWebSocketServer("", port, HandleWebSocket)
 
 
