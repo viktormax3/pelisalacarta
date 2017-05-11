@@ -31,7 +31,7 @@ import re,urllib,urllib2,sys,os
 sys.path.append ("lib")
 
 from core import config
-config.set_setting("debug","true")
+config.set_setting("debug", True)
 
 from core import scrapertools
 from core import downloadtools

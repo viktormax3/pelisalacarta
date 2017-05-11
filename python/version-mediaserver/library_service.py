@@ -186,10 +186,10 @@ def update(path, p_dialog, i, t, serie, overwrite):
                 insertados_total += insertados
 
             except Exception as ex:
-                logger.info("Error al guardar los capitulos de la serie")
+                logger.error("Error al guardar los capitulos de la serie")
                 template = "An exception of type {0} occured. Arguments:\n{1!r}"
                 message = template.format(type(ex).__name__, ex.args)
-                logger.info(message)
+                logger.error(message)
 
         except Exception as ex:
             logger.error("Error al obtener los episodios de: {0}".

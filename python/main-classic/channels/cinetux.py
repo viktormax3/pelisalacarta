@@ -216,7 +216,7 @@ def generos(item):
     for scrapedurl, scrapedtitle in matches:
         scrapedtitle = scrapertools.htmlclean(scrapedtitle).strip()
         scrapedtitle = unicode(scrapedtitle, "utf8").capitalize().encode("utf8")
-        if scrapedtitle == "Erotico" and not config.get_setting("adult_mode"):
+        if scrapedtitle == "Erotico" and config.get_setting("adult_mode") == '0':
             continue
 
         itemlist.append(item.clone(action="peliculas", title=scrapedtitle, url=scrapedurl))
@@ -327,7 +327,7 @@ def bloque_enlaces(data, filtro_idioma, dict_idiomas, type, item):
             elif server == "netu":
                 server = "netutv"
             mostrar_server = True
-            if config.get_setting("hidepremium") == "true":
+            if config.get_setting("hidepremium") == True:
                 mostrar_server = servertools.is_server_enabled(server)
             if mostrar_server:
                 try:

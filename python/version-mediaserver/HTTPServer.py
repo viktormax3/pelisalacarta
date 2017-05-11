@@ -93,7 +93,7 @@ class Handler(BaseHTTPRequestHandler):
         # Disable reverse name lookups
         return self.client_address[:2][0] 
         
-PORT=int(config.get_setting("server.port"))
+PORT=config.get_setting("server.port")
 server = MyHTTPServer(('', PORT), Handler)  
 
 def start(fnc_info):

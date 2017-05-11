@@ -34,11 +34,11 @@ logger_object=logging.getLogger("mediaserver")
 
 
 def info(texto=""):
-  if config.get_setting("debug") == "true":
+  if config.get_setting("debug") == True:
       logger_object.info(unicode(str(texto),"utf-8","ignore").replace("\n","\n"+ " "*67))
 
 def debug(texto=""):
-  if config.get_setting("debug") == "true":
+  if config.get_setting("debug") == True:
       logger_object.debug(unicode(str(texto),"utf-8","ignore").replace("\n","\n"+ " "*67))
 
 def error(texto=""):

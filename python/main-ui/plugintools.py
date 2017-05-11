@@ -532,12 +532,32 @@ def get_setting(name):
 
     _log("get_setting ->'"+str(dev)+"'")
 
-    return dev
+    if dev == "true":
+        return True
+    elif dev == "false":
+        return False
+    else:
+        try:
+            dev = int(dev)
+        except ValueError:
+            pass
+
+        return dev
+
 
 def set_setting(name,value):
     _log("set_setting name='"+name+"','"+value+"'")
 
+    if isinstance(value, bool):
+        if value:
+            value = "true"
+        else:
+            value = "false"
+    elif isinstance(value, (int, long)):
+        value = str(value)
+
     __settings__.setSetting( name,value )
+
 
 def open_settings_dialog():
     _log("open_settings_dialog")
