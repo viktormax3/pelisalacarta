@@ -59,9 +59,9 @@ def run(item):
     if item.action=="mainlist":
       # Parental control
       if channeltools.is_adult(item.channel) and config.get_setting("adult_pin")!="":
-        tecleado = platformtools.dialog_input("","PIN para canales de adultos",True)
-        if not tecleado==config.get_setting("adult_pin"):
-          return
+        tecleado = platformtools.dialog_input("","Contraseña para canales de adultos",True)
+        if tecleado is None or tecleado != config.get_setting("adult_pin"):
+            return
 
     #Importa el canal para el item, todo item debe tener un canal, sino sale de la función
     if item.channel: channelmodule = ImportarCanal(item)
