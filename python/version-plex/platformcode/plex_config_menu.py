@@ -477,14 +477,16 @@ def default_Button_click(item):
         except ImportError:
             logger.error('Imposible importar %s' % channelname)
         else:
-            itemlist =  getattr(cb_channel, custom_button['function'])(item)
+            return_value =  getattr(cb_channel, custom_button['function'])(item, dict_values)
 
             if custom_button["close"] == True:
-                if not type(itemlist)== list:
-                    itemlist = getattr(cb_channel, "mainlist")(item)
-                return itemlist
+                if not type(return_value)== list:
+                    return_value = getattr(cb_channel, "mainlist")(item)
+                return return_value
 
             else:
+                if isinstance(return_value, dict) and return_value.has_key("label"):
+                    custom_button["label"]= return_value['label']
                 return show_channel_settings(**params)
 
     else:

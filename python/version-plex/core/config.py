@@ -41,8 +41,8 @@ def get_setting(name, channel=""):
     if channel:
         from core import channeltools
         value = channeltools.get_channel_setting(name, channel)
-        if not value is None:
-            return value
+        #if not value is None:
+        return value
 
     # Devolvemos el valor del parametro global 'name'
     if name=="cache.dir":
@@ -74,7 +74,7 @@ def get_setting(name, channel=""):
                 pass
 
             if name == "adult_mode":
-                devuelve = str(["Nunca", "Siempre", "Solo hasta que se reinicie Plex Media Server"].index(devuelve))
+                devuelve = ["Nunca", "Siempre", "Solo hasta que se reinicie Plex Media Server"].index(devuelve)
 
         return devuelve
 

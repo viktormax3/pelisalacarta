@@ -54,8 +54,8 @@ def Start():
 
     global ADULT_MODE
     ADULT_MODE = config.get_setting("adult_mode")
-    if  ADULT_MODE == "2":
-        ADULT_MODE = config.set_setting("adult_mode", "0")
+    if  ADULT_MODE == 2:
+        ADULT_MODE = config.set_setting("adult_mode", 0)
 
 
 def ValidatePrefs():
@@ -69,7 +69,7 @@ def ValidatePrefs():
     if adult_aux_intro_password:
         # Hemos accedido a la seccion de Canales para adultos
         adult_password = config.get_setting("adult_password")
-        if not adult_password: adult_password = "1111"
+        if not adult_password: adult_password = "adult"
 
         if adult_aux_intro_password == adult_password:
             # La contraseña de acceso es correcta
@@ -153,7 +153,7 @@ def channels_list():
 
     itemlist = channelselector.filterchannels(category="all")
     for item in itemlist:
-        Log.Info("item="+repr(item))
+        #Log.Info("item="+str(item))
         if item.channel not in ['tengourl']:
             oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action="mainlist", caller_item_serialized = item.tourl()), title=item.title, thumb=item.thumbnail))
 
