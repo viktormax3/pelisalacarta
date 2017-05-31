@@ -229,6 +229,10 @@ function get_response(data) {
         dialog.info(response.id, data);
         break;
 
+	case "custom_button":
+		dialog.custom_button(response.id, data);
+		break;
+
     case "OpenConfig":
         loading.close();
         var itemlist = {};

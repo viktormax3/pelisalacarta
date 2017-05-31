@@ -581,15 +581,15 @@ def play_menu(item):
         return
         
     default_action = config.get_setting("default_action")
-    logger.info("default_action="+default_action)
+    logger.info("default_action=%s" % (default_action))
     # Si la accion por defecto es "Preguntar", pregunta
-    if default_action=="0":
+    if default_action==0:
         seleccion = platformtools.dialog_select(config.get_localized_string(30163), [opcion.option for opcion in opciones])
-    elif default_action=="1":
+    elif default_action==1:
         seleccion = 0
-    elif default_action=="2":
+    elif default_action==2:
         seleccion = len(video_urls)-1
-    elif default_action=="3":
+    elif default_action==3:
         seleccion = seleccion
     else:
         seleccion=0
