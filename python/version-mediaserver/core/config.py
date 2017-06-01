@@ -33,6 +33,7 @@ PLATFORM_NAME = "mediaserver"
 PLUGIN_NAME = "pelisalacarta"
 
 settings_dic ={}
+settings_types = {}
 adult_setting = {}
 
 
@@ -116,13 +117,13 @@ def open_settings():
 
             # Fijar adult_pin
             adult_pin = ""
-            if get_setting("adult_request_password") == "true":
+            if get_setting("adult_request_password") == True:
                 adult_pin = get_setting("adult_password")
             set_setting("adult_pin", adult_pin)
             
             #Solo esta sesion:
             id = threading.current_thread().name
-            if get_setting("adult_mode") == "2":
+            if get_setting("adult_mode") == 2:
               adult_setting[id] = True
               set_setting("adult_mode", "0")
             else:
@@ -198,7 +199,18 @@ def get_setting(name, channel=""):
                 pass
 
             return value
+		#Metodo mejorado para convertir valores en funcion de el tipo de control
+        #se activara cuando se implemente en las otras plataformas
+        """
+        global settings_types
 
+        if settings_types.get(name) == 'enum':
+            value = int(value)
+        if settings_types.get(name) == 'bool':
+            value = value == 'true'
+
+        return value
+        """
 
 def set_setting(name, value, channel=""):
     """
@@ -351,6 +363,7 @@ def get_local_ip():
 
 def load_settings():
     global settings_dic
+    global settings_types
     defaults = {}
     from xml.etree import ElementTree
    
@@ -369,6 +382,7 @@ def load_settings():
       for target in category.findall("setting"):
         if target.get("id"):
           defaults[target.get("id")] = target.get("default")
+          settings_types[target.get("id")] = target.get("type")
       
     for key in defaults:
       if not key in settings_dic:
