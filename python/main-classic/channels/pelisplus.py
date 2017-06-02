@@ -45,7 +45,6 @@ def mainlist(item):
 
     autoplay.prepare_autoplay_settings(item.channel,list_servers, list_quality)
     itemlist = []
-
     itemlist.append(
         item.clone(title="Peliculas",
                    action="menupeliculas",
@@ -73,14 +72,12 @@ def mainlist(item):
 
     autoplay.show_option(item.channel, itemlist)
 
-
     return itemlist
 
 
 def menupeliculas(item):
     logger.info()
     itemlist = []
-
     itemlist.append(
             Item(channel=item.channel,
                  title="Ultimas",
@@ -127,7 +124,6 @@ def menupeliculas(item):
 def menuseries(item):
     logger.info()
     itemlist = []
-
     itemlist.append(
             Item(channel=item.channel,
                  title="Todas",
@@ -163,6 +159,7 @@ def menuseries(item):
 
 def search(item, texto):
     logger.info()
+
     texto = texto.replace(" ", "+")
     item.url = item.url + texto
     try:
@@ -170,11 +167,17 @@ def search(item, texto):
             return lista(item)
         else:
             return []
-    except:
-        import sys
-        for line in sys.exc_info():
-            logger.error("%s" % line)
-        return []
+
+def search_all(item, texto):
+    logger.info()
+    itemlist =[]
+    for tipo in ['series/', 'peliculas/']:
+        item.title='Buscar'
+        if item.extra !='':
+            item.url = host + 'busqueda/?s='
+        item.extra=tipo
+        itemlist += search(item, texto)
+    return itemlist
 
 
 def lista(item):
@@ -263,7 +266,7 @@ def lista(item):
        if itemlist !=[]:
            next_page = str(int(actual)+1)
            next_page_url = host+item.extra+'pag-'+next_page
-           itemlist.append(Item(channel = item.channel, action = "lista", title = 'Siguiente >>>', url = next_page_url, thumbnail='https://s32.postimg.org/4zppxf5j9/siguiente.png',extra=item.extra))
+           itemlist.append(Item(channel = item.channel, action = "lista", title = 'Siguiente >>>', url = next_page_url, thumbnail='https://s16.postimg.org/9okdu7hhx/siguiente.png',extra=item.extra))
     return itemlist
 
 
@@ -457,7 +460,7 @@ def findvideos(item):
                    thumbnail = item.thumbnail
                    fanart=item.fanart
                    if url not in duplicados:
-                    itemlist.append( Item(channel=item.channel, action="play" , title=title , url=url, thumbnail=thumbnail,fanart =fanart, extra='directo'))
+                    itemlist.append(item.clone(action="play" , title=title , url=url, thumbnail=thumbnail,fanart =fanart, extra='directo'))
                     duplicados.append(url)
 
     url = scrapedurl

@@ -55,7 +55,6 @@ def mainlist(item):
 
     autoplay.prepare_autoplay_settings(item.channel, list_servers, list_quality)
     itemlist = []
-
     itemlist.append(
             Item(channel=item.channel, title="Series", action="todas", url=host,
                          thumbnail='https://s32.postimg.org/544rx8n51/series.png',
@@ -134,7 +133,7 @@ def todas(item):
     next_page_url = scrapertools.find_single_match(data,'<link rel="next" href="([^"]+)" />')
     
     if next_page_url!="":
-        itemlist.append(Item(channel = item.channel, action = "todas", title = ">> Página siguiente", url = next_page_url, thumbnail='https://s32.postimg.org/4zppxf5j9/siguiente.png'))
+        itemlist.append(Item(channel = item.channel, action = "todas", title = ">> Página siguiente", url = next_page_url, thumbnail='https://s16.postimg.org/9okdu7hhx/siguiente.png'))
     
 
     if next_page_url != "":
@@ -276,6 +275,7 @@ def recomendadas(item):
         title = scrapedtitle.replace('online', '')
         title = scrapertools.decodeHtmlentities(title)
         fanart = item.fanart
+
         itemlist.append(
             Item(channel=item.channel,
                  action="temporadas",
@@ -309,6 +309,7 @@ def ultimas(item):
         title = scrapedtitle.replace('online', '')
         title = scrapertools.decodeHtmlentities(title)
         fanart = item.fanart
+
         itemlist.append(
             Item(channel=item.channel,
                  action="idioma",
@@ -319,7 +320,6 @@ def ultimas(item):
                  fanart=fanart,
                  contentSerieName=title
                  ))
-
 
     return itemlist
 
@@ -554,7 +554,7 @@ def busqueda(item):
     next_page_url = scrapertools.find_single_match(data,"<a rel='nofollow' class=previouspostslink' href='([^']+)'>Siguiente &rsaquo;</a>")
     if next_page_url!="":
         item.url=next_page_url
-        itemlist.append(Item(channel = item.channel,action = "busqueda",title = ">> Página siguiente", url = next_page_url, thumbnail='https://s32.postimg.org/4zppxf5j9/siguiente.png'))
+        itemlist.append(Item(channel = item.channel,action = "busqueda",title = ">> Página siguiente", url = next_page_url, thumbnail='https://s16.postimg.org/9okdu7hhx/siguiente.png'))
     return itemlist
 
 
