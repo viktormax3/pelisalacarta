@@ -31,170 +31,29 @@
     "secure": "true"
   },
   {
-    "id": "realdebridpremium",
-    "label": "Cuenta premium Real Debrid (Activar en menú ayuda)",
+	"id": "resolve_priority",
+	"type": "enum",
+	"label": "Método prioritario",
+	"values": ["Free primero", "Premium primero", "Debriders primero"],
+	"default": 0
+  },
+  {
+    "id": "hidepremium",
+    "label": "Ocultar servidores de pago sin cuenta",
     "type": "bool",
     "default": "false"
   },
   {
-    "id": "alldebridpremium",
-    "label": "Cuenta premium All Debrid",
+    "id": "resolve_stop",
+    "label": "Dejar de buscar cuando encuentre una opción",
     "type": "bool",
-    "default": "false"
+    "default": "true"
   },
   {
-    "id": "alldebriduser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "alldebridpassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
-  },
-  {
-    "id": "uploadedtopremium",
-    "label": "Cuenta premium uploaded.to",
+    "id": "server_stats",
+    "label": "Enviar estadisticas sobre el uso de servidores",
     "type": "bool",
-    "default": "false"
-  },
-  {
-    "id": "uploadedtouser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "uploadedtopassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
-  },
-  {
-    "id": "onefichierpremium",
-    "label": "Cuenta premium 1fichier",
-    "type": "bool",
-    "default": "false"
-  },
-  {
-    "id": "onefichieruser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "onefichierpassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
-  },
-  {
-    "id": "filesmonsterpremium",
-    "label": "Cuenta premium filesmonster",
-    "type": "bool",
-    "default": "false"
-  },
-  {
-    "id": "filesmonsteruser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "filesmonsterpassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
-  },
-  {
-    "id": "mocosoftxaccount",
-    "label": "Cuenta MocosoftX",
-    "type": "bool",
-    "default": "false"
-  },
-  {
-    "id": "mocosoftxuser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "mocosoftxpassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
-  },
-  {
-    "id": "pordedeaccount",
-    "label": "Cuenta pordede",
-    "type": "bool",
-    "default": "false"
-  },
-  {
-    "id": "pordedeuser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "pordedepassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
-  },
-  {
-    "id": "torrentestrenosaccount",
-    "label": "Cuenta torrentestrenos",
-    "type": "bool",
-    "default": "false"
-  },
-  {
-    "id": "torrentestrenosuser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "torrentestrenospassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
-  },
-  {
-    "id": "hdfullaccount",
-    "label": "Cuenta hdfull",
-    "type": "bool",
-    "default": "false"
-  },
-  {
-    "id": "hdfulluser",
-    "label": "Usuario",
-    "type": "text",
-    "default": ""
-  },
-  {
-    "id": "hdfullpassword",
-    "label": "Password",
-    "type": "text",
-    "option": "hidden",
-    "default": "",
-    "secure": "true"
+    "default": "true"
   },
   {
     "id": "personalchannel",
