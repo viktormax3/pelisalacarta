@@ -69,7 +69,7 @@ def ValidatePrefs():
     if adult_aux_intro_password:
         # Hemos accedido a la seccion de Canales para adultos
         adult_password = config.get_setting("adult_password")
-        if not adult_password: adult_password = "adult"
+        if not adult_password: adult_password = "0000"
 
         if adult_aux_intro_password == adult_password:
             # La contraseña de acceso es correcta
@@ -292,7 +292,7 @@ def get_input(query, dkitem):
     else:
         channelmodule = channeltools.get_channel_module(dkitem.channel)
     itemlist = getattr(channelmodule, dkitem.action)(dkitem, query)
-    
+
     return canal(channel_name = dkitem.channel, action= "", itemlist = itemlist )
 
     

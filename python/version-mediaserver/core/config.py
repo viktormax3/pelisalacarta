@@ -86,7 +86,7 @@ def open_settings():
     global adult_setting
     adult_password = get_setting('adult_password')
     if not adult_password:
-        adult_password = set_setting('adult_password', 'adult')
+        adult_password = set_setting('adult_password', '0000')
     adult_mode = get_setting('adult_mode')
     adult_request_password = get_setting('adult_request_password')
 
@@ -181,36 +181,31 @@ def get_setting(name, channel=""):
         value = settings_dic.get(name, "")
         
         if name == "adult_mode":
-          global adult_setting
-          id = threading.current_thread().name
-          if adult_setting.get(id) == True:
-            value = "2"
+            global adult_setting
+            id = threading.current_thread().name
+            if adult_setting.get(id) == True:
+                value = "2"
 
-        # logger.info("config.get_setting -> '"+value+"'")
+
         # hack para devolver el tipo correspondiente
-        if value == "true":
-            return True
-        elif value == "false":
-            return False
-        else:
-            try:
-                value = int(value)
-            except ValueError:
-                pass
-
-            return value
-		#Metodo mejorado para convertir valores en funcion de el tipo de control
-        #se activara cuando se implemente en las otras plataformas
-        """
         global settings_types
 
-        if settings_types.get(name) == 'enum':
+        if settings_types.get(name) in ['enum', 'number']:
             value = int(value)
-        if settings_types.get(name) == 'bool':
+
+        elif settings_types.get(name) == 'bool':
             value = value == 'true'
 
+        elif not settings_types.has_key(name):
+            try:
+                t = eval (value)
+                value = t[0](t[1])
+            except:
+                value = None
+
+
         return value
-        """
+
 
 def set_setting(name, value, channel=""):
     """
@@ -241,16 +236,27 @@ def set_setting(name, value, channel=""):
         return channeltools.set_channel_setting(name, value, channel)
     else:
         global settings_dic
+        global settings_types
 
-        if isinstance(value, bool):
+
+        if settings_types.get(name) == 'bool':
             if value:
-                value = "true"
+                new_value = "true"
             else:
-                value = "false"
-        elif isinstance(value, (int, long)):
-            value = str(value)
+                new_value = "false"
 
-        settings_dic[name]=value
+        elif settings_types.get(name):
+            new_value = str(value)
+
+        else:
+            if isinstance(value, basestring):
+                new_value = "(%s, '%s')" % (type(value).__name__, value)
+            else:
+                new_value = "(%s, %s)" % (type(value).__name__, value)
+
+
+        settings_dic[name]=new_value
+
         from xml.dom import minidom
         #Crea un Nuevo XML vacio
         new_settings = minidom.getDOMImplementation().createDocument(None, "settings", None)
