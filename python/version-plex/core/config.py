@@ -37,30 +37,59 @@ def open_settings():
     return
 
   
-def get_setting(name, channel=""):
+def get_setting(name, channel="", server=""):
+    """
+    Retorna el valor de configuracion del parametro solicitado.
+
+    Devuelve el valor del parametro 'name' en la configuracion global o en la configuracion propia del canal 'channel'.
+
+    Si se especifica el nombre del canal busca en la ruta \addon_data\plugin.video.pelisalacarta\settings_channels el
+    archivo channel_data.json y lee el valor del parametro 'name'. Si el archivo channel_data.json no existe busca en la
+     carpeta channels el archivo channel.xml y crea un archivo channel_data.json antes de retornar el valor solicitado.
+    Si el parametro 'name' no existe en channel_data.json lo busca en la configuracion global y si ahi tampoco existe
+    devuelve un str vacio.
+
+    Parametros:
+    name -- nombre del parametro
+    channel [opcional] -- nombre del canal
+
+    Retorna:
+    value -- El valor del parametro 'name'
+
+    """
+
+    # Specific channel setting
     if channel:
         from core import channeltools
         value = channeltools.get_channel_setting(name, channel)
         if not value is None:
             return value
+            
+    elif server:
+        from core import servertools
+        value = servertools.get_server_setting(name, server)
+        if not value is None:
+            return value
 
-    # Devolvemos el valor del parametro global 'name'
-    if name=="cache.dir":
-        return ""
-
-    if name=="debug" or name=="download.enabled":
-        return False
-    
-    if name=="cookies.dir":
-        return os.getcwd()
-
-    if name=="cache.mode" or name=="thumbnail_type":
-        return 2
+    # Global setting
     else:
-        try:
-            devuelve = bridge.get_setting(name)
-        except:
-            devuelve = ""
+        # Devolvemos el valor del parametro global 'name'
+	    if name=="cache.dir":
+	        return ""
+	
+	    if name=="debug" or name=="download.enabled":
+	        return False
+	    
+	    if name=="cookies.dir":
+	        return os.getcwd()
+	
+	    if name=="cache.mode" or name=="thumbnail_type":
+	        return 2
+	    else:
+	        try:
+	            devuelve = bridge.get_setting(name)
+	        except:
+	            devuelve = ""
         
         # hack para devolver el tipo correspondiente
         if devuelve == "true":
@@ -78,11 +107,36 @@ def get_setting(name, channel=""):
 
         return devuelve
 
+def set_setting(name, value, channel="", server=""):
+    """
+    Fija el valor de configuracion del parametro indicado.
 
-def set_setting(name,value, channel=""):
+    Establece 'value' como el valor del parametro 'name' en la configuracion global o en la configuracion propia del
+    canal 'channel'.
+    Devuelve el valor cambiado o None si la asignacion no se ha podido completar.
+
+    Si se especifica el nombre del canal busca en la ruta \addon_data\plugin.video.pelisalacarta\settings_channels el
+    archivo channel_data.json y establece el parametro 'name' al valor indicado por 'value'. Si el archivo
+    channel_data.json no existe busca en la carpeta channels el archivo channel.xml y crea un archivo channel_data.json
+    antes de modificar el parametro 'name'.
+    Si el parametro 'name' no existe lo añade, con su valor, al archivo correspondiente.
+
+
+    Parametros:
+    name -- nombre del parametro
+    value -- valor del parametro
+    channel [opcional] -- nombre del canal
+
+    Retorna:
+    'value' en caso de que se haya podido fijar el valor y None en caso contrario
+
+    """
     if channel:
-      from core import channeltools
-      return channeltools.set_channel_setting(name,value, channel)
+        from core import channeltools
+        return channeltools.set_channel_setting(name, value, channel)
+    elif server:
+        from core import servertools
+        return servertools.set_server_setting(name, value, server)
     else:
         encontrado = False
         try:
