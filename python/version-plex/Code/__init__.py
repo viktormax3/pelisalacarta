@@ -183,7 +183,7 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
         Log.Info("caller_item="+str(caller_item))
 
         Log.Info("Importando...")
-        channelmodule = servertools.get_channel_module(channel_name)
+        channelmodule = channeltools.get_channel_module(channel_name)
         Log.Info("Importado")
 
         Log.Info("Antes de hasattr")
@@ -191,6 +191,8 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
             Log.Info("El módulo "+caller_item.channel+" tiene una funcion "+action)
             
             itemlist = getattr(channelmodule, action)(caller_item)
+            if action=="findvideos":
+                itemlist = servertools.filter_servers(itemlist)
 
             if action=="play" and len(itemlist)>0 and isinstance(itemlist[0], Item):
                 itemlist=play_video(itemlist[0])
