@@ -94,7 +94,7 @@ class Handler(BaseHTTPRequestHandler):
         return self.client_address[:2][0] 
         
 PORT=config.get_setting("server.port")
-server = MyHTTPServer(('', PORT), Handler)  
+server = MyHTTPServer(('', int(PORT)), Handler)  
 
 def start(fnc_info):
     server.fnc_info = fnc_info

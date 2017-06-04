@@ -54,7 +54,7 @@ class HandleWebSocket(WebSocketServer.WebSocket):
 
 
 port = config.get_setting("websocket.port")
-server = WebSocketServer.SimpleWebSocketServer("", port, HandleWebSocket)
+server = WebSocketServer.SimpleWebSocketServer("", int(port), HandleWebSocket)
 
 
 def start(fnc_info):
