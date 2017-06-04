@@ -156,6 +156,13 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", call
 
             # La llamada se hace desde un canal
             list_controls, default_values = channeltools.get_channel_controls_settings(channelname)
+            kwargs = {"channel": channelname}
+          
+        #Si la ruta del canal esta en la carpeta "servers", obtenemos los controles y valores mediante servertools
+        elif os.path.join(config.get_runtime_path(), "servers") in channelpath:
+            # La llamada se hace desde un server
+            list_controls, default_values = servertools.get_server_controls_settings(channelname)
+            kwargs = {"server": channelname}
 
         #En caso contrario salimos
         else:
@@ -187,7 +194,7 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", call
         #Obtenemos el valor
         if not c["id"] in dict_values:
             if not callback:
-                dict_values[c["id"]]= config.get_setting(c["id"],channelname)
+                dict_values[c["id"]]= config.get_setting(c["id"], **kwargs)
             else:
                 if not 'default' in c: c["default"] = ''
                 dict_values[c["id"]] = c["default"]
@@ -230,7 +237,7 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", call
 
 
 
-    params = {"list_controls":list_controls, "dict_values":dict_values, "caption":caption, "channelpath":channelpath, "callback":callback, "item":item, "custom_button": custom_button}
+    params = {"list_controls":list_controls, "dict_values":dict_values, "caption":caption, "channelpath":channelpath, "callback":callback, "item":item, "custom_button": custom_button, "kwargs": kwargs}
     if itemlist:
 
         #Creamos un itemlist nuevo añadiendo solo los items que han pasado la evaluacion
@@ -454,7 +461,7 @@ def ok_Button_click(item):
         except AttributeError:
             # ... si tampoco existe 'cb_validate_config'...
             for v in dict_values:
-                config.set_setting(v, dict_values[v], channel)
+                config.set_setting(v, dict_values[v], **kwargs)
 
     if not itemlist:
         itemlist = getattr(cb_channel, 'mainlist')(item)

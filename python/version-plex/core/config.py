@@ -42,45 +42,96 @@ def open_settings():
     return
 
   
-def get_setting(name, channel=""):
+def get_setting(name, channel="", server=""):
+    """
+    Retorna el valor de configuracion del parametro solicitado.
+
+    Devuelve el valor del parametro 'name' en la configuracion global o en la configuracion propia del canal 'channel'.
+
+    Si se especifica el nombre del canal busca en la ruta \addon_data\plugin.video.pelisalacarta\settings_channels el
+    archivo channel_data.json y lee el valor del parametro 'name'. Si el archivo channel_data.json no existe busca en la
+     carpeta channels el archivo channel.xml y crea un archivo channel_data.json antes de retornar el valor solicitado.
+    Si el parametro 'name' no existe en channel_data.json lo busca en la configuracion global y si ahi tampoco existe
+    devuelve un str vacio.
+
+    Parametros:
+    name -- nombre del parametro
+    channel [opcional] -- nombre del canal
+
+    Retorna:
+    value -- El valor del parametro 'name'
+
+    """
+
+    # Specific channel setting
     if channel:
         from core import channeltools
         return channeltools.get_channel_setting(name, channel)
 
+            
+    elif server:
+        from core import servertools
+        return servertools.get_server_setting(name, server)
 
-    # Devolvemos el valor del parametro global 'name'
-    if name=="cache.dir":
+    # Global setting
+    else:
+        # Devolvemos el valor del parametro global 'name'
+	    if name=="cache.dir":
         value = ""
 
-    if name=="debug" or name=="download.enabled":
-        value = False
-    
-    if name=="cookies.dir":
-        value = os.getcwd() #TODO no parece funcionar
+        if name=="debug" or name=="download.enabled":
+            value = False
+	    
+	    if name=="cookies.dir":
+            value = os.getcwd() #TODO no parece funcionar
+	
+	    if name=="cache.mode" or name=="thumbnail_type":
+            value = 2
 
-    if name=="cache.mode" or name=="thumbnail_type":
-        value = 2
+	    else:
+            value = bridge.get_setting(name)
 
-    else:
-        value = bridge.get_setting(name)
+            # hack para devolver el tipo correspondiente
+            settings_types = get_settings_types()
 
-        # hack para devolver el tipo correspondiente
-        settings_types = get_settings_types()
+            if isinstance(settings_types.get(name),tuple) and settings_types[name][0] == 'enum':
+                value = settings_types[name][1].index(value)
 
-        if isinstance(settings_types.get(name),tuple) and settings_types[name][0] == 'enum':
-            value = settings_types[name][1].index(value)
+            elif settings_types.get(name) == 'bool':
+                value = bool(value)
 
-        elif settings_types.get(name) == 'bool':
-            value = bool(value)
+        return value
 
-    return value
+def set_setting(name, value, channel="", server=""):
+    """
+    Fija el valor de configuracion del parametro indicado.
+
+    Establece 'value' como el valor del parametro 'name' en la configuracion global o en la configuracion propia del
+    canal 'channel'.
+    Devuelve el valor cambiado o None si la asignacion no se ha podido completar.
+
+    Si se especifica el nombre del canal busca en la ruta \addon_data\plugin.video.pelisalacarta\settings_channels el
+    archivo channel_data.json y establece el parametro 'name' al valor indicado por 'value'. Si el archivo
+    channel_data.json no existe busca en la carpeta channels el archivo channel.xml y crea un archivo channel_data.json
+    antes de modificar el parametro 'name'.
+    Si el parametro 'name' no existe lo añade, con su valor, al archivo correspondiente.
 
 
-def set_setting(name,value, channel=""):
+    Parametros:
+    name -- nombre del parametro
+    value -- valor del parametro
+    channel [opcional] -- nombre del canal
+
+    Retorna:
+    'value' en caso de que se haya podido fijar el valor y None en caso contrario
+
+    """
     if channel:
         from core import channeltools
-        return channeltools.set_channel_setting(name,value, channel)
-
+        return channeltools.set_channel_setting(name, value, channel)
+    elif server:
+        from core import servertools
+        return servertools.set_server_setting(name, value, server)
     else:
         try:
             settings_types = get_settings_types()

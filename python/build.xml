@@ -188,44 +188,6 @@
             </fileset>
         </copy>
 
-        <!-- Duplicate skin files in other resolutions -->
-        <mkdir dir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/1080i"/>
-        <mkdir dir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/NTSC16x9"/>
-        <mkdir dir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/NTSC"/>
-        <mkdir dir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/PAL16x9"/>
-        <mkdir dir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/PAL"/>
-        <mkdir dir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/xml"/>
-
-        <copy todir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/1080i">
-            <fileset dir="main-classic/resources/skins/Default/720p">
-            </fileset>
-        </copy>
-
-        <copy todir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/NTSC16x9">
-            <fileset dir="main-classic/resources/skins/Default/720p">
-            </fileset>
-        </copy>
-
-        <copy todir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/NTSC">
-            <fileset dir="main-classic/resources/skins/Default/720p">
-            </fileset>
-        </copy>
-
-        <copy todir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/PAL16x9">
-            <fileset dir="main-classic/resources/skins/Default/720p">
-            </fileset>
-        </copy>
-
-        <copy todir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/PAL">
-            <fileset dir="main-classic/resources/skins/Default/720p">
-            </fileset>
-        </copy>
-     
-        <copy todir="${target_base_folder}/${target_platform_folder}/plugin.video.pelisalacarta/resources/skins/Default/xml">
-            <fileset dir="main-classic/resources/skins/Default/720p">
-            </fileset>
-        </copy>
-
         <!-- Builds zip file -->
         <zip destfile="${target_base_folder}/pelisalacarta-${target_platform_name}-${version}.zip" basedir="${target_base_folder}/${target_platform_folder}"/>
 

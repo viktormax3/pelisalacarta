@@ -74,7 +74,7 @@ def open_settings():
     xbmcplugin.openSettings(sys.argv[0])
 
 
-def get_setting(name, channel=""):
+def get_setting(name, channel="", server=""):
     """
     Retorna el valor de configuracion del parametro solicitado.
 
@@ -104,6 +104,14 @@ def get_setting(name, channel=""):
         # logger.info("config.get_setting -> '"+repr(value)+"'")
 
         return value
+            
+    elif server:
+        # logger.info("config.get_setting reading server setting '"+name+"' from server xml")
+        from core import servertools
+        value = servertools.get_server_setting(name, server)
+        # logger.info("config.get_setting -> '"+repr(value)+"'")
+
+        return value
 
     # Global setting
     else:
@@ -129,7 +137,7 @@ def get_setting(name, channel=""):
             return value
 
 
-def set_setting(name, value, channel=""):
+def set_setting(name, value, channel="", server=""):
     """
     Fija el valor de configuracion del parametro indicado.
 
@@ -156,6 +164,9 @@ def set_setting(name, value, channel=""):
     if channel:
         from core import channeltools
         return channeltools.set_channel_setting(name, value, channel)
+    elif server:
+        from core import servertools
+        return servertools.set_server_setting(name, value, server)
     else:
         try:
             if isinstance(value, bool):
