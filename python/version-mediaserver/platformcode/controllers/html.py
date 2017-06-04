@@ -410,7 +410,6 @@ class platform(Platformtools):
 
             def update(self, percent=0, heading="", message=""):
                 JsonData = {}
-                message = self.platformtools.kodi_labels_to_html(message)
                 JsonData["action"]="ProgressBGUpdate" 
                 JsonData["data"]={}
                 JsonData["data"]["title"]=self.platformtools.kodi_labels_to_html(heading)
@@ -602,6 +601,7 @@ class platform(Platformtools):
     def show_channel_settings(self, list_controls=None, dict_values=None, caption="", callback=None, item=None, custom_button=None, channelpath=None):
       from core import config
       from core import channeltools
+      from core import servertools
       import inspect
       if not os.path.isdir(os.path.join(config.get_data_path(), "settings_channels")):
          os.mkdir(os.path.join(config.get_data_path(), "settings_channels"))
@@ -631,6 +631,13 @@ class platform(Platformtools):
         
           # La llamada se hace desde un canal
           list_controls, default_values = channeltools.get_channel_controls_settings(channelname)
+          kwargs = {"channel": channelname}
+          
+        #Si la ruta del canal esta en la carpeta "servers", obtenemos los controles y valores mediante servertools
+        elif os.path.join(config.get_runtime_path(), "servers") in channelpath:
+          # La llamada se hace desde un server
+          list_controls, default_values = servertools.get_server_controls_settings(channelname)
+          kwargs = {"server": channelname}
 
         #En caso contrario salimos
         else:
@@ -666,7 +673,7 @@ class platform(Platformtools):
           #Obtenemos el valor
           if not c["id"] in dict_values:
             if not callback:
-              c["value"]= config.get_setting(c["id"],channelname)
+              c["value"]= config.get_setting(c["id"], **kwargs)
             else:
               c["value"] = c["default"]
 
@@ -725,7 +732,7 @@ class platform(Platformtools):
               except AttributeError:
                   # ... si tampoco existe 'cb_validate_config'...
                   for v in data:
-                      config.set_setting(v,data[v],channelname)
+                      config.set_setting(v,data[v], **kwargs)
           
         elif data == "custom_button":
           try:
