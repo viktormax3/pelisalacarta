@@ -625,6 +625,7 @@ class platform(Platformtools):
       if not channelpath:
         channelpath = inspect.currentframe().f_back.f_back.f_code.co_filename
       channelname = os.path.basename(channelpath).replace(".py", "")
+      ch_type = os.path.basename(os.path.dirname(channelpath))
 
       #Si no tenemos list_controls, hay que sacarlos del xml del canal
       if not list_controls:      
@@ -721,7 +722,7 @@ class platform(Platformtools):
           if callback and '.' in callback:
               package, callback = callback.rsplit('.', 1)
           else:
-              package = 'channels.%s' % channelname  
+              package = '%s.%s' % (ch_type, channelname)  
                 
           cb_channel = None
           try:
@@ -745,7 +746,7 @@ class platform(Platformtools):
             if '.' in callback:
                 package, callback = callback.rsplit('.', 1)
             else:
-                package = 'channels.%s' % channelname
+                package = '%s.%s' % (ch_type, channelname)
             try:
                 cb_channel = __import__(package, None, None, [package])
             except ImportError:

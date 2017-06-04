@@ -24,7 +24,7 @@ def isGeneric():
     return True 
 
 
-def show_channel_settings(list_controls=None, dict_values=None, caption="", callback=None,item=None, custom_button= None, channelpath= None):
+def show_channel_settings(list_controls=None, dict_values=None, caption="", callback=None,item=None, custom_button= None, channelpath= None, kwargs=None, ch_type=None):
     ''' Funcion que permite utilizar cuadros de configuracion personalizados.
     
     show_channel_settings(listado_controles, dict_values, caption, callback, item)
@@ -146,7 +146,8 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", call
     if not channelpath:
         channelpath = inspect.currentframe().f_back.f_back.f_code.co_filename
     channelname = os.path.basename(channelpath).replace(".py", "")
-
+    ch_type = os.path.basename(os.path.dirname(channelpath))
+    kwargs = {}
 
     #Si no tenemos list_controls, hay que sacarlos del xml del canal
     if not list_controls:
@@ -237,7 +238,7 @@ def show_channel_settings(list_controls=None, dict_values=None, caption="", call
 
 
 
-    params = {"list_controls":list_controls, "dict_values":dict_values, "caption":caption, "channelpath":channelpath, "callback":callback, "item":item, "custom_button": custom_button, "kwargs": kwargs}
+    params = {"list_controls":list_controls, "dict_values":dict_values, "caption":caption, "channelpath":channelpath, "callback":callback, "item":item, "custom_button": custom_button, "kwargs": kwargs, "ch_type": ch_type}
     if itemlist:
 
         #Creamos un itemlist nuevo añadiendo solo los items que han pasado la evaluacion
@@ -438,12 +439,13 @@ def ok_Button_click(item):
     dict_values = params["dict_values"]
     channel = os.path.basename(params["channelpath"]).replace(".py", "")
     callback = params["callback"]
+    ch_type = params["ch_type"]
     item = params["item"]
 
     if callback and '.' in callback:
         package, callback = callback.rsplit('.', 1)
     else:
-        package = 'channels.%s' % channel
+        package = '%s.%s' % (ch_type, channel)
 
     cb_channel = None
     try:
@@ -476,13 +478,19 @@ def default_Button_click(item):
     dict_values = params["dict_values"]
     custom_button = params["custom_button"]
     item = params["item"]
-    channelname = os.path.basename(params["channelpath"]).replace(".py", "")
-
+    channel = os.path.basename(params["channelpath"]).replace(".py", "")
+    ch_type = params["ch_type"]
+    callback = params["callback"]
+    
     if custom_button is not None:
+        if callback and '.' in callback:
+            package, callback = callback.rsplit('.', 1)
+        else:
+            package = '%s.%s' % (ch_type, channel)
         try:
-            cb_channel = __import__('channels.%s' % channelname, None, None, ["channels.%s" % channelname])
+            cb_channel = __import__(package, None, None, [package])
         except ImportError:
-            logger.error('Imposible importar %s' % channelname)
+            logger.error('Imposible importar %s' % channel)
         else:
             return_value =  getattr(cb_channel, custom_button['function'])(item, dict_values)
 

@@ -76,19 +76,19 @@ def get_setting(name, channel="", server=""):
     # Global setting
     else:
         # Devolvemos el valor del parametro global 'name'
-	    if name=="cache.dir":
-        value = ""
+        if name=="cache.dir":
+            value = ""
 
         if name=="debug" or name=="download.enabled":
             value = False
 	    
-	    if name=="cookies.dir":
+        if name=="cookies.dir":
             value = os.getcwd() #TODO no parece funcionar
 	
-	    if name=="cache.mode" or name=="thumbnail_type":
+        if name=="cache.mode" or name=="thumbnail_type":
             value = 2
 
-	    else:
+        else:
             value = bridge.get_setting(name)
 
             # hack para devolver el tipo correspondiente
