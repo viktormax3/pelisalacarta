@@ -61,6 +61,7 @@ def run(item):
       if channeltools.is_adult(item.channel) and config.get_setting("adult_pin")!="":
         tecleado = platformtools.dialog_input("","Contraseña para canales de adultos",True)
         if tecleado is None or tecleado != config.get_setting("adult_pin"):
+            platformtools.render_items(None, item)
             return
 
     #Importa el canal para el item, todo item debe tener un canal, sino sale de la función
