@@ -99,20 +99,13 @@ def open_settings():
             
             # Cambio de contraseña
             if get_setting('adult_aux_new_password1'):
-                try:
-                    n = int(get_setting('adult_aux_new_password1'))
-                except ValueError:
-                    if get_setting('adult_aux_new_password1') == get_setting('adult_aux_new_password2'):
-                        set_setting('adult_password', get_setting('adult_aux_new_password1'))
-                    else:
-                        platformtools.dialog_ok("Canales para adultos",
-                                        "Los campos 'Nueva contraseña' y 'Confirmar nueva contraseña' no coinciden.",
-                                        "Entre de nuevo en 'Preferencias' para cambiar la contraseña")
-
+                if get_setting('adult_aux_new_password1') == get_setting('adult_aux_new_password2'):
+                    set_setting('adult_password', get_setting('adult_aux_new_password1'))
                 else:
                     platformtools.dialog_ok("Canales para adultos",
-                                            "La contraseña no puede contener solo numeros.",
-                                            "Entre de nuevo en 'Preferencias' para cambiar la contraseña")
+                                    "Los campos 'Nueva contraseña' y 'Confirmar nueva contraseña' no coinciden.",
+                                    "Entre de nuevo en 'Preferencias' para cambiar la contraseña")
+
 
 
             # Fijar adult_pin
@@ -250,7 +243,7 @@ def set_setting(name, value, channel=""):
 
         else:
             if isinstance(value, basestring):
-                new_value = "(%s, '%s')" % (type(value).__name__, value)
+                new_value = "(%s, %s)" % (type(value).__name__, repr(value))
             else:
                 new_value = "(%s, %s)" % (type(value).__name__, value)
 
