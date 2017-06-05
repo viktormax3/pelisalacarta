@@ -22,6 +22,8 @@ PLUGIN_TITLE     = "pelisalacarta"
 ART_DEFAULT      = "art-default.jpg"
 ICON_DEFAULT     = "icon-default.png"
 ADULT_MODE       = "0"
+LAST_ID          = None 
+LAST_RESULT      = None
 
 ###################################################################################################
 def Start():
@@ -169,7 +171,14 @@ def trailers(query=""):
 ####################################################################################################
 #/{channel_name}/{action}/{caller_item_serialized}
 @route('/video/pelisalacarta/canal')
-def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
+def canal(channel_name="",action="",id = None, caller_item_serialized=None, itemlist=""):
+    global LAST_ID
+    global LAST_RESULT
+    
+    if id == LAST_ID and LAST_RESULT:
+        return LAST_RESULT
+        
+    LAST_ID = id    
     oc = ObjectContainer(view_group="List")
 
     try:
@@ -209,7 +218,8 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
             elif action=="play":
                 itemlist=play_video(caller_item)
             elif action=="menu_principal":
-                return mainlist()
+                LAST_RESULT = mainlist()
+                return LAST_RESULT
              
         Log.Info("Tengo un itemlist con %d elementos" % len(itemlist))
 
@@ -247,7 +257,9 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
                                 thumb = item.thumbnail
                             ))
                 else:
-                    oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action=item.action, caller_item_serialized=item.tourl()), title=unicode( item.title, "utf-8" , errors="replace" ), thumb=item.thumbnail))
+                    import random
+                    id = "%032x" % (random.getrandbits(128))
+                    oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action=item.action, id=id,caller_item_serialized=item.tourl()), title=unicode( item.title, "utf-8" , errors="replace" ), thumb=item.thumbnail))
             else:
                 Log.Info("Llamando a la funcion play comun")
                 videoClipObject = VideoClipObject(title=unicode( item.title, "utf-8" , errors="replace" ),thumb=item.thumbnail, url="pelisalacarta://"+item.url )
@@ -257,7 +269,7 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
         Log.Info("Excepcion al ejecutar "+channel_name+"."+action)
         import traceback
         Log.Info("Detalles: "+traceback.format_exc())
-
+    LAST_RESULT = oc
     return oc
 
 def resuelve(url):
