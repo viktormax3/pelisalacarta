@@ -229,6 +229,10 @@ function get_response(data) {
         dialog.info(response.id, data);
         break;
 
+	case "custom_button":
+		dialog.custom_button(response.id, data);
+		break;
+
     case "OpenConfig":
         loading.close();
         var itemlist = {};
@@ -273,12 +277,20 @@ function get_response(data) {
                 else {
                     var type = "text";
                 };
+				if (data.items[x].type == 'number') {
+					keypress = "if ('0123456789'.indexOf(event.key) == -1 && event.charCode){return false}"
+				}
+				else {
+					keypress = "";
+				};
                 itemlist[data.items[x].category].push(replace_list(html.config.text, {
                     "item_color": data.items[x].color,
                     "item_label": data.items[x].label,
                     "item_id": data.items[x].id,
                     "item_value": data.items[x].value,
-                    "item_type": type
+                    "item_type": type,
+					"keypress": keypress
+
                 }));
                 break;
 

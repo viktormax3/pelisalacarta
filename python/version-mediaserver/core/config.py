@@ -33,6 +33,7 @@ PLATFORM_NAME = "mediaserver"
 PLUGIN_NAME = "pelisalacarta"
 
 settings_dic ={}
+settings_types = {}
 adult_setting = {}
 
 
@@ -85,9 +86,9 @@ def open_settings():
     global adult_setting
     adult_password = get_setting('adult_password')
     if not adult_password:
-        adult_password = set_setting('adult_password', '1111')
+        adult_password = set_setting('adult_password', '0000')
     adult_mode = get_setting('adult_mode')
-    adult_request_password =  get_setting('adult_request_password')
+    adult_request_password = get_setting('adult_request_password')
 
     platformtools.open_settings(Opciones)
 
@@ -101,18 +102,21 @@ def open_settings():
                 if get_setting('adult_aux_new_password1') == get_setting('adult_aux_new_password2'):
                     set_setting('adult_password', get_setting('adult_aux_new_password1'))
                 else:
-                    platformtools.dialog_ok("Canales para adultos", "Los campos 'Nueva contraseña' y 'Confirmar nueva contraseña' no coinciden.",
-                                            "Entre de nuevo en 'Preferencias' para cambiar la contraseña")
+                    platformtools.dialog_ok("Canales para adultos",
+                                    "Los campos 'Nueva contraseña' y 'Confirmar nueva contraseña' no coinciden.",
+                                    "Entre de nuevo en 'Preferencias' para cambiar la contraseña")
+
+
 
             # Fijar adult_pin
             adult_pin = ""
-            if get_setting("adult_request_password") == "true":
+            if get_setting("adult_request_password") == True:
                 adult_pin = get_setting("adult_password")
             set_setting("adult_pin", adult_pin)
             
             #Solo esta sesion:
             id = threading.current_thread().name
-            if get_setting("adult_mode") == "2":
+            if get_setting("adult_mode") == 2:
               adult_setting[id] = True
               set_setting("adult_mode", "0")
             else:
@@ -178,24 +182,30 @@ def get_setting(name, channel="", server=""):
         value = settings_dic.get(name, "")
         
         if name == "adult_mode":
-          global adult_setting
-          id = threading.current_thread().name
-          if adult_setting.get(id) == True:
-            value = "2"
+            global adult_setting
+            id = threading.current_thread().name
+            if adult_setting.get(id) == True:
+                value = "2"
 
-        # logger.info("config.get_setting -> '"+value+"'")
+
         # hack para devolver el tipo correspondiente
-        if value == "true":
-            return True
-        elif value == "false":
-            return False
-        else:
-            try:
-                value = int(value)
-            except ValueError:
-                pass
+        global settings_types
 
-            return value
+        if settings_types.get(name) in ['enum', 'number']:
+            value = int(value)
+
+        elif settings_types.get(name) == 'bool':
+            value = value == 'true'
+
+        elif not settings_types.has_key(name):
+            try:
+                t = eval (value)
+                value = t[0](t[1])
+            except:
+                value = None
+
+
+        return value
 
 
 def set_setting(name, value, channel="", server=""):
@@ -230,16 +240,27 @@ def set_setting(name, value, channel="", server=""):
         return servertools.set_server_setting(name, value, server)
     else:
         global settings_dic
+        global settings_types
 
-        if isinstance(value, bool):
+
+        if settings_types.get(name) == 'bool':
             if value:
-                value = "true"
+                new_value = "true"
             else:
-                value = "false"
-        elif isinstance(value, (int, long)):
-            value = str(value)
+                new_value = "false"
 
-        settings_dic[name]=value
+        elif settings_types.get(name):
+            new_value = str(value)
+
+        else:
+            if isinstance(value, basestring):
+                new_value = "(%s, %s)" % (type(value).__name__, repr(value))
+            else:
+                new_value = "(%s, %s)" % (type(value).__name__, value)
+
+
+        settings_dic[name]=new_value
+
         from xml.dom import minidom
         #Crea un Nuevo XML vacio
         new_settings = minidom.getDOMImplementation().createDocument(None, "settings", None)
@@ -352,6 +373,7 @@ def get_local_ip():
 
 def load_settings():
     global settings_dic
+    global settings_types
     defaults = {}
     from xml.etree import ElementTree
    
@@ -370,6 +392,7 @@ def load_settings():
       for target in category.findall("setting"):
         if target.get("id"):
           defaults[target.get("id")] = target.get("default")
+          settings_types[target.get("id")] = target.get("type")
       
     for key in defaults:
       if not key in settings_dic:
