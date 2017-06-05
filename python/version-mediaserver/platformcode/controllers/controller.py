@@ -43,7 +43,7 @@ class Controller(object):
         
         if self.handler:
           self.platformtools = Platformtools()
-          self.host = "http://"+ config.get_local_ip() +":" + config.get_setting("server.port")
+          self.host = "http://%s:%s" %(config.get_local_ip(), config.get_setting("server.port"))
 
 
     def __setattr__(self, name, value):

@@ -232,6 +232,44 @@ dialog.progress_close = function () {
     dialog.closeall();
 };
 
+dialog.custom_button = function(id, data) {
+    var el = document.getElementById("window_settings");
+	el.RequestID = id;
+	if (data.return_value.label){
+		el.getElementById("custom_button").innerHTML = data.return_value.label
+	};
+	var controls = document.getElementById("window_settings").getControls();
+	for (var x in controls) {
+		switch (controls[x].type) {
+		case "text":
+			controls[x].value = data.values[controls[x].id];
+			break;
+		case "password":
+			controls[x].value = data.values[controls[x].id];
+			break;
+		case "checkbox":
+			value = data.values[controls[x].id];
+			if (value == true) {
+				value = "checked";
+			}
+			else {
+				value = "";
+			};
+			controls[x].checked = value;
+			break;
+		case "select-one":
+			if (controls[x].name == "enum") {
+				controls[x].selectedIndex = data.values[controls[x].id];
+			}
+			else if (controls[x].name == "labelenum") {
+				controls[x].value = data.values[controls[x].id];
+			};
+			break;
+		};
+		controls[x].onchange()
+	};
+};
+
 dialog.config = function (id, data, Secciones, Lista) {
     dialog.closeall();
     var el = document.getElementById("window_settings");

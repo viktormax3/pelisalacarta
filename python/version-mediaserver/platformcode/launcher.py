@@ -59,9 +59,10 @@ def run(item):
     if item.action=="mainlist":
       # Parental control
       if channeltools.is_adult(item.channel) and config.get_setting("adult_pin")!="":
-        tecleado = platformtools.dialog_input("","PIN para canales de adultos",True)
-        if not tecleado==config.get_setting("adult_pin"):
-          return
+        tecleado = platformtools.dialog_input("","Contraseña para canales de adultos",True)
+        if tecleado is None or tecleado != config.get_setting("adult_pin"):
+            platformtools.render_items(None, item)
+            return
 
     #Importa el canal para el item, todo item debe tener un canal, sino sale de la función
     if item.channel: channelmodule = ImportarCanal(item)
@@ -517,15 +518,15 @@ def play_menu(item):
         return
         
     default_action = config.get_setting("default_action")
-    logger.info("default_action="+default_action)
+    logger.info("default_action=%s" % (default_action))
     # Si la accion por defecto es "Preguntar", pregunta
-    if default_action=="0":
+    if default_action==0:
         seleccion = platformtools.dialog_select(config.get_localized_string(30163), [opcion.option for opcion in opciones])
-    elif default_action=="1":
+    elif default_action==1:
         seleccion = 0
-    elif default_action=="2":
+    elif default_action==2:
         seleccion = len(video_urls)-1
-    elif default_action=="3":
+    elif default_action==3:
         seleccion = seleccion
     else:
         seleccion=0
