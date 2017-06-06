@@ -22,6 +22,8 @@ PLUGIN_TITLE     = "pelisalacarta"
 ART_DEFAULT      = "art-default.jpg"
 ICON_DEFAULT     = "icon-default.png"
 ADULT_MODE       = "0"
+LAST_ID          = None 
+LAST_RESULT      = None
 
 ###################################################################################################
 def Start():
@@ -54,8 +56,8 @@ def Start():
 
     global ADULT_MODE
     ADULT_MODE = config.get_setting("adult_mode")
-    if  ADULT_MODE == "2":
-        ADULT_MODE = config.set_setting("adult_mode", "0")
+    if  ADULT_MODE == 2:
+        ADULT_MODE = config.set_setting("adult_mode", 0)
 
 
 def ValidatePrefs():
@@ -69,7 +71,7 @@ def ValidatePrefs():
     if adult_aux_intro_password:
         # Hemos accedido a la seccion de Canales para adultos
         adult_password = config.get_setting("adult_password")
-        if not adult_password: adult_password = "1111"
+        if not adult_password: adult_password = "0000"
 
         if adult_aux_intro_password == adult_password:
             # La contraseña de acceso es correcta
@@ -153,7 +155,7 @@ def channels_list():
 
     itemlist = channelselector.filterchannels(category="all")
     for item in itemlist:
-        Log.Info("item="+repr(item))
+        #Log.Info("item="+str(item))
         if item.channel not in ['tengourl']:
             oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action="mainlist", caller_item_serialized = item.tourl()), title=item.title, thumb=item.thumbnail))
 
@@ -169,7 +171,14 @@ def trailers(query=""):
 ####################################################################################################
 #/{channel_name}/{action}/{caller_item_serialized}
 @route('/video/pelisalacarta/canal')
-def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
+def canal(channel_name="",action="",id = None, caller_item_serialized=None, itemlist=""):
+    global LAST_ID
+    global LAST_RESULT
+    
+    if id == LAST_ID and LAST_RESULT:
+        return LAST_RESULT
+        
+    LAST_ID = id    
     oc = ObjectContainer(view_group="List")
 
     try:
@@ -183,7 +192,7 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
         Log.Info("caller_item="+str(caller_item))
 
         Log.Info("Importando...")
-        channelmodule = servertools.get_channel_module(channel_name)
+        channelmodule = channeltools.get_channel_module(channel_name)
         Log.Info("Importado")
 
         Log.Info("Antes de hasattr")
@@ -191,6 +200,8 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
             Log.Info("El módulo "+caller_item.channel+" tiene una funcion "+action)
             
             itemlist = getattr(channelmodule, action)(caller_item)
+            if action=="findvideos":
+                itemlist = servertools.filter_servers(itemlist)
 
             if action=="play" and len(itemlist)>0 and isinstance(itemlist[0], Item):
                 itemlist=play_video(itemlist[0])
@@ -207,7 +218,8 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
             elif action=="play":
                 itemlist=play_video(caller_item)
             elif action=="menu_principal":
-                return mainlist()
+                LAST_RESULT = mainlist()
+                return LAST_RESULT
              
         Log.Info("Tengo un itemlist con %d elementos" % len(itemlist))
 
@@ -245,7 +257,9 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
                                 thumb = item.thumbnail
                             ))
                 else:
-                    oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action=item.action, caller_item_serialized=item.tourl()), title=unicode( item.title, "utf-8" , errors="replace" ), thumb=item.thumbnail))
+                    import random
+                    id = "%032x" % (random.getrandbits(128))
+                    oc.add(DirectoryObject(key=Callback(canal, channel_name=item.channel, action=item.action, id=id,caller_item_serialized=item.tourl()), title=unicode( item.title, "utf-8" , errors="replace" ), thumb=item.thumbnail))
             else:
                 Log.Info("Llamando a la funcion play comun")
                 videoClipObject = VideoClipObject(title=unicode( item.title, "utf-8" , errors="replace" ),thumb=item.thumbnail, url="pelisalacarta://"+item.url )
@@ -255,7 +269,7 @@ def canal(channel_name="",action="",caller_item_serialized=None, itemlist=""):
         Log.Info("Excepcion al ejecutar "+channel_name+"."+action)
         import traceback
         Log.Info("Detalles: "+traceback.format_exc())
-
+    LAST_RESULT = oc
     return oc
 
 def resuelve(url):
@@ -292,7 +306,7 @@ def get_input(query, dkitem):
     else:
         channelmodule = channeltools.get_channel_module(dkitem.channel)
     itemlist = getattr(channelmodule, dkitem.action)(dkitem, query)
-    
+
     return canal(channel_name = dkitem.channel, action= "", itemlist = itemlist )
 
     

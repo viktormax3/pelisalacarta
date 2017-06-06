@@ -410,7 +410,6 @@ class platform(Platformtools):
 
             def update(self, percent=0, heading="", message=""):
                 JsonData = {}
-                message = self.platformtools.kodi_labels_to_html(message)
                 JsonData["action"]="ProgressBGUpdate" 
                 JsonData["data"]={}
                 JsonData["data"]["title"]=self.platformtools.kodi_labels_to_html(heading)
@@ -576,6 +575,9 @@ class platform(Platformtools):
       JsonData["data"]["items"]=[]
       
       for item in items:
+        if item.get('option') == 'hidden':
+           item['hidden'] = True
+
         for key in item:
           if key in ["lvalues", "label", "category"]:
             try:
@@ -602,6 +604,7 @@ class platform(Platformtools):
     def show_channel_settings(self, list_controls=None, dict_values=None, caption="", callback=None, item=None, custom_button=None, channelpath=None):
       from core import config
       from core import channeltools
+      from core import servertools
       import inspect
       if not os.path.isdir(os.path.join(config.get_data_path(), "settings_channels")):
          os.mkdir(os.path.join(config.get_data_path(), "settings_channels"))
@@ -622,6 +625,7 @@ class platform(Platformtools):
       if not channelpath:
         channelpath = inspect.currentframe().f_back.f_back.f_code.co_filename
       channelname = os.path.basename(channelpath).replace(".py", "")
+      ch_type = os.path.basename(os.path.dirname(channelpath))
 
       #Si no tenemos list_controls, hay que sacarlos del xml del canal
       if not list_controls:      
@@ -631,6 +635,13 @@ class platform(Platformtools):
         
           # La llamada se hace desde un canal
           list_controls, default_values = channeltools.get_channel_controls_settings(channelname)
+          kwargs = {"channel": channelname}
+          
+        #Si la ruta del canal esta en la carpeta "servers", obtenemos los controles y valores mediante servertools
+        elif os.path.join(config.get_runtime_path(), "servers") in channelpath:
+          # La llamada se hace desde un server
+          list_controls, default_values = servertools.get_server_controls_settings(channelname)
+          kwargs = {"server": channelname}
 
         #En caso contrario salimos
         else:
@@ -666,10 +677,14 @@ class platform(Platformtools):
           #Obtenemos el valor
           if not c["id"] in dict_values:
             if not callback:
-              c["value"]= config.get_setting(c["id"],channelname)
+              c["value"]= config.get_setting(c["id"], **kwargs)
             else:
               c["value"] = c["default"]
 
+            dict_values[c["id"]] = c["value"]
+
+          else:
+            c["value"] = dict_values[c["id"]]
             
           # Translation
           if c['label'].startswith('@') and unicode(c['label'][1:]).isnumeric():
@@ -707,7 +722,7 @@ class platform(Platformtools):
           if callback and '.' in callback:
               package, callback = callback.rsplit('.', 1)
           else:
-              package = 'channels.%s' % channelname  
+              package = '%s.%s' % (ch_type, channelname)  
                 
           cb_channel = None
           try:
@@ -717,7 +732,7 @@ class platform(Platformtools):
 
           if callback:
               # Si existe una funcion callback la invocamos ...
-              return getattr(cb_channel, self.callback)(item, data)
+              return getattr(cb_channel, callback)(item, data)
           else:
               # si no, probamos si en el canal existe una funcion 'cb_validate_config' ...
               try:
@@ -725,19 +740,28 @@ class platform(Platformtools):
               except AttributeError:
                   # ... si tampoco existe 'cb_validate_config'...
                   for v in data:
-                      config.set_setting(v,data[v],channelname)
+                      config.set_setting(v,data[v], **kwargs)
           
         elif data == "custom_button":
-          try:
-              cb_channel = __import__('channels.%s' % channelname, None, None, ["channels.%s" % channelname])
-          except ImportError:
-              logger.error('Imposible importar %s' % channelname)
-              
-          else:
-            return_value = getattr(cb_channel, custom_button['function'])(item)
-            if custom_button["close"] == True:
-              return return_value
-        
+            if '.' in callback:
+                package, callback = callback.rsplit('.', 1)
+            else:
+                package = '%s.%s' % (ch_type, channelname)
+            try:
+                cb_channel = __import__(package, None, None, [package])
+            except ImportError:
+                logger.error('Imposible importar %s' % package)
+            else:
+                return_value = getattr(cb_channel, custom_button['function'])(item, dict_values)          
+                if custom_button["close"] == True:
+                    return return_value
+                else:
+                    JsonData["action"]="custom_button"
+                    JsonData["data"] = {}
+                    JsonData["data"]["values"] = dict_values
+                    JsonData["data"]["return_value"] = return_value
+                    ID = self.send_message(JsonData)
+                        
         elif data == False:
           return None
          

@@ -59,9 +59,10 @@ def run(item):
     if item.action=="mainlist":
       # Parental control
       if channeltools.is_adult(item.channel) and config.get_setting("adult_pin")!="":
-        tecleado = platformtools.dialog_input("","PIN para canales de adultos",True)
-        if not tecleado==config.get_setting("adult_pin"):
-          return
+        tecleado = platformtools.dialog_input("","Contraseña para canales de adultos",True)
+        if tecleado is None or tecleado != config.get_setting("adult_pin"):
+            platformtools.render_items(None, item)
+            return
 
     #Importa el canal para el item, todo item debe tener un canal, sino sale de la función
     if item.channel: channelmodule = ImportarCanal(item)
@@ -164,9 +165,8 @@ def run(item):
     
      
     #Filtrado de Servers      
-    if item.action== "findvideos" and config.get_setting('filter_servers') == True:
-      server_white_list, server_black_list = set_server_list() 
-      itemlist = filtered_servers(itemlist, server_white_list, server_black_list) 
+    if item.action== "findvideos":
+        itemlist = servertools.filter_servers(itemlist)
       
     
     #Si la accion no ha devuelto ningún resultado, añade un item con el texto "No hay elementos para mostrar"              
@@ -378,69 +378,6 @@ def download_all_episodes(item,first_episode="",preferred_server="vidspot",filte
 
 
 
-
-def set_server_list():
-    logger.info("start")
-    server_white_list = []
-    server_black_list = []
-
-    if len(config.get_setting('whitelist')) > 0:
-        server_white_list_key = config.get_setting('whitelist').replace(', ', ',').replace(' ,', ',')
-        server_white_list = re.split(',', server_white_list_key)
-
-    if len(config.get_setting('blacklist')) > 0:
-        server_black_list_key = config.get_setting('blacklist').replace(', ', ',').replace(' ,', ',')
-        server_black_list = re.split(',', server_black_list_key)
-
-    logger.info("set_server_list whiteList %s" % server_white_list)
-    logger.info("set_server_list blackList %s" % server_black_list)
-    logger.info("end")
-
-    return server_white_list, server_black_list
-
-def filtered_servers(itemlist, server_white_list, server_black_list):
-    logger.info("start")
-    new_list = []
-    white_counter = 0
-    black_counter = 0
-
-    logger.info("filtered_servers whiteList %s" % server_white_list)
-    logger.info("filtered_servers blackList %s" % server_black_list)
-
-    if len(server_white_list) > 0:
-        logger.info("filtered_servers whiteList")
-        for item in itemlist:
-            logger.info("item.title " + item.title)
-            if any(server in item.title for server in server_white_list):
-                # if item.title in server_white_list:
-                logger.info("found")
-                new_list.append(item)
-                white_counter += 1
-            else:
-                logger.info("not found")
-
-    if len(server_black_list) > 0:
-        logger.info("filtered_servers blackList")
-        for item in itemlist:
-            logger.info("item.title " + item.title)
-            if any(server in item.title for server in server_black_list):
-                # if item.title in server_white_list:
-                logger.info("found")
-                black_counter += 1
-            else:
-                new_list.append(item)
-                logger.info("not found")
-
-    logger.info("whiteList server %s has #%d rows" % (server_white_list, white_counter))
-    logger.info("blackList server %s has #%d rows" % (server_black_list, black_counter))
-
-    if len(new_list) == 0:
-        new_list = itemlist
-    logger.info("end")
-
-    return new_list
-
-
 def add_to_favorites(item):
     #Proviene del menu contextual:
     if "item_action" in item:
@@ -581,15 +518,15 @@ def play_menu(item):
         return
         
     default_action = config.get_setting("default_action")
-    logger.info("default_action="+default_action)
+    logger.info("default_action=%s" % (default_action))
     # Si la accion por defecto es "Preguntar", pregunta
-    if default_action=="0":
+    if default_action==0:
         seleccion = platformtools.dialog_select(config.get_localized_string(30163), [opcion.option for opcion in opciones])
-    elif default_action=="1":
+    elif default_action==1:
         seleccion = 0
-    elif default_action=="2":
+    elif default_action==2:
         seleccion = len(video_urls)-1
-    elif default_action=="3":
+    elif default_action==3:
         seleccion = seleccion
     else:
         seleccion=0
