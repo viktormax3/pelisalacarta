@@ -103,7 +103,7 @@
         <setting id="xbmc_host" type="text" label="Nombre Servidor" enable="eq(-1,1)" default=""/>
         <setting id="xbmc_port" type="number" label="Puerto Servidor" enable="eq(-2,1)" default="0"/>
         <setting id="mark_as_watched" type="bool" label="Marcar automáticamente como visto" default="false"/>
-        <setting id="watched_setting" type="enum" values="5 Min|30%|50%|80%" label="Tiempo necesario del video" default="3" enable="eq(-1,true)"/>
+        <setting id="watched_setting" type="enum" values="5 Min|30%|50%|80%|0 seg" label="Tiempo necesario del video" default="3" enable="eq(-1,true)"/>
         <setting id="show_all_seasons" type="bool" label="Mostrar la opción &quot;Todos las temporadas&quot;" default="true"/>
         <setting id="no_pile_on_seasons" type="select" label="No apilar temporadas de series" values="Nunca|Sólo si hay una temporada|Siempre" default="Sólo si hay una temporada"/>
         <setting id="ask_channel" type="bool" label="Mostrar cuadro de selección de canales " default="false"/>
