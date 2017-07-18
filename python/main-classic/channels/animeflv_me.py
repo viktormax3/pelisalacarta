@@ -7,14 +7,20 @@
 import re
 import urlparse
 from os import path
-
-from channels import renumbertools
 from core import config
 from core import filetools
 from core import httptools
 from core import logger
 from core import scrapertools
 from core.item import Item
+from core import channeltools
+from platformcode import platformtools
+if config.is_xbmc():
+	from channels import renumbertools
+if not config.is_xbmc():
+ platformtools.dialog_notification("¡ALERTA!",
+                                                "El renumerado no funcionara "
+                                                "en la version Plex o Mediaserver")
 
 CHANNEL_HOST = "http://animeflv.me/"
 CHANNEL_DEFAULT_HEADERS = [
@@ -132,30 +138,50 @@ def __find_series(html):
 
     return series
 
+if config.is_xbmc():
+ def mainlist(item):
+     logger.info()
+
+     itemlist = list()
+
+     itemlist.append(Item(channel=item.channel, action="letras",
+                          title="Por orden alfabético"))
+     itemlist.append(Item(channel=item.channel, action="generos", title="Por géneros",
+                          url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime")))
+     itemlist.append(Item(channel=item.channel, action="series", title="Por popularidad",
+                          url=urlparse.urljoin(CHANNEL_HOST, "/ListadeAnime/MasVisto")))
+     itemlist.append(Item(channel=item.channel, action="series", title="Novedades",
+                          url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime/Nuevo")))
+     itemlist.append(Item(channel=item.channel, action="series", title="Últimos",
+                          url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime/LatestUpdate")))
+     itemlist.append(Item(channel=item.channel, action="search", title="Buscar...",
+                          url=urlparse.urljoin(CHANNEL_HOST, "Buscar?s=")))
+
+     itemlist = renumbertools.show_option(item.channel, itemlist)
+
+     return itemlist	 
+
 
 def mainlist(item):
-    logger.info()
+     logger.info()
 
-    itemlist = list()
+     itemlist = list()
 
-    itemlist.append(Item(channel=item.channel, action="letras",
-                         title="Por orden alfabético"))
-    itemlist.append(Item(channel=item.channel, action="generos", title="Por géneros",
-                         url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime")))
-    itemlist.append(Item(channel=item.channel, action="series", title="Por popularidad",
-                         url=urlparse.urljoin(CHANNEL_HOST, "/ListadeAnime/MasVisto")))
-    itemlist.append(Item(channel=item.channel, action="series", title="Novedades",
-                         url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime/Nuevo")))
-    itemlist.append(Item(channel=item.channel, action="series", title="Últimos",
-                         url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime/LatestUpdate")))
-    itemlist.append(Item(channel=item.channel, action="search", title="Buscar...",
-                         url=urlparse.urljoin(CHANNEL_HOST, "Buscar?s=")))
-
-    itemlist = renumbertools.show_option(item.channel, itemlist)
-
-    return itemlist
-
-
+     itemlist.append(Item(channel=item.channel, action="letras",
+                          title="Por orden alfabético"))
+     itemlist.append(Item(channel=item.channel, action="generos", title="Por géneros",
+                          url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime")))
+     itemlist.append(Item(channel=item.channel, action="series", title="Por popularidad",
+                          url=urlparse.urljoin(CHANNEL_HOST, "/ListadeAnime/MasVisto")))
+     itemlist.append(Item(channel=item.channel, action="series", title="Novedades",
+                          url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime/Nuevo")))
+     itemlist.append(Item(channel=item.channel, action="series", title="Últimos",
+                          url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime/LatestUpdate")))
+     itemlist.append(Item(channel=item.channel, action="search", title="Buscar...",
+                          url=urlparse.urljoin(CHANNEL_HOST, "Buscar?s=")))
+                          
+     return itemlist
+						  
 def letras(item):
     logger.info()
 
@@ -197,8 +223,8 @@ def generos(item):
 
     return itemlist
 
-
-def search(item, texto):
+if config.is_xbmc():
+ def search(item, texto):
     logger.info()
 
     texto = texto.replace(" ", "%20")
@@ -231,9 +257,44 @@ def search(item, texto):
         return []
 
     return items
+	
+	
+def search(item, texto):
+    logger.info()
 
+    texto = texto.replace(" ", "%20")
+    item.url = "{0}{1}".format(item.url, texto)
 
-def series(item):
+    html = get_url_contents(item.url)
+
+    try:
+        # Se encontro un solo resultado y se redicciono a la página de la serie
+        if html.find('<title>Ver') >= 0:
+            series = [__extract_info_from_serie(html)]
+        # Se obtuvo una lista de resultados
+        else:
+            series = __find_series(html)
+
+        items = []
+        for serie in series:
+            title, url, thumbnail, plot = serie
+
+            logger.debug("title=[{0}], url=[{1}], thumbnail=[{2}]".format(
+                title, url, thumbnail))
+
+            items.append(Item(channel=item.channel, action="episodios", title=title,
+                              url=url, thumbnail=thumbnail, plot=plot,
+                              show=title, viewmode="movies_with_plot"))
+    except:
+        import sys
+        for line in sys.exc_info():
+            logger.error("%s" % line)
+        return []
+
+    return items	
+
+if config.is_xbmc():
+ def series(item):
     logger.info()
 
     page_html = get_url_contents(item.url)
@@ -260,8 +321,35 @@ def series(item):
 
     return items
 
+	
+def series(item):
+    logger.info()
 
-def episodios(item):
+    page_html = get_url_contents(item.url)
+
+    series = __find_series(page_html)
+
+    items = []
+    for serie in series:
+        title, url, thumbnail, plot = serie
+
+        logger.debug("title=[{0}], url=[{1}], thumbnail=[{2}]".format(
+            title, url, thumbnail))
+
+        items.append(Item(channel=item.channel, action="episodios", title=title, url=url,
+                          thumbnail=thumbnail, plot=plot, show=title, viewmode="movies_with_plot"))
+
+    url_next_page = __find_next_page(page_html)
+
+    if url_next_page:
+        items.append(Item(channel=item.channel, action="series", title=">> Página Siguiente",
+                          url=url_next_page, thumbnail="", plot="", folder=True,
+                          viewmode="movies_with_plot"))
+
+    return items
+	
+if config.is_xbmc():
+ def episodios(item):
     logger.info()
 
     itemlist = []
@@ -321,7 +409,65 @@ def episodios(item):
                                  show=item.show))
 
     return itemlist
+	
+	
+def episodios(item):
+    logger.info()
 
+    itemlist = []
+
+    html_serie = get_url_contents(item.url)
+
+    info_serie = __extract_info_from_serie(html_serie)
+    plot = info_serie[3] if info_serie else ''
+
+    episodes = re.findall(REGEX_EPISODE, html_serie, re.DOTALL)
+
+    es_pelicula = False
+    for url, title, date in episodes:
+        episode = scrapertools.find_single_match(title, r'Episodio (\d+)')
+
+        # El enlace pertenece a un episodio
+        if episode:
+            season = 1
+            episode = int(episode)
+            title = "{0}x{1:02d} {2} ({3})".format(
+                season, episode, "Episodio " + str(episode), date)
+        # El enlace pertenece a una pelicula
+        else:
+            title = "{0} ({1})".format(title, date)
+            item.url = url
+            es_pelicula = True
+
+        logger.debug("title=[{0}], url=[{1}], thumbnail=[{2}]".format(
+            title, url, item.thumbnail))
+
+        itemlist.append(Item(channel=item.channel, action="findvideos", title=title, url=url,
+                             thumbnail=item.thumbnail, plot=plot, show=item.show,
+                             fulltitle="{0} {1}".format(item.show, title),
+                             viewmode="movies_with_plot", folder=True))
+
+    # El sistema soporta la biblioteca y se encontro por lo menos un episodio
+    # o pelicula
+    if config.get_library_support() and len(itemlist) > 0:
+        if es_pelicula:
+            item_title = "Añadir película a la biblioteca"
+            item_action = "add_pelicula_to_library"
+            item_extra = ""
+        else:
+            item_title = "Añadir serie a la biblioteca"
+            item_action = "add_serie_to_library"
+            item_extra = "episodios"
+
+        itemlist.append(Item(channel=item.channel, title=item_title, url=item.url,
+                             action=item_action, extra=item_extra, show=item.show))
+
+        if not es_pelicula:
+            itemlist.append(Item(channel=item.channel, title="Descargar todos los episodios",
+                                 url=item.url, action="download_all_episodes", extra="episodios",
+                                 show=item.show))
+
+    return itemlist	
 
 def findvideos(item):
     logger.info()
