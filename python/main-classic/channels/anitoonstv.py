@@ -20,7 +20,7 @@ if config.is_xbmc():
 if not config.is_xbmc():
 	from platformcode import platformtools
 	platformtools.dialog_notification("¡ALERTA!",
-                                                "El renumerado no funcionara "
+                                                "El renumerado no funciona "
                                                 "en la version Plex o Mediaserver")
 
 host = "http://www.anitoonstv.com"
@@ -113,7 +113,7 @@ def episodios(item):
         season = temp
         episode = int(cap)
         if config.is_xbmc():
-		 season, episode = renumbertools.numbered_for_tratk(item.channel, item.show, season, episode)
+         season, episode = renumbertools.numbered_for_tratk(item.channel, item.show, season, episode)
         date=name
         title = "{0}x{1:02d} {2} ({3})".format(
             season, episode, "Episodio " + str(episode), date)

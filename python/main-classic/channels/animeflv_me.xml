@@ -16,9 +16,9 @@
 	
     <changes>
 		<change>
-			<date>18/07/2017</date>
+			<date>19/07/2017</date>
 			<autor>viktormax3</autor>
-			<description>Añadida compatibilidad para version Mediaserver y Plex</description>
+			<description>Mejoras de compatibilidad con plex y mediaserver (renumbertools)</description>
 		</change>	
 		<change>
 			<date>15/03/2017</date>

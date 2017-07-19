@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # ------------------------------------------------------------
 # pelisalacarta - XBMC Plugin
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
@@ -15,8 +15,14 @@ from core import servertools
 from core.item import Item
 from core import httptools
 from channelselector import get_thumb
-from channels import renumbertools
 from core import tmdb
+if config.is_xbmc():
+	from channels import renumbertools
+if not config.is_xbmc():
+	from platformcode import platformtools
+	platformtools.dialog_notification("¡ALERTA!",
+                                                "El renumerado no funciona "
+                                                "en la version Plex o Mediaserver")
 
 host = "https://serieslan.com"
 
@@ -28,7 +34,8 @@ def mainlist(item):
     itemlist = list()
 
     itemlist.append(Item(channel=item.channel, action="lista", title="Series", url=host,thumbnail=thumb_series, page=0))
-    itemlist = renumbertools.show_option(item.channel, itemlist)
+    if config.is_xbmc():
+     itemlist = renumbertools.show_option(item.channel, itemlist)
     return itemlist
 
 def lista(item):
@@ -53,8 +60,10 @@ def lista(item):
         title=name
         url=host+link
         scrapedthumbnail=host+img
-        itemlist.append(item.clone(title=title, url=url, action="episodios", thumbnail=scrapedthumbnail, show=title, context=renumbertools.context))
-
+        if config.is_xbmc():
+         itemlist.append(item.clone(title=title, url=url, action="episodios", thumbnail=scrapedthumbnail, show=title, context=renumbertools.context))
+        if not config.is_xbmc():
+         itemlist.append(item.clone(title=title, url=url, action="episodios", thumbnail=scrapedthumbnail, show=title))
     itemlist.append(Item(channel = item.channel,title="Página Siguiente >>", url = item.url, action="lista", page= item.page +1))
 
     tmdb.set_infoLabels(itemlist)
@@ -85,14 +94,19 @@ def episodios(item):
             for pos in name.split(pat):
                 i=i+1
                 total_episode += 1
-                season, episode = renumbertools.numbered_for_tratk(item.channel, item.show, 1, total_episode)
+                if config.is_xbmc():
+                 season, episode = renumbertools.numbered_for_tratk(item.channel, item.show, 1, total_episode)
                 if len(name.split(pat))==i:
                     title += "{0}x{1:02d} ".format(season, episode)
                 else:
                     title += "{0}x{1:02d}_".format(season, episode)
         else:
             total_episode += 1
-            season, episode = renumbertools.numbered_for_tratk(item.channel, item.show, 1, total_episode)
+            if config.is_xbmc():
+             season, episode = renumbertools.numbered_for_tratk(item.channel, item.show, 1, total_episode)
+            if not config.is_xbmc():
+             season = 1
+             episode = total_episode
 
             title += "{0}x{1:02d} ".format(season, episode)
 

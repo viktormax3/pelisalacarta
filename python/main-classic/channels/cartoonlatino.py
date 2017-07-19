@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # ------------------------------------------------------------
 # pelisalacarta - XBMC Plugin
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
@@ -8,15 +8,20 @@ import urlparse
 
 from channels import filtertools
 from channelselector import get_thumb
-from core import config
 from core import logger
 from core import scrapertools
 from core import servertools
 from core.item import Item
 from core import httptools
-from channels import renumbertools
 from core import tmdb
-
+from core import config
+if config.is_xbmc():
+	from channels import renumbertools
+if not config.is_xbmc():
+	from platformcode import platformtools
+	platformtools.dialog_notification("¡ALERTA!",
+                                                "El renumerado no funciona "
+                                                "en la version Plex o Mediaserver")
 host = "http://www.cartoon-latino.com/"
 
 def mainlist(item):
@@ -29,8 +34,9 @@ def mainlist(item):
     itemlist = list()
 
     itemlist.append(Item(channel=item.channel, action="lista", title="Series", url=host,
-thumbnail=thumb_series))
-    itemlist = renumbertools.show_option(item.channel, itemlist)
+	thumbnail=thumb_series))
+    if config.is_xbmc():
+     itemlist = renumbertools.show_option(item.channel, itemlist)
 
     return itemlist
 """
@@ -62,7 +68,10 @@ def lista_gen(item):
         if 'HD' in scrapedlang:
             scrapedlang = scrapedlang.replace('HD','')
         title=scrapedtitle+" [ "+scrapedlang+"]"
-        itemlist.append(Item(channel=item.channel, title=title, url=scrapedurl, thumbnail=scrapedthumbnail, action="episodios", show=scrapedtitle, context=renumbertools.context))
+        if config.is_xbmc():
+         itemlist.append(Item(channel=item.channel, title=title, url=scrapedurl, thumbnail=scrapedthumbnail, action="episodios", show=scrapedtitle, context=renumbertools.context))
+        if not config.is_xbmc():
+         itemlist.append(Item(channel=item.channel, title=title, url=scrapedurl, thumbnail=scrapedthumbnail, action="episodios", show=scrapedtitle))
     tmdb.set_infoLabels(itemlist)
     #Paginacion
     patron_pag='<a class="nextpostslink" rel="next" href="([^"]+)">'
@@ -88,7 +97,10 @@ def lista(item):
     for link, name in matches:
         title=name+" [Latino]"
         url=link
-        itemlist.append(item.clone(title=title, url=url, plot=title, action="episodios", show=title, context=renumbertools.context))
+        if config.is_xbmc():
+         itemlist.append(item.clone(title=title, url=url, plot=title, action="episodios", show=title, context=renumbertools.context))
+        if not config.is_xbmc():
+         itemlist.append(item.clone(title=title, url=url, plot=title, action="episodios", show=title))
     tmdb.set_infoLabels(itemlist)
     return itemlist
 
@@ -129,7 +141,8 @@ def episodios(item):
         if "Ranma" in show:
             season = 1
             episode = number
-            season, episode = renumbertools.numbered_for_tratk(
+            if config.is_xbmc():
+             season, episode = renumbertools.numbered_for_tratk(
                 item.channel, item.show, season, episode)
             date=name
             if episode<10:
@@ -199,5 +212,4 @@ def play(item):
 
 
     return itemlist
-
 

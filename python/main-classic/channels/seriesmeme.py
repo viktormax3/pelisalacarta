@@ -14,8 +14,14 @@ from core import scrapertools
 from core import servertools
 from core.item import Item
 from core import httptools
-from channels import renumbertools
 from core import tmdb
+if config.is_xbmc():
+	from channels import renumbertools
+if not config.is_xbmc():
+	from platformcode import platformtools
+	platformtools.dialog_notification("¡ALERTA!",
+                                                "El renumerado no funciona "
+                                                "en la version Plex o Mediaserver")
 
 host = "https://seriesmeme.com/"
 
@@ -29,16 +35,17 @@ def mainlist(item):
     itemlist = list()
 
     itemlist.append(Item(channel=item.channel, action="lista_gen", title="Novedades", url=host,
-thumbnail=thumb_series))
+	thumbnail=thumb_series))
     itemlist.append(Item(channel=item.channel, action="lista", title="Series", url=urlparse.urljoin(host, "/lista"),
-thumbnail=thumb_series))
+	thumbnail=thumb_series))
     itemlist.append(Item(channel=item.channel, action="categorias", title="Categorias", url=host,
-thumbnail=thumb_series))
+	thumbnail=thumb_series))
     itemlist.append(Item(channel=item.channel, action="alfabetico", title="Listado Alfabetico", url=host,
-thumbnail=thumb_series_az))
+	thumbnail=thumb_series_az))
     itemlist.append(Item(channel=item.channel, action="top", title="Top Series", url=host,
-thumbnail=thumb_series))
-    itemlist = renumbertools.show_option(item.channel, itemlist)
+	thumbnail=thumb_series))
+    if config.is_xbmc():
+     itemlist = renumbertools.show_option(item.channel, itemlist)
     return itemlist
 """
 def search(item, texto):
@@ -126,7 +133,11 @@ def lista_gen(item):
         if 'HD' in scrapedlang:
             scrapedlang = scrapedlang.replace('HD','')
         title=scrapedtitle+" [ "+scrapedlang+"]"
-        itemlist.append(Item(channel=item.channel, title=title, url=scrapedurl, thumbnail=scrapedthumbnail, action="episodios", show=scrapedtitle, context=renumbertools.context))
+        if config.is_xbmc():
+         itemlist.append(Item(channel=item.channel, title=title, url=scrapedurl, thumbnail=scrapedthumbnail, action="episodios", show=scrapedtitle, context=renumbertools.context))
+        if not config.is_xbmc():
+         itemlist.append(Item(channel=item.channel, title=title, url=scrapedurl, thumbnail=scrapedthumbnail, action="episodios", show=scrapedtitle))
+		
     tmdb.set_infoLabels(itemlist)
     #Paginacion
     patron_pag='<a class="nextpostslink" rel="next" href="([^"]+)">'
@@ -171,8 +182,8 @@ def episodios(item):
         else:
             season = 1
             episode = int(cap)
-            season, episode = renumbertools.numbered_for_tratk(
-                item.channel, item.show, season, episode)
+            if config.is_xbmc():
+             season, episode = renumbertools.numbered_for_tratk(item.channel, item.show, season, episode)
             date=name
             title = "{0}x{1:02d} {2} ({3})".format(
                 season, episode, "Episodio " + str(episode), date)

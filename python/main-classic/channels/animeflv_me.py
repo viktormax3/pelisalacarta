@@ -14,12 +14,12 @@ from core import logger
 from core import scrapertools
 from core.item import Item
 from core import channeltools
-from platformcode import platformtools
 if config.is_xbmc():
 	from channels import renumbertools
 if not config.is_xbmc():
- platformtools.dialog_notification("¡ALERTA!",
-                                                "El renumerado no funcionara "
+	from platformcode import platformtools
+	platformtools.dialog_notification("¡ALERTA!",
+                                                "El renumerado no funciona "
                                                 "en la version Plex o Mediaserver")
 
 CHANNEL_HOST = "http://animeflv.me/"
@@ -36,7 +36,7 @@ REGEX_PLOT = r'<span class="info">Línea de historia:</span><p><span>(.*?)</span
 REGEX_URL = r'href="(http://animeflv\.me/Anime/[^"]+)">'
 REGEX_SERIE = r'{0}.+?{1}([^<]+?)</a><p>(.+?)</p>'.format(REGEX_THUMB, REGEX_URL)
 REGEX_EPISODE = r'href="(http://animeflv\.me/Ver/[^"]+?)">(?:<span.+?</script>)?(.+?)</a></td><td>(\d+/\d+/\d+)</td></tr>'
-REGEX_GENERO = r'<a href="(http://animeflv\.me/genero/[^\/]+/)">([^<]+)</a>'
+REGEX_GENERO = r'<a href="(http://animeflv\.me/ListadeAnime/[^\/]+/)">([^<]+)</a>'
 
 
 def get_url_contents(url):
@@ -138,29 +138,6 @@ def __find_series(html):
 
     return series
 
-if config.is_xbmc():
- def mainlist(item):
-     logger.info()
-
-     itemlist = list()
-
-     itemlist.append(Item(channel=item.channel, action="letras",
-                          title="Por orden alfabético"))
-     itemlist.append(Item(channel=item.channel, action="generos", title="Por géneros",
-                          url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime")))
-     itemlist.append(Item(channel=item.channel, action="series", title="Por popularidad",
-                          url=urlparse.urljoin(CHANNEL_HOST, "/ListadeAnime/MasVisto")))
-     itemlist.append(Item(channel=item.channel, action="series", title="Novedades",
-                          url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime/Nuevo")))
-     itemlist.append(Item(channel=item.channel, action="series", title="Últimos",
-                          url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime/LatestUpdate")))
-     itemlist.append(Item(channel=item.channel, action="search", title="Buscar...",
-                          url=urlparse.urljoin(CHANNEL_HOST, "Buscar?s=")))
-
-     itemlist = renumbertools.show_option(item.channel, itemlist)
-
-     return itemlist	 
-
 
 def mainlist(item):
      logger.info()
@@ -179,9 +156,13 @@ def mainlist(item):
                           url=urlparse.urljoin(CHANNEL_HOST, "ListadeAnime/LatestUpdate")))
      itemlist.append(Item(channel=item.channel, action="search", title="Buscar...",
                           url=urlparse.urljoin(CHANNEL_HOST, "Buscar?s=")))
-                          
-     return itemlist
-						  
+
+     if config.is_xbmc():
+      itemlist = renumbertools.show_option(item.channel, itemlist)
+
+     return itemlist	 
+
+	 
 def letras(item):
     logger.info()
 
@@ -223,42 +204,6 @@ def generos(item):
 
     return itemlist
 
-if config.is_xbmc():
- def search(item, texto):
-    logger.info()
-
-    texto = texto.replace(" ", "%20")
-    item.url = "{0}{1}".format(item.url, texto)
-
-    html = get_url_contents(item.url)
-
-    try:
-        # Se encontro un solo resultado y se redicciono a la página de la serie
-        if html.find('<title>Ver') >= 0:
-            series = [__extract_info_from_serie(html)]
-        # Se obtuvo una lista de resultados
-        else:
-            series = __find_series(html)
-
-        items = []
-        for serie in series:
-            title, url, thumbnail, plot = serie
-
-            logger.debug("title=[{0}], url=[{1}], thumbnail=[{2}]".format(
-                title, url, thumbnail))
-
-            items.append(Item(channel=item.channel, action="episodios", title=title,
-                              url=url, thumbnail=thumbnail, plot=plot,
-                              show=title, viewmode="movies_with_plot", context=renumbertools.context))
-    except:
-        import sys
-        for line in sys.exc_info():
-            logger.error("%s" % line)
-        return []
-
-    return items
-	
-	
 def search(item, texto):
     logger.info()
 
@@ -282,7 +227,12 @@ def search(item, texto):
             logger.debug("title=[{0}], url=[{1}], thumbnail=[{2}]".format(
                 title, url, thumbnail))
 
-            items.append(Item(channel=item.channel, action="episodios", title=title,
+            if config.is_xbmc():
+             items.append(Item(channel=item.channel, action="episodios", title=title,
+                              url=url, thumbnail=thumbnail, plot=plot,
+                              show=title, viewmode="movies_with_plot", context=renumbertools.context))
+            if not config.is_xbmc():
+             items.append(Item(channel=item.channel, action="episodios", title=title,
                               url=url, thumbnail=thumbnail, plot=plot,
                               show=title, viewmode="movies_with_plot"))
     except:
@@ -291,37 +241,9 @@ def search(item, texto):
             logger.error("%s" % line)
         return []
 
-    return items	
-
-if config.is_xbmc():
- def series(item):
-    logger.info()
-
-    page_html = get_url_contents(item.url)
-
-    series = __find_series(page_html)
-
-    items = []
-    for serie in series:
-        title, url, thumbnail, plot = serie
-
-        logger.debug("title=[{0}], url=[{1}], thumbnail=[{2}]".format(
-            title, url, thumbnail))
-
-        items.append(Item(channel=item.channel, action="episodios", title=title, url=url,
-                          thumbnail=thumbnail, plot=plot, show=title, viewmode="movies_with_plot",
-                          context=renumbertools.context))
-
-    url_next_page = __find_next_page(page_html)
-
-    if url_next_page:
-        items.append(Item(channel=item.channel, action="series", title=">> Página Siguiente",
-                          url=url_next_page, thumbnail="", plot="", folder=True,
-                          viewmode="movies_with_plot"))
-
     return items
-
 	
+
 def series(item):
     logger.info()
 
@@ -336,7 +258,12 @@ def series(item):
         logger.debug("title=[{0}], url=[{1}], thumbnail=[{2}]".format(
             title, url, thumbnail))
 
-        items.append(Item(channel=item.channel, action="episodios", title=title, url=url,
+        if config.is_xbmc():
+         items.append(Item(channel=item.channel, action="episodios", title=title, url=url,
+                          thumbnail=thumbnail, plot=plot, show=title, viewmode="movies_with_plot",
+                          context=renumbertools.context))
+        if not config.is_xbmc():
+         items.append(Item(channel=item.channel, action="episodios", title=title, url=url,
                           thumbnail=thumbnail, plot=plot, show=title, viewmode="movies_with_plot"))
 
     url_next_page = __find_next_page(page_html)
@@ -348,8 +275,8 @@ def series(item):
 
     return items
 	
-if config.is_xbmc():
- def episodios(item):
+
+def episodios(item):
     logger.info()
 
     itemlist = []
@@ -369,8 +296,9 @@ if config.is_xbmc():
         if episode:
             season = 1
             episode = int(episode)
-            season, episode = renumbertools.numbered_for_tratk(
-                item.channel, item.show, season, episode)
+            if config.is_xbmc():
+             season, episode = renumbertools.numbered_for_tratk(
+			  item.channel, item.show, season, episode)
 
             title = "{0}x{1:02d} {2} ({3})".format(
                 season, episode, "Episodio " + str(episode), date)
