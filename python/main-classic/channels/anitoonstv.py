@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # ------------------------------------------------------------
 # pelisalacarta - XBMC Plugin
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
@@ -13,30 +13,35 @@ from core import scrapertools
 from core import servertools
 from core.item import Item
 from core import httptools
-from channels import renumbertools
 from core import tmdb
 from channelselector import get_thumb
+if config.is_xbmc():
+	from channels import renumbertools
+if not config.is_xbmc():
+	from platformcode import platformtools
+	platformtools.dialog_notification("¡ALERTA!",
+                                                "El renumerado no funcionara "
+                                                "en la version Plex o Mediaserver")
 
 host = "http://www.anitoonstv.com"
+
 
 def mainlist(item):
     logger.info()
     thumb_series = get_thumb("squares", "thumb_canales_series.png")
-
-
     itemlist = list()
-
     itemlist.append(Item(channel=item.channel, action="lista", title="Anime", url=host,
-thumbnail=thumb_series))
+	thumbnail=thumb_series))
     itemlist.append(Item(channel=item.channel, action="lista", title="Series Animadas", url=host,
-thumbnail=thumb_series))
+	thumbnail=thumb_series))
     itemlist.append(Item(channel=item.channel, action="lista", title="Novedades", url=host,
-thumbnail=thumb_series))
+	thumbnail=thumb_series))
     itemlist.append(Item(channel=item.channel, action="lista", title="Pokemon", url=host,
-thumbnail=thumb_series))
-    itemlist = renumbertools.show_option(item.channel, itemlist)
+	thumbnail=thumb_series))
+    if config.is_xbmc():
+     itemlist = renumbertools.show_option(item.channel, itemlist)
     return itemlist
-
+	
 def lista(item):
     logger.info()
 
@@ -78,8 +83,10 @@ def lista(item):
                 if "&" in show:
                     cad = title.split("xy")
                     show=cad[0]
-
-        itemlist.append(item.clone(title=title, url=url, plot=show, action="episodios", show=show, context=renumbertools.context))
+        if config.is_xbmc():
+         itemlist.append(item.clone(title=title, url=url, plot=show, action="episodios", show=show, context=renumbertools.context))
+        if not config.is_xbmc():
+         itemlist.append(item.clone(title=title, url=url, plot=show, action="episodios", show=show))
     tmdb.set_infoLabels(itemlist)
     return itemlist
 
@@ -105,8 +112,8 @@ def episodios(item):
             cap="0"+cap
         season = temp
         episode = int(cap)
-        season, episode = renumbertools.numbered_for_tratk(
-            item.channel, item.show, season, episode)
+        if config.is_xbmc():
+		 season, episode = renumbertools.numbered_for_tratk(item.channel, item.show, season, episode)
         date=name
         title = "{0}x{1:02d} {2} ({3})".format(
             season, episode, "Episodio " + str(episode), date)
@@ -173,5 +180,4 @@ def play(item):
 
 
     return itemlist
-
 

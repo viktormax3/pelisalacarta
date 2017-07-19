@@ -16,6 +16,11 @@
 	
     <changes>
 		<change>
+			<date>19/07/2017</date>
+			<autor>viktormax3</autor>
+			<description>Mejoras de compatibilidad con plex y mediaserver (renumbertools)</description>
+		</change>
+		<change>
 			<date>13/06/2017</date>
 			<autor>danielr460</autor>
 			<description>Arreglado problema en nombre de servidores</description>
