@@ -4,22 +4,15 @@
 # Canal para ver_pelis
 # http://blog.tvalacarta.info/plugin-xbmc/pelisalacarta/
 #------------------------------------------------------------
-import string
 import os
 import re
-import sys
-import urllib
 from core import config
 from core import logger
 from core import scrapertools
 from core import servertools
 from core import httptools
-from platformcode import platformtools
 from core.item import Item, InfoLabels
-import xbmc
-import xbmcgui
 from core import tmdb
-from core.scrapertools import decodeHtmlentities as dhe
 import unicodedata
 from threading import Thread
 
@@ -82,8 +75,8 @@ def mainlist(item):
 
     logger.info()
     itemlist=[]
-    i=0
     global i
+    i=0
     itemlist.append( item.clone(title="[COLOR oldlace][B]Películas[/B][/COLOR]", action="scraper",url="http://ver-pelis.me/ver/",thumbnail="http://imgur.com/36xALWc.png", fanart="http://imgur.com/53dhEU4.jpg",contentType= "movie"))
     itemlist.append( item.clone(title="[COLOR oldlace][B]Películas en Español[/B][/COLOR]", action="scraper",url="http://ver-pelis.me/ver/espanol/",thumbnail="http://imgur.com/36xALWc.png", fanart="http://imgur.com/53dhEU4.jpg",contentType= "movie"))
     
@@ -105,7 +98,6 @@ def scraper(item):
     logger.info()
     itemlist=[]
     url_next_page = ""
-    global i
     data = httptools.downloadpage(item.url).data
     data = re.sub(r"\n|\r|\t|\s{2}|&nbsp;","",data)
     patron =scrapertools.find_multiple_matches(data, '<a class="thumb cluetip".*?href="([^"]+)".*?src="([^"]+)" alt="([^"]+)".*?"res">([^"]+)</span>')
